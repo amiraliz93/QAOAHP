@@ -91,6 +91,6 @@ class QAOAFastSimulationPython(QAOASimulationBase):
         return probs[indices].sum()
     
 
-class QAOAFURXSimulator(QAOAFastSimulatorPythonBase):
+class QAOAFURXSimulator(QAOASimulationBase):
     def _apply_qaoa(self, sv: np.ndarray, gammas: Sequence[float], betas: Sequence[float], **kwargs):
         apply_qaoa_furx(sv, gammas, betas, self._hc_diag, self.n_qubits)
