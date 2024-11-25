@@ -7,7 +7,7 @@ import sys
 
 # Terms are a list of tuples (coeff, [qubit indices])
 # hinting system
-if sys.version_info(3, 10):
+if sys.version_info >= (3, 10):
     from  collections.abc import Sequence
     TermsType = Sequence[tuple[float, Sequence[int]]]
     CostsType = Sequence[float] | np.ndarray
@@ -51,8 +51,8 @@ class QAOASimulationBase(ABC):
         # and contain abstract base class (ABS) wich can not be instantiated directly 
         
             # -- Internal methods
-        @abstractmethod 
-        def _diag_from_terms(self, terms: TermsType) -> typing.Any:
+    @abstractmethod 
+    def _diag_from_terms(self, terms: TermsType) -> typing.Any:
             """Precompute the diagonal of the cost Hamiltonian
             return implementation data.type For example,
         GPU simulator may return a GPU pointer. Consult the simulator
@@ -65,8 +65,8 @@ class QAOASimulationBase(ABC):
             """
             ...
         
-        @abstractmethod
-        def _diag_from_costs(self, costs: CostsType) -> typing.Any:
+    @abstractmethod
+    def _diag_from_costs(self, costs: CostsType) -> typing.Any:
             """
             Adapt the costs array to the simulator-specific datatype
 
@@ -77,15 +77,15 @@ class QAOASimulationBase(ABC):
             ... # elipsis; means that in this place sth intentionally left out or implementation provide later
         # public method
 
-        @abstractmethod
-        def get_cost_digonal(self) -> np.ndarray:
+    @abstractmethod
+    def get_cost_digonal(self) -> np.ndarray:
             """return the diagonal of the cost Hamiltonian
                 np.ndarray: _description_
             """
             ...
         
-        @abstractmethod
-        def simulate_qoao(self, gamma: ParamType, betas: ParamType, sv0: np.ndarray, **kwargs) -> typing.Any:
+    @abstractmethod
+    def simulate_qaoa(self, gamma: ParamType, betas: ParamType, sv0: np.ndarray, **kwargs) -> typing.Any:
             """simulator QAOA circuit
             parameters
 
@@ -100,8 +100,8 @@ class QAOASimulationBase(ABC):
             """
             ...
         
-        @abstractmethod
-        def get_expectation(self, result, costs: typing.Any = None, optimisation_type = "min", **kwargs) -> float:
+    @abstractmethod
+    def get_expectation(self, result, costs: typing.Any = None, optimisation_type = "min", **kwargs) -> float:
             """return the expectation value of the cost Hamiltonian
 
             Args:
@@ -113,8 +113,8 @@ class QAOASimulationBase(ABC):
 
             ...
         
-        @abstractmethod
-        def get_overlap(self, result, costs: CostsType | None = None, indices: np.ndarray | Sequence(int), optimisation_type = "min", **kwarg) -> float:
+    @abstractmethod
+    def get_overlap(self, result, costs: CostsType | None = None, indices: np.ndarray | Sequence[int] | None= None, optimisation_type = "min", **kwarg) -> float:
             """return overlap between the lowest energy state and statvector parameters
 
             Args:
@@ -126,8 +126,8 @@ class QAOASimulationBase(ABC):
                 float: _description_
             """
             ...
-        @abstractmethod
-        def get_statvector(self, result, **kwargs) -> np.ndarray:
+    @abstractmethod
+    def get_statvector(self, result, **kwargs) -> np.ndarray:
             """return the statvetor as numpy array, which requires enough memory to store 2**n_qubits complex number
 
             Args:
