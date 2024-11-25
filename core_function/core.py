@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+from collections.abc import Sequence
 ########################################
 # single-qubit X rotation
 ########################################
@@ -44,11 +44,16 @@ def furx(x: np.ndarray, theta: float, q: int) -> np.ndarray:
 x = [0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111]
 a = furx(x, 1.0, 2 )
 
+
+########################################
+# single-qubit X rotation on all qubits
+########################################
 def furx_all(x:np.array, theta:float, np_qubits: int) -> np.ndarray:
 
     #applies e^{-i theta X} (furx function) on all qubits
     for i in range(np_qubits):
         furx(x, theta, i)
+
 
 def get_complex_array(sv: np.ndarray) -> np.adarray:
     """create complex Numpy array from a numpy array or return the object as is if 
@@ -62,7 +67,7 @@ def get_complex_array(sv: np.ndarray) -> np.adarray:
     return sv
 
 
-
+#improve the # single-qubit X rotation
 def X_rotation_on_gate(sv: np.array, theta: float, q: int) -> np.ndarray:
     """a single qubit pualix_rotatio
         Rx(theta) = exp(-i * theta * X/2)
@@ -80,4 +85,21 @@ def X_rotation_on_gate(sv: np.array, theta: float, q: int) -> np.ndarray:
     sv = get_complex_array(sv)
     furx(sv, 0.5 * theta, q)
     return sv
+
+#finally apply qaoa curcate  
+def apply_qaoa_furx(sv, gammas: Sequence[float], betas: Sequence[float], hc_diagonal: np.ndarray, n_qubits:int ):
+    """
+    apply a QAOA with the X mixer defined by
+    U(beta) = sum_{j} exp(-i*beta*X_j/2)
+    where X_j is the Pauli-X operator applied on the jth qubit.
+    @param sv array NumPy array (dtype=complex) of length n containing the statevector
+    @param gammas parameters for the phase separating layers
+    @param betas parameters for the mixing layers
+    @param hc_diag array of length n containing diagonal elements of the diagonal cost Hamiltonian
+    @param n_qubits total number of qubits represented by the statevector
+    """
+    for gamma, beta in zip(gammas, betas):
+        sv *= np.exp(-0.5 * gamma * hc_diagonal)
+        furx_all(sv, beta, n_qubits)
+
 

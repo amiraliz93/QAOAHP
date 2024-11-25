@@ -11,6 +11,7 @@ def maxcut_obj(x: np.ndarray, w: np.ndarray) -> float:
     X = np.outer(x, (1 - x))
     return np.sum(w * X)  # type: ignore
 
+
 def get_maxcut_terms(G: nx.Graph): #-> TermsType:
     """Get terms corresponding to cost function value
 
