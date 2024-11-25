@@ -41,9 +41,6 @@ def furx(x: np.ndarray, theta: float, q: int) -> np.ndarray:
     return x
 
 
-x = [0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111]
-a = furx(x, 1.0, 2 )
-
 
 ########################################
 # single-qubit X rotation on all qubits
@@ -103,3 +100,6 @@ def apply_qaoa_furx(sv, gammas: Sequence[float], betas: Sequence[float], hc_diag
         furx_all(sv, beta, n_qubits)
 
 
+
+x = [0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111]
+a = furx(x, 1.0, 2 )
