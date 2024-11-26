@@ -52,7 +52,7 @@ def furx_all(x:np.array, theta:float, np_qubits: int) -> np.ndarray:
         furx(x, theta, i)
 
 
-def get_complex_array(sv: np.ndarray) -> np.adarray:
+def get_complex_array(sv: np.ndarray):
     """create complex Numpy array from a numpy array or return the object as is if 
     its already a complex numpy array
 
