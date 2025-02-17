@@ -7,3 +7,5 @@ from Base import QAOAFastSimulatorBase, CostsType, TermsType, ParamType
 from ...precoputation.numpy_vectorized import precompute_vectorized_cpu_parallel
 from .QAOA_simulator import apply_qaoa_furx
 
+
+
