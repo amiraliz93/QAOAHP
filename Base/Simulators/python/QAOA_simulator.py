@@ -3,14 +3,14 @@ from __future__ import annotations
 # which means that type hints can be written as strings and will be evaluated only when needed
 from collections.abc import Sequence
 import numpy as np
-from QAOA_mtrix_simulation.Base.qaoa_simulator_base import QAOASimulationBase, CostsType, TermsType, ParamType
-from ...Base.qaoa_simulator_base import QAOASimulationBase, CostsType, TermsType, ParamType
-from ...precoputation.numpy_vectorized import precompute_vectorized_cpu_parallel
-from ...Simulators.python.QAOA_rotation import apply_qaoa_furx
+
+from ...qaoa_simulator_base import QAOAFastSimulatorBase, CostsType, TermsType, ParamType
+#from .... import precompute_vectorized_cpu_parallel
+from QAOA_mtrix_simulation.precoputation.numpy_vectorized import precompute_vectorized_cpu_parallel
+from ..python.QAOA_rotation import apply_qaoa_furx
 
 
-
-class QAOAFastSimulatorPythonBase(qaoa_simulator_base):
+class QAOAFastSimulatorPythonBase(QAOAFastSimulatorBase):
     _hc_diag: np.ndarray
 
     def _diag_from_costs(self, costs: CostsType):

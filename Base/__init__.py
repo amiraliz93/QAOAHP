@@ -1,7 +1,7 @@
 
 import numba.cuda
-from .qaoa_simulator_base import QAOASimulationBase
-from ..Simulators.python import QAOAFURXSimulator, ParamType, CostsType, TermsType
+from .qaoa_simulator_base import QAOAFastSimulatorBase
+from .Simulators.python.QAOA_simulator import QAOAFURXSimulator, ParamType, CostsType, TermsType
 
 Simulators = {
     "x": {
