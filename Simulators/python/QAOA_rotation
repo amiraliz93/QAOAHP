@@ -17,3 +17,4 @@ def apply_qaoa_furx(sv: np.ndarray, gammas: Sequence[float], betas: Sequence[flo
     for gamma, beta in zip(gammas, betas):
         sv *= np.exp(-0.5j * gamma * hc_diag)
         furx_all(sv, beta, n_qubits)
+        

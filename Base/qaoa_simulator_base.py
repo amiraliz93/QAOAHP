@@ -128,6 +128,8 @@ class QAOASimulationBase(ABC):
                 float: _description_
             """
             ...
+    
+    
     @abstractmethod
     def get_statvector(self, result, **kwargs) -> np.ndarray:
             """return the statvetor as numpy array, which requires enough memory to store 2**n_qubits complex number
