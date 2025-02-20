@@ -5,8 +5,8 @@ from collections.abc import Sequence
 import numpy as np
 
 from ...qaoa_simulator_base import QAOAFastSimulatorBase, CostsType, TermsType, ParamType
-#from .... import precompute_vectorized_cpu_parallel
-from QAOA_mtrix_simulation.precoputation.numpy_vectorized import precompute_vectorized_cpu_parallel
+#from ... import precompute_vectorized_cpu_parallel
+from QAOA_mtrix_simulation.precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
 from ..python.QAOA_rotation import apply_qaoa_furx
 
 
