@@ -1,0 +1,1 @@
+from .numpy_vectorized import precompute_vectorized_cpu_parallel
