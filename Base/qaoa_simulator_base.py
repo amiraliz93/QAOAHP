@@ -55,6 +55,7 @@ class QAOAFastSimulatorBase(ABC):
         """
         self.n_qubits = n_qubits
         self.n_states = 2**n_qubits
+        assert not costs, f"Error: 'costs' parameter should be empty, but received: {costs}" f" the ost is mess up the current value is: {costs} "
         if costs is None:
             if terms is None:
                 raise ValueError("Either costs or terms must be provided")
