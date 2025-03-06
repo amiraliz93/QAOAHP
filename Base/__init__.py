@@ -2,12 +2,12 @@
 import numba.cuda
 from .qaoa_simulator_base import QAOAFastSimulatorBase
 from .Simulators.python.QAOA_simulator import QAOAFURXSimulator, ParamType, CostsType, TermsType
-
+from .Simulators.GPU.qaoa_simulatorbase import QAOAFURXSimulatorGPU
 Simulators = {
     "x": {
        # "c": QAOAFURXSimulatorC,
         "python": QAOAFURXSimulator,
-        #"gpu": QAOAFURXSimulatorGPU,
+         "gpu": QAOAFURXSimulatorGPU,
         #"gpumpi": QAOAFURXSimulatorGPUMPI,
     }
 }
