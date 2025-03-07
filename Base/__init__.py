@@ -25,14 +25,14 @@ def get_available_simulator_names(type: str = "x") -> list:
     if family is None:
         raise ValueError(f'the simulator is not defined {type}')
 
-    precedence = ["python", "gpumpi", "gpu", "c" ]
+    precedence = ["python",  "gpu" ] # "gpumpi", "c"
 
-    check = [mpi_available, numba.cuda.is_available, c_available]
+    check = [ numba.cuda.is_available] # mpi_available, , c_available
     available = []
     for i in range(len(check)):
         if precedence[i] not in family:
             continue
-        if checks[i]():
+        if check[i]():
             available.append(precedence[i])
     
     available.append(precedence[-1])
@@ -58,4 +58,6 @@ def get_available_simulators(type: str = "x") -> list:
 def choose_simulator(name="auto", **kwargs):
     if name != "auto":
         return Simulators["x"][name]
-    return Simulators["x"]['python']
+    #return Simulators["x"]['python']
+    print(get_available_simulators("x"))
+    return get_available_simulators("x")[0]
