@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 import numpy as np
-from .core_rotation import furx_all
+from .core_rotation_python import furx_all
 
 
 def apply_qaoa_furx(sv: np.ndarray, gammas: Sequence[float], betas: Sequence[float], hc_diag: np.ndarray, n_qubits: int) -> None:

@@ -5,11 +5,13 @@ from pathlib import Path
 from functools import lru_cache
 import warnings
 
-try:
-    import cupy as cp
-except ImportError:
-    if numba.cuda.is_available():
-        warnings.warn("Cupy import failed, which is required for X rotations on NVIDA GPUs", RuntimeWarning)
+#import cupy as cp
+
+#try:
+#    import cupy as cp
+#except ImportError:
+ #  if numba.cuda.is_available():
+    #    warnings.warn("Cupy import failed, which is required for X rotations on NVIDA GPUs", RuntimeWarning)
 
 
 
@@ -68,7 +70,7 @@ def furx_all(sv: np.ndarray, theta: float, n_qubits: int):
     n_states = len(sv)
     state_mask = (n_states - 1) >> 1
 
-    a, b = math.cos(theta), -math.sin(theta)
+    a, b = math.cos(theta), - math.sin(theta)
 
     group_size = 10
     last_group_size = n_qubits % group_size
