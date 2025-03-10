@@ -5,7 +5,7 @@ from pathlib import Path
 from functools import lru_cache
 import warnings
 
-#import cupy as cp
+import cupy as cp
 
 #try:
 #    import cupy as cp
