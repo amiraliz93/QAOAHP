@@ -1,0 +1,17 @@
+simulation_qaoa_LV/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_bundle/pydevd_concurrency_analyser/__pycache__/pydevd_thread_wrappers.cpython-311.pyc
+*.pyc
+*.pyc
+simulation_qaoa_LV/Lib/site-packages/qiskit/transpiler/passes/routing/commuting_2q_gate_routing/__pycache__/pauli_2q_evolution_commutation.cpython-311.pyc
+# Ignore virtual environment
+simulation_qaoa_LV/Lib/
+simulation_qaoa_LV/Lib/site-packages/
+simulation_qaoa_LV/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_bundle/_debug_adapter/__pycache__/__main__pydevd_gen_debug_adapter_protocol.cpython-311.pyc
+simulation_qaoa_LV/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_bundle/pydevd_concurrency_analyser/__pycache__/pydevd_concurrency_logger.cpython-311.pyc
+simulation_qaoa_LV/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_bundle/pydevd_concurrency_analyser/__pycache__/pydevd_thread_wrappers.cpython-311.pyc
+simulation_qaoa_LV/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_frame_eval/vendored/bytecode/tests/__pycache__/test_bytecode.cpython-311.pyc
+simulation_qaoa_LV/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_frame_eval/vendored/bytecode/tests/__pycache__/test_bytecode.cpython-311.pyc
+simulation_qaoa_LV/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_frame_eval/vendored/bytecode/tests/__pycache__/test_concrete.cpython-311.pyc
+/simulation_qaoa_LV
+# Ignore virtual environment files
+simulation_qaoa_LV/Lib/
+simulation_qaoa_LV/Lib/site-packages/
