@@ -8,7 +8,7 @@ from ...qaoa_simulator_base import QAOAFastSimulatorBase, CostsType, TermsType, 
 #from ... import precompute_vectorized_cpu_parallel
 from ...precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
 
-from ..python.QAOA_rotation import apply_qaoa_furx
+from .QAOA_rotation_python import apply_qaoa_furx
 
 
 class QAOAFastSimulatorPythonBase(QAOAFastSimulatorBase):
