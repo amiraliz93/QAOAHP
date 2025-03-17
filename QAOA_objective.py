@@ -19,8 +19,8 @@ from Base.precomputation import precompute_vectorized_cpu_parallel
 
 
 def _get_qiskit_objective(
-     parameterized_circuit,
-     precomputed_objectives=None,
+    parameterized_circuit,
+    precomputed_objectives=None,
     precomputed_optimal_bitstrings=None,
     objective: str = "expectation", 
     terms=None,
