@@ -3,6 +3,7 @@
 import networkx as nx
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from typing import Sequence
+import numpy as np
 
 from .utils import precompute_energies
 from .Base.maxcut import get_maxcut_terms, maxcut_obj, get_adjacency_matrix
@@ -11,7 +12,7 @@ from .Base.qaoa_circuit1 import get_parameterized_qaoa_circuit
 from .QAOA_objective import get_qaoa_objective
 
 def get_qaoa_maxcut_objective(
-           N: int,
+    N: int,
     p: int,
     G: nx.Graph | None = None,
     precomputed_cuts: np.ndarray | None = None,
