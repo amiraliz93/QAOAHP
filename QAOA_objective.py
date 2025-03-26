@@ -8,8 +8,7 @@ from functools import reduce
 import numba.cuda
 
 from Base import choose_simulator, qaoa_simulator_base
-
-from parameter_utils import from_fourier_basis
+from parameter_utils import from_fourier_basis, QAOAParameterization
 import parameter_utils
 from parameter_utils import QAOAParameterization
 
