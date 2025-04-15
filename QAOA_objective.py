@@ -26,6 +26,7 @@ def _get_qiskit_objective(
     parameterization: str | QAOAParameterization = "theta",
     mixer: str = "x",
     optimization_type="min"):
+
     N = parameterized_circuit.num_qubits
     if objective == "expectation":
         if  precomputed_objectives is None:
@@ -37,6 +38,8 @@ def _get_qiskit_objective(
         def compute_objective_from_probabilities(probabilities):  
              if optimization_type == "max":
                  return -1 * precomputed_objectives.dot(probabilities)
+             else:
+                 return precomputed_objectives.dot(probabilities)
 
     elif objective == "overlap":
         if precomputed_optimal_bitstrings is None:
@@ -136,7 +139,7 @@ def get_qaoa_objective(
 
         if precomputed_costs is None:
             precomputed_costs = precomputed_diagonal_hamiltonian
-            assert precomputed_costs is not None, 'the precomputed_costs still None {precomputed_costs}'
+           # assert precomputed_costs is not None, f'the precomputed_costs still None {precomputed_costs}'
         g = _get_qiskit_objective(
                 parameterized_circuit,
                 precomputed_costs,
@@ -154,7 +157,7 @@ def get_qaoa_objective(
 
         return fq
     # --------------
-    if mixer == "x":
+    if mixer == "x": # for x mixer 
         simulator_cls = choose_simulator(name=simulator)
     
     else:
@@ -181,7 +184,9 @@ def get_qaoa_objective(
         elif objective == "overlap":
             overlap = sim.get_overlap(result, costs=precomputed_costs, indices=bitstring_loc, preserve_state=False, optimization_type=optimization_type)
             return 1 - overlap
-    
+        else:
+            raise ValueError(f"Unknown objective: {objective}")
+
     return f
 
 
