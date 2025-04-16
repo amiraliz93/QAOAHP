@@ -8,8 +8,7 @@ from functools import reduce
 import numba.cuda
 
 from Base import choose_simulator, qaoa_simulator_base
-
-from parameter_utils import from_fourier_basis
+from parameter_utils import from_fourier_basis, QAOAParameterization
 import parameter_utils
 from parameter_utils import QAOAParameterization
 
@@ -19,14 +18,15 @@ from Base.precomputation import precompute_vectorized_cpu_parallel
 
 
 def _get_qiskit_objective(
-     parameterized_circuit,
-     precomputed_objectives=None,
+    parameterized_circuit,
+    precomputed_objectives=None,
     precomputed_optimal_bitstrings=None,
     objective: str = "expectation", 
     terms=None,
     parameterization: str | QAOAParameterization = "theta",
     mixer: str = "x",
     optimization_type="min"):
+
     N = parameterized_circuit.num_qubits
     if objective == "expectation":
         if  precomputed_objectives is None:
@@ -38,6 +38,8 @@ def _get_qiskit_objective(
         def compute_objective_from_probabilities(probabilities):  
              if optimization_type == "max":
                  return -1 * precomputed_objectives.dot(probabilities)
+             else:
+                 return precomputed_objectives.dot(probabilities)
 
     elif objective == "overlap":
         if precomputed_optimal_bitstrings is None:
@@ -84,14 +86,14 @@ def _get_qiskit_objective(
 
 def get_qaoa_objective(
     N: int,
-    precomputed_diagonal_hamiltonian=None,
+    precomputed_diagonal_hamiltonian=None, # not define
     precomputed_costs=None,
-    terms=None,
+    terms=None, # we define this terms
     precomputed_optimal_bitstrings=None,
     parameterization: str | QAOAParameterization = "theta",
     objective: str = "expectation",
     parameterized_circuit=None,
-    simulator: str = "auto",
+    simulator: str = "auto", # we define this parameter
     mixer: str = "x",
     initial_state: np.ndarray | None = None,
     n_trotters: int = 1,
@@ -134,18 +136,20 @@ def get_qaoa_objective(
 
 # -- Qiskit edge case
     if simulator == "qiskit":
+
         if precomputed_costs is None:
             precomputed_costs = precomputed_diagonal_hamiltonian
+           # assert precomputed_costs is not None, f'the precomputed_costs still None {precomputed_costs}'
         g = _get_qiskit_objective(
-            parameterized_circuit,
-            precomputed_costs,
-            precomputed_optimal_bitstrings,
-            objective,
-            terms,
-            parameterization,
-            mixer,
-            optimization_type=optimization_type,
-        )
+                parameterized_circuit,
+                precomputed_costs,
+                precomputed_optimal_bitstrings,
+                objective,
+                terms,
+                parameterization,
+                mixer,
+                optimization_type=optimization_type,
+            )
 
         def fq(*args):
             gamma, beta = parameter_utils.convert_to_gamma_beta(*args, parameterization=parameterization)
@@ -153,7 +157,7 @@ def get_qaoa_objective(
 
         return fq
     # --------------
-    if mixer == "x":
+    if mixer == "x": # for x mixer 
         simulator_cls = choose_simulator(name=simulator)
     
     else:
@@ -180,7 +184,9 @@ def get_qaoa_objective(
         elif objective == "overlap":
             overlap = sim.get_overlap(result, costs=precomputed_costs, indices=bitstring_loc, preserve_state=False, optimization_type=optimization_type)
             return 1 - overlap
-    
+        else:
+            raise ValueError(f"Unknown objective: {objective}")
+
     return f
 
 
