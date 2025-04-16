@@ -1,8 +1,0 @@
-#!C:\Users\N1259534\Desktop\Projects\QAOA_simulation_LV\QAOA_mtrix_simulation\simulation_qaoa_LV\Scripts\python.exe
-# -*- coding: UTF-8 -*-
-from __future__ import print_function, division, absolute_import
-
-from numba.misc.numba_entry import main
-
-if __name__ == "__main__":
-    main()
