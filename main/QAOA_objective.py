@@ -7,14 +7,12 @@ from qiskit_aer import Aer
 from functools import reduce
 import numba.cuda
 
-from Base import choose_simulator, qaoa_simulator_base
-from parameter_utils import from_fourier_basis, QAOAParameterization
-import parameter_utils
-from parameter_utils import QAOAParameterization
+from .Base import choose_simulator, qaoa_simulator_base
+from .parameter_utils import from_fourier_basis, QAOAParameterization
 
 #from .qaoa_circuit_portfolio import measure_circuit
 
-from Base.precomputation import precompute_vectorized_cpu_parallel
+from .Base.precomputation import precompute_vectorized_cpu_parallel
 
 
 def _get_qiskit_objective(
