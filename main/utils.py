@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 from itertools import product
-
+# calculate maxcut solution with exact solution Mixed Integer Linear Program (MILP) 
+import pulp
 
 
 def reverse_array_index_bit_order(arr):
@@ -55,6 +56,33 @@ def precompute_energies(obj_f, nbits: int, *args: object, **kwargs: object):
 
     return np.array([obj_f(x, *args, **kwargs) for x in bit_strings])
 
+#Mixed Integer Linear Program
+# maximize sigma (w_ij(x_i XOR x_j))
+def solve_maxcut_pulp(G):
+    prob = pulp.LpProblem("MaxCut", pulp.LpMaximize)
+    x = {i: pulp.LpVariable(f"x_{i}", cat="Binary") for i in G.nodes}
+    y = {}  # auxiliary variables for edge products
+
+    for i, j in G.edges():
+        y[(i, j)] = pulp.LpVariable(f"y_{i}_{j}", cat="Binary")
+
+    # Add constraints for linearization: y_ij = x_i * x_j
+    for i, j in G.edges():
+        prob += y[(i, j)] <= x[i]
+        prob += y[(i, j)] <= x[j]
+        prob += y[(i, j)] >= x[i] + x[j] - 1
+
+    # Objective: maximize cut edges
+    cut = []
+    for i, j in G.edges():
+        weight = G[i][j].get("weight", 1)
+        cut.append(weight * (x[i] + x[j] - 2 * y[(i, j)]))
+    prob += pulp.lpSum(cut), "TotalCutWeight"
+
+    prob.solve(pulp.PULP_CBC_CMD(msg=0))
+    cut_value = pulp.value(prob.objective)
+    solution = {i: int(pulp.value(x[i])) for i in G.nodes}
+    return cut_value, solution
 
 def brute_force(obj_f, num_variables: int, minimize: bool = False, function_takes: str = "spins", *args: object, **kwargs: object):
     """Get the maximum of a function by complete enumeration

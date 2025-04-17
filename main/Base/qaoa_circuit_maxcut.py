@@ -6,7 +6,7 @@ import networkx as nx
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from typing import Sequence
 from .maxcut import get_maxcut_terms
-from .qaoa_circuit1 import get_qaoa_circuit_from_terms, get_parameterized_qaoa_circuit_from_terms
+from .qaoa_circuit1 import get_qaoa_circuit_from_terms2, get_parameterized_qaoa_circuit_from_terms
 
 def get_qaoa_circuit(G: nx.Graph, gammas: Sequence, betas: Sequence, save_statevector: bool = True, qr: QuantumRegister = None, cr: ClassicalRegister = None):
     """Generates a circuit for weighted MaxCut on graph G.
@@ -35,7 +35,8 @@ def get_qaoa_circuit(G: nx.Graph, gammas: Sequence, betas: Sequence, save_statev
 
     terms = get_maxcut_terms(G)
     N = G.number_of_nodes()
-    return get_qaoa_circuit_from_terms(N=N, terms=terms[:-1], gammas=gammas, betas=betas, save_statevector=save_statevector, qr=qr, cr=cr)
+    return get_qaoa_circuit_from_terms2(N=N, terms=terms[:-1], gammas=gammas, betas=betas, save_statevector=save_statevector, qr=qr, cr=cr)
+
 
 
 def get_parameterized_qaoa_circuit(

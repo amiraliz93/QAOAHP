@@ -60,15 +60,17 @@ def append_mixer_operator_circuit(qc: QuantumCircuit, beta: float) -> None:
         append_x_term(qc, n, beta)
 
 
-def get_qaoa_circuit_from_terms(
-    N: int, terms: Sequence, gammas: Sequence, betas: Sequence, save_statevector: bool = True, qr: QuantumRegister = None, cr: ClassicalRegister = None
-):
-    """Generates a Qiskit circuit from Hamiltonian terms
-
-    Parameters
-    ----------
-    N : int
-        Number of qubits
+def get_qaoa_circuit_from_terms2(
+    N: int,
+    terms: Sequence,
+    gammas: Sequence,
+    betas,
+    save_statevector: bool = True,
+    qr: QuantumRegister = None,
+    cr: ClassicalRegister = None,
+) -> QuantumCircuit:
+    """
+    Build a QAOA circuit on N qubits for given Hamiltonian terms and angles.
     terms : list-like
         A sequence of `term` or `(float, term)`, where `term` is a tuple of ints.
         Each term corresponds to a summand in the cost Hamiltonian
@@ -78,12 +80,6 @@ def get_qaoa_circuit_from_terms(
         Unweighted Hamiltonians are supported as well:
         e.g. if terms = [(0,1), (0,1,2,3)]
         the Hamiltonian is Z0Z1 + Z0Z1Z2Z3
-    beta : list-like
-        QAOA parameter beta
-    gamma : list-like
-        QAOA parameter gamma
-    save_statevector : bool, default True
-        Add save state instruction to the end of the circuit
     qr : qiskit.QuantumRegister, default None
         Registers to use for the circuit.
         Useful when one has to compose circuits in a complicated way
@@ -91,35 +87,26 @@ def get_qaoa_circuit_from_terms(
     cr : qiskit.ClassicalRegister, default None
         Classical registers, useful if measuring
         By default, no classical registers are added
-    Returns
-    -------
-    qc : qiskit.QuantumCircuit
-        Quantum circuit implementing QAOA
     """
-    assert len(betas) == len(gammas)
-    p = len(betas)  # infering number of QAOA steps from the parameters passed
-    if qr is not None:
-        assert qr.size >= N
-    else:
-        qr = QuantumRegister(N)
+    assert len(gammas) == len(betas), "gamma/beta length mismatch"
+    p = len(gammas)
 
-    if cr is not None:
-        qc = QuantumCircuit(qr, cr)
-    else:
-        qc = QuantumCircuit(qr)
+    # use provided registers or create fresh ones
+    qr = qr or QuantumRegister(N)
+    qc = QuantumCircuit(qr, cr) if cr else QuantumCircuit(qr)
 
-    # first, apply a layer of Hadamards
-    qc.h(range(N))
-    # second, apply p alternating operators
-    for i in range(p):
-        append_cost_operator_circuit(qc, terms, gammas[i])
-        append_mixer_operator_circuit(qc, betas[i])
+    # initial layer of Hadamards on all qubits
+    qc.h(qr)
+
+    # alternating cost and mixer layers
+    for γ, β in zip(gammas, betas):
+        append_cost_operator_circuit(qc, terms, γ)
+        append_mixer_operator_circuit(qc, β)
+
     if save_statevector:
         qc.save_statevector()
-        return qc
-    
-    else:
-        return qc
+
+    return qc
 
 
 def get_parameterized_qaoa_circuit_from_terms(
