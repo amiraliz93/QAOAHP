@@ -4,6 +4,7 @@ Helper functions for the Maximum Cut (MaxCut) problem
 from .qaoa_simulator_base import TermsType
 import numpy as np
 import networkx as nx
+from scipy import sparse
 
 def maxcut_obj(x: np.ndarray, w: np.ndarray) -> float:
     """Compute the value of a cut.
@@ -43,21 +44,16 @@ def get_maxcut_terms(G: nx.Graph) -> TermsType:
 
 
 
-def get_adjacency_matrix(G: nx.Graph) -> np.ndarray:
-    """Get adjacency matrix to be used in maxcut_obj
-    Args:
-        G (nx.Graph) : graph
-    Returns:
-        w (numpy.ndarray): adjacency matrix
+def get_adjacency_matrix(G: nx.Graph, nodelist=None, dtype=float) -> np.ndarray:
     """
-    n = G.number_of_nodes()
-    w = np.zeros([n, n])
+    Return the (dense) adjacency matrix of G as a NumPy array.
 
-    for e in G.edges():
-        if nx.is_weighted(G):
-            w[e[0], e[1]] = G[e[0]][e[1]]["weight"]
-            w[e[1], e[0]] = G[e[0]][e[1]]["weight"]
-        else:
-            w[e[0], e[1]] = 1
-            w[e[1], e[0]] = 1
-    return w
+    If G is weighted, edge weights are taken from the "weight" attribute;
+    otherwise every edge contributes a 1.  Runs in C/SciPy so is far faster
+    than iterating in Python.
+    """
+    # If you know your nodes are 0…n-1 you can omit nodelist entirely.
+    if nodelist is None:
+        nodelist = list(G.nodes())
+    # to_numpy_array calls into SciPy and returns a dense ndarray
+    return nx.to_numpy_array(G, nodelist=nodelist, dtype=dtype)
