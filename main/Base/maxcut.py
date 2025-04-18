@@ -6,6 +6,7 @@ import numpy as np
 import networkx as nx
 from scipy import sparse
 
+
 def maxcut_obj(x: np.ndarray, w: np.ndarray) -> float:
     """Compute the value of a cut.
     Args:

@@ -3,6 +3,11 @@ import pandas as pd
 from itertools import product
 # calculate maxcut solution with exact solution Mixed Integer Linear Program (MILP) 
 import pulp
+from .Base.maxcut import get_adjacency_matrix
+
+#new classic solver added here
+# brute_force will be remove from here no need 
+# add new method to calculate value of expected MaxCut value from shot counts
 
 
 def reverse_array_index_bit_order(arr):
@@ -104,3 +109,41 @@ def brute_force(obj_f, num_variables: int, minimize: bool = False, function_take
             best_cost_brute = cost
             xbest_brute = x
     return best_cost_brute, xbest_brute
+
+def invert_counts(counts):
+    """Convert from lsb to msb ordering and vice versa, as fast as possible."""
+    items = counts.items
+    rev   = slice(None, None, -1)
+    return {k[rev]: v for k, v in items()}
+
+def expected_maxcut_from_counts(counts, G):
+    """
+    Compute the expected MaxCut value from shot counts and adjacency matrix.
+
+    Args:
+        counts (dict): measurement counts from quantum circuit (bitstring → count)
+        w (np.ndarray): adjacency matrix of the graph
+        
+    Vectorized MaxCut expectation:
+      1) extract upper‑triangle edge list + weights,
+      2) for each bitstring, build a bit‐mask via np.frombuffer,
+      3) use one C‑speed dot( ) per shot.
+    """
+    w = get_adjacency_matrix(G)            # your dense adjacency
+    n = w.shape[0]
+
+    # get all i<j indices and their weights in one flat array
+    iu, ju = np.triu_indices(n, k=1)
+    w_triu = w[iu, ju]
+
+    total_counts = sum(counts.values())
+    total = 0.0
+
+    for bitstr, cnt in counts.items():
+        # fast convert '0101…' → array([0,1,0,1,…], dtype=uint8)
+        x = np.frombuffer(bitstr.encode("ascii"), dtype=np.uint8) & 1
+        # boolean XOR on two index arrays, dot with weights
+        cut_val = (x[iu] ^ x[ju]).dot(w_triu)
+        total += cut_val * cnt
+
+    return total / total_counts
