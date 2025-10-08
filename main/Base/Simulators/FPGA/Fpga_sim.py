@@ -3,8 +3,8 @@ import numpy as np
 from typing import Sequence
 import serial
 import time
-from BaseSimulation import SimulationBase, TermsType, CostsType, ParamType
-
+from ..FPGA import Sim_Base
+from Sim_Base import CostsType, ParamType, TermsType
 # Mock FPGA interface (to be replaced with actual FPGA driver)
 class FpgaDriver:
 

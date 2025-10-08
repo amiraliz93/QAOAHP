@@ -17,6 +17,19 @@ def bit_count(arr):
 
 
 def precompute_vectorized_cpu_parallel(weighted_terms, offset, N):
+    """Given the term list, a scalar offset (often 0.0),
+      and number of qubits N, 
+      it returns the full diagonal vector:
+      hc_dig[s] = f(s) for all states s in [0, 2**N-1]
+
+    Args:
+        weighted_terms (_type_): _description_
+        offset (_type_): _description_
+        N (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     state_indices = np.arange(2**N)
     term_v = np.zeros_like(state_indices, dtype=np.float64)
     for coeff, pos in weighted_terms:
