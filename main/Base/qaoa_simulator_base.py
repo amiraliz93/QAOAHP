@@ -24,7 +24,7 @@ else:
     ParamType = typing.Union[Sequence[float], np.ndarray]
     from collections.abc import Sequence
 
-class QAOAFastSimulatorBase(ABC):
+class Sim_Base(ABC):
     """
     Base class for QAOA simulator
     """
