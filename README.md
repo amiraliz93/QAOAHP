@@ -1,6 +1,19 @@
 # This is part of my PhD project, Develping a hybrid Quantum Computational Platform 
 ## QAOA Simulator (CPU/GPU) — Max‑Cut Focus
-### Not completet yet
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](#)
+[![CUDA/CuPy](https://img.shields.io/badge/CUDA-CuPy-informational.svg)](#)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
+[![Tests](https://img.shields.io/badge/CI-pytest-black.svg)](#tests)
+
+### Progress
+- [x] CPU/NumPy reference backend
+- [x] GPU/CuPy backend (core rotations)
+- [x] Vectorized grid evaluation for (β, γ)
+- [x] Unit tests parity CPU↔GPU
+- [ ] Optional FPGA backend behind the same interface
+- [ ] Add Bayesian Optimiser MAVE-BO
+
 A modular Quantum Approximate Optimization Algorithm (QAOA) toolkit with clean separation between objective functions, circuit builders, and simulation backends. The repository currently supports pure‑Python/NumPy and GPU (CuPy/CUDA) execution, with precomputation helpers to accelerate diagonal cost phases. It is designed for research workflows (experiments, notebooks) and for future extension (e.g., FPGA or other accelerators).
 This project consists of different QAOA simulations based on Qiskit, using a GPU and, in the future FPGA
 
@@ -72,10 +85,14 @@ pip install -r requirements.txt
 - Install CuPy that matches your CUDA toolkit (e.g., cupy-cuda12x).
 - Verify with python -c "import cupy; print(cupy.__version__)".
 
+## Gallery
+<p align="center">
+
+</p>
+
 ### How to Cite
 If this code contributes to published work, please reference the repository and your commit/tag. A BibTeX stub can be added once a preprint is available.
 ## Acknowledgements
-
 This project is adapted from [QOkit](https://github.com/jpmorganchase/QOKit/tree/main), 
 #### // Copyright: JP Morgan Chase & Co
 which is licensed under the Apache-2.0 License.
