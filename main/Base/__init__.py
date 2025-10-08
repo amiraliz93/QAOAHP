@@ -1,6 +1,6 @@
 
 import numba.cuda
-from .qaoa_simulator_base import QAOAFastSimulatorBase
+from .qaoa_simulator_base import Sim_Base
 from .Simulators.python.QAOA_simulator import QAOAFURXSimulator, ParamType, CostsType, TermsType
 from .Simulators.GPU.qaoa_simulatorbase import QAOAFURXSimulatorGPU
 Simulators = {
