@@ -1,0 +1,791 @@
+{
+	"title" : "Flow Non-Default Global Settings",
+	"data" : {
+		"data" : [
+			{
+				"0" : "CLOUD_NOTIFY_ENABLE",
+				"1" : "Off",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "CLOUD_NOTIFY_GROUP_ID",
+				"1" : "dse1",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "COMPILER_SIGNATURE_ID",
+				"1" : "233730242656979.175758745225648",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_SEND_REPORT_PANEL",
+				"1" : "Flow Elapsed Time",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_SEND_REPORT_PANEL",
+				"1" : "Fitter/(Resource Section|Place Stage)/Fitter Resource Usage Summary",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_SEND_REPORT_PANEL",
+				"1" : "^TimeQuest Timing Analyzer/(Slow|Fast)\\s.*Model/(Slow|Fast)\\s.*Model\\sFmax\\sSummary$",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_SEND_REPORT_PANEL",
+				"1" : "^TimeQuest Timing Analyzer/(Slow|Fast)\\s.*Model/(Slow|Fast)\\s.*Model\\s(Setup|Hold|Recovery|Removal)\\sSummary$",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_SEND_REPORT_PANEL",
+				"1" : "^TimeQuest Timing Analyzer/Clocks$",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_SERVER_SEND_REPORTS",
+				"1" : "On",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_SERVER_URL",
+				"1" : "http://localhost:56547",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "DSE_WORKER_ID",
+				"1" : "0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "EDA_DESIGN_INSTANCE_NAME",
+				"1" : "NA",
+				"2" : "--",
+				"3" : "--",
+				"4" : "ntu_smachine_tb"
+			},
+			{
+				"0" : "EDA_DESIGN_INSTANCE_NAME",
+				"1" : "NA",
+				"2" : "--",
+				"3" : "--",
+				"4" : "uart_my2_tb"
+			},
+			{
+				"0" : "EDA_DESIGN_INSTANCE_NAME",
+				"1" : "NA",
+				"2" : "--",
+				"3" : "--",
+				"4" : "alutest_tb"
+			},
+			{
+				"0" : "EDA_NATIVELINK_SIMULATION_TEST_BENCH",
+				"1" : "ntu_smachine_tb",
+				"2" : "--",
+				"3" : "--",
+				"4" : "eda_simulation"
+			},
+			{
+				"0" : "EDA_OUTPUT_DATA_FORMAT",
+				"1" : "Systemverilog Hdl",
+				"2" : "--",
+				"3" : "--",
+				"4" : "eda_simulation"
+			},
+			{
+				"0" : "EDA_SIMULATION_TOOL",
+				"1" : "ModelSim-Altera (SystemVerilog)",
+				"2" : "<None>",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_ENABLE_STATUS",
+				"1" : "TEST_BENCH_MODE",
+				"2" : "--",
+				"3" : "--",
+				"4" : "eda_simulation"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_FILE",
+				"1" : "ntu_smachine_tb.sv",
+				"2" : "--",
+				"3" : "--",
+				"4" : "ntu_smachine_tb"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_FILE",
+				"1" : "simulation/questa/uart_my2_tb.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "uart_my2_tb"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_FILE",
+				"1" : "alutest_tb.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "alutest_tb"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_MODULE_NAME",
+				"1" : "ntu_smachine_tb",
+				"2" : "--",
+				"3" : "--",
+				"4" : "ntu_smachine_tb"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_MODULE_NAME",
+				"1" : "uart_my2_tb",
+				"2" : "--",
+				"3" : "--",
+				"4" : "uart_my2_tb"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_MODULE_NAME",
+				"1" : "alutest_tb",
+				"2" : "--",
+				"3" : "--",
+				"4" : "alutest_tb"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_NAME",
+				"1" : "ntu_smachine_tb",
+				"2" : "--",
+				"3" : "--",
+				"4" : "eda_simulation"
+			},
+			{
+				"0" : "EDA_TEST_BENCH_RUN_SIM_FOR",
+				"1" : "1 ms",
+				"2" : "--",
+				"3" : "--",
+				"4" : "uart_my2_tb"
+			},
+			{
+				"0" : "EDA_TIME_SCALE",
+				"1" : "10 ps",
+				"2" : "--",
+				"3" : "--",
+				"4" : "eda_simulation"
+			},
+			{
+				"0" : "ENABLE_SIGNALTAP",
+				"1" : "On",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "FITTER_EFFORT",
+				"1" : "Standard Fit",
+				"2" : "Auto Fit",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MAX_CORE_JUNCTION_TEMP",
+				"1" : "100",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MIN_CORE_JUNCTION_TEMP",
+				"1" : "-40",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "fifo1.bsf",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "fifo1_inst.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "fifo1_bb.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "fifo1.inc",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "fifo1.cmp",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "fifo1_syn.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "pll2.cmp",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "pll2_sim/pll2.vo",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addfix8.bsf",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addfix8_inst.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addfix8_bb.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addfix8.inc",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addfix8.cmp",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addfix8_syn.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "mulFPF64.cmp",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "mulFPF64_sim/mulFPF64.vo",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "mulfix8.bsf",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "mulfix8_inst.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "mulfix8_bb.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "mulfix8_syn.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addFPF64.cmp",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "addFPF64_sim/addFPF64.vo",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "ram.bsf",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "ram_inst.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "ram_bb.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MISC_FILE",
+				"1" : "ram_syn.v",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "MUX_RESTRUCTURE",
+				"1" : "Off",
+				"2" : "Auto",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "OPTIMIZATION_MODE",
+				"1" : "Aggressive Performance",
+				"2" : "Balanced",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "OPTIMIZATION_TECHNIQUE",
+				"1" : "Speed",
+				"2" : "Balanced",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "PARTITION_COLOR",
+				"1" : "-- (Not supported for targeted family)",
+				"2" : "--",
+				"3" : "Golden_TOP2",
+				"4" : "Top"
+			},
+			{
+				"0" : "PARTITION_FITTER_PRESERVATION_LEVEL",
+				"1" : "-- (Not supported for targeted family)",
+				"2" : "--",
+				"3" : "Golden_TOP2",
+				"4" : "Top"
+			},
+			{
+				"0" : "PARTITION_NETLIST_TYPE",
+				"1" : "-- (Not supported for targeted family)",
+				"2" : "--",
+				"3" : "Golden_TOP2",
+				"4" : "Top"
+			},
+			{
+				"0" : "PHYSICAL_SYNTHESIS_COMBO_LOGIC",
+				"1" : "On",
+				"2" : "Off",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "PHYSICAL_SYNTHESIS_COMBO_LOGIC_FOR_AREA",
+				"1" : "On",
+				"2" : "Off",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION",
+				"1" : "On",
+				"2" : "Off",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "PHYSICAL_SYNTHESIS_REGISTER_RETIMING",
+				"1" : "On",
+				"2" : "Off",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "PLACEMENT_EFFORT_MULTIPLIER",
+				"1" : "4.0",
+				"2" : "1.0",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "POWER_BOARD_THERMAL_MODEL",
+				"1" : "None (CONSERVATIVE)",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "POWER_PRESET_COOLING_SOLUTION",
+				"1" : "23 MM HEAT SINK WITH 200 LFPM AIRFLOW",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "PROGRAMMABLE_POWER_TECHNOLOGY_SETTING",
+				"1" : "Force All Tiles with Failing Timing Paths to High Speed",
+				"2" : "Automatic",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "PROJECT_OUTPUT_DIRECTORY",
+				"1" : "output_files",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "ROUTER_TIMING_OPTIMIZATION_LEVEL",
+				"1" : "MAXIMUM",
+				"2" : "Normal",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SEED",
+				"1" : "8",
+				"2" : "1",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SLD_FILE",
+				"1" : "db/Fan_stp_auto_stripped.stp",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SLD_NODE_CREATOR_ID",
+				"1" : "110",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_ENTITY_NAME",
+				"1" : "sld_signaltap",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_RAM_BLOCK_TYPE=AUTO",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_DATA_BITS=14",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_TRIGGER_BITS=14",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_STORAGE_QUALIFIER_BITS=14",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_NODE_INFO=805334528",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_POWER_UP_TRIGGER=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_INVERSION_MASK=000000000000000000000000000000000000000000000000000000000000000",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_INVERSION_MASK_LENGTH=63",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_STORAGE_QUALIFIER_INVERSION_MASK_LENGTH=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_SEGMENT_SIZE=128",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_ATTRIBUTE_MEM_MODE=OFF",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_STATE_FLOW_USE_GENERATED=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_STATE_BITS=11",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_BUFFER_FULL_STOP=1",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_CURRENT_RESOURCE_WIDTH=1",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_INCREMENTAL_ROUTING=1",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_TRIGGER_LEVEL=1",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_SAMPLE_DEPTH=128",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_TRIGGER_IN_ENABLED=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_TRIGGER_PIPELINE=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_RAM_PIPELINE=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_COUNTER_PIPELINE=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_ADVANCED_TRIGGER_ENTITY=basic,1,",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_TRIGGER_LEVEL_PIPELINE=1",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SLD_NODE_PARAMETER_ASSIGNMENT",
+				"1" : "SLD_ENABLE_ADVANCED_TRIGGER=0",
+				"2" : "--",
+				"3" : "--",
+				"4" : "auto_signaltap_0"
+			},
+			{
+				"0" : "SPD_FILE",
+				"1" : "pll2.spd",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SPD_FILE",
+				"1" : "mulFPF64.spd",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SPD_FILE",
+				"1" : "addFPF64.spd",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SYNTHESIS_ONLY_QIP",
+				"1" : "On",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SYNTHESIS_ONLY_QIP",
+				"1" : "On",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "SYNTHESIS_ONLY_QIP",
+				"1" : "On",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "TOP_LEVEL_ENTITY",
+				"1" : "Golden_TOP2",
+				"2" : "Golden_TOP",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "USE_SIGNALTAP_FILE",
+				"1" : "demo_batch/Fan_stp.stp",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "VERILOG_INPUT_VERSION",
+				"1" : "SystemVerilog_2005",
+				"2" : "Verilog_2001",
+				"3" : "--",
+				"4" : "--"
+			},
+			{
+				"0" : "VERILOG_SHOW_LMF_MAPPING_MESSAGES",
+				"1" : "Off",
+				"2" : "--",
+				"3" : "--",
+				"4" : "--"
+			}
+		]
+	}
+}
