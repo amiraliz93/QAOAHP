@@ -1,0 +1,10 @@
+set_global_assignment -name IP_TOOL_NAME "ALTFP_MULT"
+set_global_assignment -name IP_TOOL_VERSION "17.1"
+set_global_assignment -name IP_GENERATED_DEVICE_FAMILY "{Stratix V}"
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "altmul64.v"]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) "altmul64.bsf"]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) "altmul64_inst.v"]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) "altmul64_bb.v"]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) "altmul64.inc"]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) "altmul64.cmp"]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) "altmul64_syn.v"]
