@@ -1,4 +1,143 @@
 //============================================================================
+// Documentation
+//============================================================================
+// 1- module name
+//2- Author Amir Alizadeh from NTu university , Hiroki shibata from Metropolitian university of Tokiyo
+
+//3- high level functionality owerview 
+
+//4- interface description (port)
+
+
+//============================================================================
+//---------------------- Localparam / Parameters 
+//============================================================================
+
+
+//-------------------------------------------------------------------------------
+//------------------------  localparam - Internal constrants -------------------------------------
+//---------------------------------------------------------------------------
+
+//--------------------------- MAIN STATE MACHINE STATES -----------------------
+//---------------------------------------------------------------------------
+// 8 state so need max 3 bit width  - formula = ceil(log2(max value +1))
+// 3 Width - d(base) - 0 (value)
+localparam s_IDLE        = 3'd0;  // Idle: waiting for command
+localparam s_Fetch       = 3'd1;  // Fetching opcode/data from RX FIFO
+localparam s_Operation   = 3'd2;  // Decode and dispatch operation
+localparam s_WAIT_COMP   = 3'd3;  // Wait for arithmetic operation to complete
+localparam s_WRITE_REG   = 3'd4;  // Write result to register
+localparam s_WRITE_BRAM  = 3'd5;  // Write data to Block RAM
+localparam s_READ_BRAM   = 3'd6;  // Read data from Block RAM
+localparam s_TXData      = 3'd7;  // Transmit data to PC via UART
+localparam s_FetchWait   = 3'd8;  // 
+
+//---------------------- Operation Code (Data Transfer) --------------------
+//---------------------------------------------------------------------------
+// 255 value - max width 8
+localparam OP_NONE       = 8'd0;   // No operation
+localparam OP_SEND1T     = 8'd1;   // Request 1 byte from PC → rT
+localparam OP_SEND8T     = 8'd2;   // Request 8 bytes from PC → rT
+localparam OP_MOV_T2A    = 8'd3;   // Move rT → rA
+localparam OP_MOV_T2B    = 8'd4;   // Move rT → rB
+localparam OP_MOV_A2U    = 8'd5;   // Move rA → rU (address register)
+localparam OP_MOV_A2B    = 8'd6;   // Move rA → rB
+
+//------------------- Data Retrieval Operations (60-70)
+localparam OP_FETCH1U    = 8'd60;  // Send 1 byte from rU to PC
+localparam OP_FETCH8U    = 8'd61;  // Send 8 bytes from rU to PC
+
+
+//--------------- Arithmetic Operations (Fixed-Point) (80-85)
+localparam OP_ADD_B2A    = 8'd80;  // rA = rA + rB (64-bit fixed, 2 cycles)
+localparam OP_MUL_B2A    = 8'd81;  // rA = rA * rB (24-bit fixed, 8 cycles)
+localparam OP_INC_A     = 8'd84    // rA = rA +1
+
+// --------------- Arithmetic Operations (Floating-Point)
+localparam OP_ADDFP_B2A  = 8'd82;  // rA = rA + rB (FP64, 27 cycles)
+localparam OP_MULFP_B2A  = 8'd83;  // rA = rA * rB (FP64, 24 cycles)
+
+//------------------- Command Operations (for QAOA system) (100-115)
+localparam OP_RUN_MIXER        = 8'd100;  // Execute QAOA mixer step
+localparam OP_RUN_COST         = 8'd101;  // Execute QAOA cost step
+localparam OP_RUN_CONTINUOUS   = 8'd103;  // Continuous QAOA execution
+localparam OP_SEND_CMD         = 8'd115;  // Send command to external module
+localparam OP_ENABLE_INTRUPTION = 8'd121; // Enable interrupt on status change
+
+//-------------------- Memory Operations 
+localparam OP_WRITE_T2RAM = 8'd111;  // Write rT to BRAM[rA]
+localparam OP_READ_RAM2U  = 8'd112;  // Read BRAM[rA] → rU
+
+
+
+//-------------------------------------------------------------------------------
+//------------------------  Configurable Parameters -------------------------------------
+//-------------------------------------------------------------------------------
+
+// -----------------------UART Communication Settings ---------------
+parameter UART_CLKS_PER_BIT = 868  // Baud rate divider (FPGA_clock_Frequency / CLKS_PER_BIT)
+
+// ------------------------QAOA Problem Size Configuration ---------------
+
+parameter MAX_QUBITS = 20;          // Maximum number of qubits supported
+parameter MAX_EDGES = 190;          // Maximum graph edges (n*(n-1)/2)
+parameter BRAM_ADDR_WIDTH = 11;     // BRAM address width (2^11 = 2048 locations)
+parameter BRAM_DATA_WIDTH = 64;     // BRAM data width (64-bit words)
+
+// ------------- Arthemetic Precision Settings -----------------------------
+parameter FP_PRECISION = 64;    // floating-point presicion (32 or 64 bit)
+parameter FIXED_INT_BITS = 40;  // Integer bits for fixed-point
+parameter FIXED_FRAC_BITS = 24; // Fractional bits for fixed-point
+
+// ------------------- Pipeline Depth Configuration (for timing optimization) ------------------------
+
+parameter FP64_ADD_LATENCY = 27;    // Cycles for FP64 addition
+parameter FP64_MUL_LATENCY = 24;    // Cycles for FP64 multiplication
+parameter FIX64_ADD_LATENCY = 2;    // Cycles for fixed-point add
+parameter FIX24_MUL_LATENCY = 8;    // Cycles for fixed-point multiply
+
+
+
+
+//--------------------------- SUB-STATE DEFINITIONS (Fetch, Store) -----------------
+
+// Fetch parameters
+parameter FETCH_IDLE    = 0;  // Idle: not fetching
+parameter FETCH_DATA    = 1;  // Fetching data bytes into rT
+parameter FETCH_WAIT    = 2;  // Waiting for FIFO data valid
+parameter FETCH_GETOP   = 4;  // Getting operation code
+parameter FETCH_w_BRAM  = 6;  // (Reserved for BRAM streaming - not implemented)
+
+// Store parameters
+parameter STORE_IDLE    = 0;  // Idle: not transmitting
+parameter STORE_LEN     = 1;  // Transmitting bytes from rU
+parameter STORE_BRAM    = 2;  // (Reserved for BRAM streaming - not implemented)
+parameter STORE_WAIT    = 4;  // Waiting for TX FIFO space
+
+
+//--------------------------- Write Operation parameters (Codes) --------------------
+
+parameter WRITE_NONE        = 0;   // No write operation
+parameter WRITE_T2A         = 1;   // rA = rT
+parameter WRITE_T2B         = 2;   // rB = rT
+parameter WRITE_A2B         = 3;   // rB = rA
+parameter WRITE_A2U         = 4;   // rU = rA
+parameter WRITE_B2A         = 5;   // rA = rB
+parameter WRITE_mulFP64_rA  = 6;   // rA = res_mulFP64 (FP multiply result)
+parameter WRITE_addFP64_rA  = 7;   // rA = res_addFP64 (FP add result)
+parameter WRITE_mul_rA      = 8;   // rA = res_mulAB (fixed multiply result)
+parameter WRITE_add_rA      = 9;   // rA = res_addAB (fixed add result)
+parameter WRITE_rA1         = 10;  // rA = rA + 1
+parameter WRITE_rB1         = 11;  // rB = rB + 1
+parameter WRITE_BRAM_U      = 12;  // rU = r_data (BRAM read result)
+
+
+
+
+
+
+
+//============================================================================
 // TX FIFO CONTROLLER - Manages transmission of data from FIFO to UART
 //============================================================================
 // This block controls when data is read from TX FIFO and sent to UART transmitter
@@ -147,57 +286,6 @@ wire [63:0] rAinc = rA3 + 1;  // rA + 1 (uses delayed version for timing)
 wire [63:0] rBinc = rB3 + 1;  // rB + 1
 
 //============================================================================
-// MAIN STATE MACHINE STATES
-//============================================================================
-parameter s_IDLE        = 0;  // Idle: waiting for command
-parameter s_Fetch       = 1;  // Fetching opcode/data from RX FIFO
-parameter s_Operation   = 2;  // Decode and dispatch operation
-parameter s_WAIT_COMP   = 3;  // Wait for arithmetic operation to complete
-parameter s_WRITE_REG   = 4;  // Write result to register
-parameter s_WRITE_BRAM  = 5;  // Write data to Block RAM
-parameter s_READ_BRAM   = 6;  // Read data from Block RAM
-parameter s_TXData      = 7;  // Transmit data to PC via UART
-parameter s_FetchWait   = 8;  // (Unused in current implementation)
-
-//============================================================================
-// OPERATION CODES (OPCODES)
-//============================================================================
-// Data Transfer Operations
-parameter OP_NONE       = 0;   // No operation
-parameter OP_SEND1T     = 1;   // Request 1 byte from PC → rT
-parameter OP_SEND8T     = 2;   // Request 8 bytes from PC → rT
-parameter OP_MOV_T2A    = 3;   // Move rT → rA
-parameter OP_MOV_T2B    = 4;   // Move rT → rB
-parameter OP_MOV_A2U    = 5;   // Move rA → rU (address register)
-parameter OP_MOV_A2B    = 6;   // Move rA → rB
-
-// Data Retrieval Operations
-parameter OP_FETCH1U    = 60;  // Send 1 byte from rU to PC
-parameter OP_FETCH8U    = 61;  // Send 8 bytes from rU to PC
-
-// Arithmetic Operations (Fixed-Point)
-parameter OP_ADD_B2A    = 80;  // rA = rA + rB (64-bit fixed, 2 cycles)
-parameter OP_MUL_B2A    = 81;  // rA = rA * rB (24-bit fixed, 8 cycles)
-
-// Arithmetic Operations (Floating-Point)
-parameter OP_ADDFP_B2A  = 82;  // rA = rA + rB (FP64, 27 cycles)
-parameter OP_MULFP_B2A  = 83;  // rA = rA * rB (FP64, 24 cycles)
-
-// Increment Operation
-parameter OP_INC_A      = 84;  // rA = rA + 1 (1 cycle)
-
-// Memory Operations
-parameter OP_WRITE_T2RAM = 111;  // Write rT to BRAM[rA]
-parameter OP_READ_RAM2U  = 112;  // Read BRAM[rA] → rU
-
-// Command Operations (for QAOA system)
-parameter OP_SEND_CMD         = 115;  // Send command to external module
-parameter OP_RUN_MIXER        = 100;  // Execute QAOA mixer step
-parameter OP_RUN_COST         = 101;  // Execute QAOA cost step
-parameter OP_RUN_CONTINUOUS   = 103;  // Continuous QAOA execution
-parameter OP_ENABLE_INTRUPTION = 121; // Enable interrupt on status change
-
-//============================================================================
 // STATUS CODES (for rS64 register - used by QAOA)
 //============================================================================
 // sR64 = 100: Mixer operation in progress
@@ -240,22 +328,6 @@ logic [3:0] n_txPos;        // Next TX byte position
 reg [3:0] txMaxPos;         // Maximum bytes to transmit
 logic [3:0] n_txMaxPos;     // Next max TX position
 
-//============================================================================
-// FETCH SUB-STATE DEFINITIONS
-//============================================================================
-parameter FETCH_IDLE    = 0;  // Idle: not fetching
-parameter FETCH_DATA    = 1;  // Fetching data bytes into rT
-parameter FETCH_WAIT    = 2;  // Waiting for FIFO data valid
-parameter FETCH_GETOP   = 4;  // Getting operation code
-parameter FETCH_w_BRAM  = 6;  // (Reserved for BRAM streaming - not implemented)
-
-//============================================================================
-// STORE SUB-STATE DEFINITIONS
-//============================================================================
-parameter STORE_IDLE    = 0;  // Idle: not transmitting
-parameter STORE_LEN     = 1;  // Transmitting bytes from rU
-parameter STORE_BRAM    = 2;  // (Reserved for BRAM streaming - not implemented)
-parameter STORE_WAIT    = 4;  // Waiting for TX FIFO space
 
 //============================================================================
 // SUB-STATE CONDITIONAL LOGIC
@@ -273,22 +345,7 @@ reg [4:0] bwriteReg;        // Buffered write op (for arithmetic operations)
 logic [4:0] n_writeReg;     // Next write operation
 logic [4:0] nb_writeReg;    // Next buffered write op
 
-//============================================================================
-// WRITE OPERATION CODES
-//============================================================================
-parameter WRITE_NONE        = 0;   // No write operation
-parameter WRITE_T2A         = 1;   // rA = rT
-parameter WRITE_T2B         = 2;   // rB = rT
-parameter WRITE_A2B         = 3;   // rB = rA
-parameter WRITE_A2U         = 4;   // rU = rA
-parameter WRITE_B2A         = 5;   // rA = rB
-parameter WRITE_mulFP64_rA  = 6;   // rA = res_mulFP64 (FP multiply result)
-parameter WRITE_addFP64_rA  = 7;   // rA = res_addFP64 (FP add result)
-parameter WRITE_mul_rA      = 8;   // rA = res_mulAB (fixed multiply result)
-parameter WRITE_add_rA      = 9;   // rA = res_addAB (fixed add result)
-parameter WRITE_rA1         = 10;  // rA = rA + 1
-parameter WRITE_rB1         = 11;  // rB = rB + 1
-parameter WRITE_BRAM_U      = 12;  // rU = r_data (BRAM read result)
+
 
 //============================================================================
 // MAIN STATE MACHINE - COMBINATIONAL LOGIC
