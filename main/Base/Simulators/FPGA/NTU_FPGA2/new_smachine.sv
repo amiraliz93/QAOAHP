@@ -21,7 +21,7 @@ module ntu_smachine #(
     //------------------------------------------------------------------------
     // CONFIGURABLE PARAMETERS
     //------------------------------------------------------------------------
-    parameter UART_CLKS_PER_BIT = 868,      // Baud rate divider
+    parameter UART_CLKS_PER_BIT = 434,      // Baud rate divider
     parameter MAX_QUBITS = 20,              // Maximum qubits
     parameter MAX_EDGES = 190,              // Maximum graph edges
     parameter BRAM_ADDR_WIDTH = 11,         // BRAM address width
@@ -46,7 +46,7 @@ module ntu_smachine #(
     //------------------------------------------------------------------------
     input  wire        i_Rx_Serial,         // UART RX input
     output wire        o_Tx_Serial,         // UART TX output
-    
+    output reg [31:0]  o_Status,            // counter to wait read FIFO latency
     //------------------------------------------------------------------------
     // BRAM INTERFACE
     //------------------------------------------------------------------------
@@ -87,33 +87,35 @@ localparam OP_MOV_T2A    = 8'd3;   // Move rT → rA
 localparam OP_MOV_T2B    = 8'd4;   // Move rT → rB
 localparam OP_MOV_A2U    = 8'd5;   // Move rA → rU (address register)
 localparam OP_MOV_A2B    = 8'd6;   // Move rA → rB
-
+localparam OP_MOV_Info2U = 8'd7;   // send firmware version info
 //------------------- Data Retrieval Operations (60-70)
 localparam OP_FETCH1U    = 8'd60;  // Send 1 byte from rU to PC
 localparam OP_FETCH8U    = 8'd61;  // Send 8 bytes from rU to PC
 
 
-//--------------- Arithmetic Operations (Fixed-Point) (80-85)
+//---------------  Arithmetic Operations (Fixed-Point) (80-85)
 localparam OP_ADD_B2A    = 8'd80;  // rA = rA + rB (64-bit fixed, 2 cycles)
 localparam OP_MUL_B2A    = 8'd81;  // rA = rA * rB (24-bit fixed, 8 cycles)
 localparam OP_INC_A     = 8'd84;    // rA = rA +1
 
-// --------------- Arithmetic Operations (Floating-Point)
+// ---------------  Arithmetic Operations (Floating-Point)
 localparam OP_ADDFP_B2A  = 8'd82;  // rA = rA + rB (FP64, 27 cycles)
 localparam OP_MULFP_B2A  = 8'd83;  // rA = rA * rB (FP64, 24 cycles)
 
-//------------------- Command Operations (for QAOA system) (100-115)
+//-------------------  Command Operations (for QAOA system) (100-115)
 localparam OP_RUN_MIXER        = 8'd100;  // Execute QAOA mixer step
 localparam OP_RUN_COST         = 8'd101;  // Execute QAOA cost step
 localparam OP_RUN_CONTINUOUS   = 8'd103;  // Continuous QAOA execution
-localparam OP_SEND_CMD         = 8'd115;  // Send command to external module
 localparam OP_ENABLE_INTRUPTION = 8'd121; // Enable interrupt on status change
 
 //-------------------- Memory Operations 
 localparam OP_WRITE_T2RAM = 8'd111;  // Write rT to BRAM[rA]
 localparam OP_READ_RAM2U  = 8'd112;  // Read BRAM[rA] → rU
+localparam OP_SEND_CMD    = 8'd118;  // send: 0, Res: 0. see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
 
-//---------------------SUB-STATE DEFINITIONS (Fetch, Store) -----------------
+
+
+//---------------------  SUB-STATE DEFINITIONS (Fetch, Store) --------------
 //---------------------------------------------------------------------------
 //--------------------- Fetch parameters
 localparam FETCH_IDLE    = 3'd0;  // Idle: not fetching
@@ -143,6 +145,7 @@ localparam WRITE_add_rA      = 5'd9;   // rA = res_addAB (fixed add result)
 localparam WRITE_rA1         = 5'd10;  // rA = rA + 1
 localparam WRITE_rB1         = 5'd11;  // rB = rB + 1
 localparam WRITE_BRAM_U      = 5'd12;  // rU = r_data (BRAM read result)
+localparam WRITE_Info2U      = 5'd13;  // rU = firmware version string 
 
 //======================================================================================
 
@@ -193,14 +196,19 @@ reg [4:0] bwriteReg;          // buffered write (for arthemetic operation)
 logic [4:0] n_writeReg;       // Next write operation
 logic [4:0] nb_writeReg;      // Next buffered write
 
-// -------------Data Path Registers (64bit)
+// ------------- Data Path Registers (64bit)
 reg [63:0] rA;                // Register A (general purpose)
 reg [63:0] rB;                // Register B
 reg [63:0] rT;                // Temporary Register (RX data)
 reg [63:0] rU;                // Address register (TX data)
+reg [63:0] rC;
+reg [63:0] rD;
+reg [63:0] rV;
 
-logic [63:0] n_rA, n_rB, n_rT, n_rU;      //Next values
 
+logic [63:0] n_rA, n_rB, n_rT, n_rU, n_rC, n_rD, n_rV;      //Next values
+
+logic [7:0] n_o_CMD;
 //-----------------------  pipline Register (for FP arithmetic timing)
 reg [63:0] rA2, rA3, rA4;     // rA pipeline (stages 1-3)
 reg [63:0] rB2, rB3, rB4;     // rB pipeline (stages 1-3)
@@ -264,6 +272,7 @@ logic [10:0] n_w_addr, n_r_addr;
 logic [63:0] n_w_data;
 logic n_w_req, n_r_req;
 
+
 //---------------------- Helper Wires
 wire [63:0] rAinc = rA3 + 1;  // Increment operations
 wire [63:0] rBinc = rB3 + 1;
@@ -299,6 +308,7 @@ always_comb begin: main_StateBlock
       n_rA = rA;                          // Keep register A value
       n_rB = rB;                          // Keep register B value
       n_rT = rT;                          // Keep temporary register
+      n_o_CMD = o_Status[7:0];                  // keep         
       n_rU = rU;                          // Keep address register
       n_txPos = 0;                        // Reset TX position
       n_txBRPos = 0;                      // Reset BRAM TX position
@@ -397,6 +407,15 @@ always_comb begin: main_StateBlock
             OP_MOV_A2B: begin
                   n_state = s_WRITE_REG;
                   n_writeReg = WRITE_A2B;
+            end
+            // 
+            OP_SEND_CMD: begin
+                        n_o_CMD = rT[7:0];
+                        n_state = s_IDLE;
+            end
+            OP_MOV_Info2U: begin
+                        n_state = s_WRITE_REG;
+                        n_writeReg = WRITE_Info2U;
             end
             
             //--------------------------------------------------------------------
@@ -579,6 +598,10 @@ always_comb begin: main_StateBlock
                         n_rU = r_data;
                   end
                   
+                  WRITE_Info2U: begin
+                        n_rU = 64'h3130764d5355544e; //  // "NTUSMv01" (version string)
+                  end
+
                   default: begin
                         // No operation
                   end
@@ -661,6 +684,9 @@ always @(posedge CLK) begin
             rB4 <= 0;
             rT <= 0;   // Temporary register
             rU <= 0;   // Address register
+            rC <= 0;
+            rD <= 0;
+            rV <= 0;
             
             // Clear control registers
             c_wait <= 0;
@@ -669,6 +695,7 @@ always @(posedge CLK) begin
             fetchMaxPos <= 0;
             storeReg <= 0;
             opa_c_wait <= 0;
+            o_Status <= {24'h0, qa_INIT};
       end
       
       //------------------------------------------------------------------------
@@ -698,6 +725,7 @@ always @(posedge CLK) begin
             rU <= n_rU;              // Update address register
             
             // State machine registers
+            o_Status <= {o_Status[8+:24], n_o_CMD};
             state <= n_state;        // Update main state
             ope_state <= n_ope_state;// Update operation code
             fetchReg <= n_fetchReg;  // Update fetch sub-state
@@ -784,9 +812,6 @@ receiver #(.CLKS_PER_BIT(UART_CLKS_PER_BIT)) uart1
 	.o_Rx_DV   (rx_dv),
       .o_Rx_Byte       (rx_data_out)    
 );
-
-
-
 
 
 //----------------------------------------------------------------------------
@@ -880,8 +905,16 @@ addfix8 addix8_inst (
 
 
 //============================================================================
-// STATUS CODES (for rS64 register - used by QAOA)
+// STATUS REGISTER USAGE GUIDE (o_Status)
 //============================================================================
+// The o_Status register is a 32-bit register used for bidirectional
+// communication between the FPGA and PC control software.
+//
+// FORMAT:
+//   [31:8] - Reserved for future use (currently always 0)
+//   [7:0]  - Command/Status byte (updated via OP_SEND_CMD or internally)
+
+// STATUS CODES (o_Status[7:0])
 // sR64 = 100: Mixer operation in progress
 // sR64 = 102: Mixer operation complete
 // sR64 = 101: Cost operation in progress
@@ -903,3 +936,5 @@ endmodule
 // SECTION 7: ASSERTIONS & DEBUG (Optional)
 //============================================================================
 
+// addressing function to define location  or indexing 
+// cost function (cos - sin) - //  
