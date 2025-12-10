@@ -1,25 +1,53 @@
 import typing
 import numpy as np
-from typing import Sequence
 import serial
 import time
-from ..FPGA import Sim_Base
-from Sim_Base import CostsType, ParamType, TermsType
-# Mock FPGA interface (to be replaced with actual FPGA driver)
+import struct
+from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
+
+
 class FpgaDriver:
+    """
+    FPGA Driver for State Machine QAOA Hardware
+    Based on ntu_smachine.sv and qaoa_system.sv protocol
+    """
+    
+    # Operation codes from ntu_smachine.sv
+    OP_NONE = 0
+    OP_SEND1T = 1      # Send 1 byte to rT
+    OP_SEND8T = 2      # Send 8 bytes to rT
+    OP_MOV_T2A = 3     # Move rT to rA
+    OP_MOV_T2B = 4     # Move rT to rB
+    OP_MOV_A2U = 5     # Move rA to rU (for output)
+    OP_MOV_A2B = 6     # Move rA to rB
+    OP_MOV_Info2U = 7  # Move Info to rU
+    OP_FETCH1U = 60    # Fetch 1 byte from rU
+    OP_FETCH8U = 61    # Fetch 8 bytes (64-bit) from rU
+    OP_INC_A = 84      # Increment rA by 1
+    OP_WRITE_T2RAM = 111  # Write rT to BRAM at address rA
+    OP_READ_RAM2U = 112   # Read BRAM at address rA to rU
+    OP_SEND_CMD = 118     # Send command to qaoa_system
+    
+    # QAOA system commands (from qaoa_system.sv)
+    qa_INIT = 4   # Initialize QAOA system
+    qa_WAIT = 1   # Wait state
+    qa_RUN = 2    # Run QAOA layer
+    
+    # BRAM bank identifiers (bits 56-59 in address)
+    BRAM_STATE_REAL = 0x0000000000000000      # BRAM[0]: State vector real part
+    BRAM_STATE_IMAG = 0x2000000000000000      # BRAM[1]: State vector imaginary part
+    BRAM_COST_FUNC = 0x4000000000000000       # BRAM[2]: Cost function
+    BRAM_PARAMS = 0x6000000000000000          # BRAM[5]: Parameters (cos β, sin β, γ)
 
     def __init__(self, port="COM3", baudrate=115200, timeout=1):
         """
-    Initialise FPGA driver with serial port setting
-    
-    This class interfaces with FPGA hardware to accelerate QAOA simulations by offloading
-    the quantum state evolution to specialized hardware.
-
-    Args:
-    port: Serial port (e.g., 'COM3' on Windows, '/dev/ttyUSB0' on Linux)
-    baudrate: communication speed (must match FPGA settigs)
-    timeout: Read timeout in seconds
-    """ 
+        Initialize FPGA driver with serial port settings
+        
+        Args:
+            port: Serial port (e.g., 'COM3' on Windows, '/dev/ttyUSB0' on Linux)
+            baudrate: Communication speed (default 115200)
+            timeout: Read timeout in seconds
+        """
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -27,208 +55,436 @@ class FpgaDriver:
         self.connected = False
         
     def connect(self):
-        """ connect to FPGA via UART"""
-        print("Connecting to FPGA board...")
+        """Connect to FPGA via UART and verify version"""
+        print(f"Connecting to FPGA on {self.port}...")
         try:
             self.ser = serial.Serial(
-                port = self.port,
-                baudrate = self.baudrate,
-                bytesize = serial.EIGHTBITS,
-                parity= serial.PARITY_NONE,
-                stopbits= serial.STOPBITS_ONE,
-                timeout = self.timeout
+                port=self.port,
+                baudrate=self.baudrate,
+                bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                timeout=self.timeout
             )
-
-            # clear any existing data in the buffers
+            
+            # Clear buffers
             self.ser.reset_input_buffer()
             self.ser.reset_output_buffer()
-        
-            # simple handshake to verify connection - do this directly
-            # instead of using _send_command which checks self.connected
-            cmd_bytes = ("Hellow FPGA\n").encode('ascii')
-            self.ser.write(cmd_bytes)
-            self.ser.flush()
+            time.sleep(0.1)
             
-            # Read response directly too
-            response = self.ser.readline().decode('ascii').strip()
+            # Check version
+            self._send_opcode(self.OP_MOV_Info2U)
+            self._send_opcode(self.OP_FETCH8U)
+            version = self.ser.read(8).decode('ascii', errors='ignore')
             
-            if response == "READY":
-                self.connected = True  # Now set this flag
-                print(f"FPGA connected and ready on {self.port}")
+            if "NTUSMv" in version:
+                self.connected = True
+                print(f"✓ FPGA connected: {version}")
                 return True
             else:
-                print(f"FPGA connection failed, got {response}")
+                print(f"✗ FPGA version check failed: {version}")
                 self.ser.close()
-                self.connected = False
                 return False
-            
+                
         except Exception as e:
-            print(f"Error connection is {e}")
+            print(f"✗ Connection error: {e}")
             self.connected = False
             return False
 
-
-    def _read_response(self):
-        """Read response from FPGA"""
+    def _send_opcode(self, opcode):
+        """Send single opcode byte"""
         if not self.connected:
             raise RuntimeError("Not connected to FPGA")
-            
-        response = self.ser.readline().decode('ascii').strip()
-        return response
+        self.ser.write(bytes([opcode]))
+        time.sleep(1e-5)  # Prevent UART buffer overflow
 
-    def _send_command(self, cmd):
-        """send command string to FPGA board"""
+    def _send_byte(self, value):
+        """Send single byte"""
         if not self.connected:
             raise RuntimeError("Not connected to FPGA")
-        
-        cmd_bytes = (cmd + '\n').encode('ascii')
-        self.ser.write(cmd_bytes)
-        self.ser.flush()
+        self.ser.write(bytes([value]))
+        time.sleep(1e-5)
 
-        # wait for akcnowledgement
-        response = self._read_response()
-        if response != "ACK":
-            raise RuntimeError(f"FPGA did not acknowledge command '{cmd}', got '{response}'")
-        
-    def _send_data(self, data_array):
-        """send data to fpga board as binary data
-        
-        First send the lenght aas 4-byte int 
-         then send the array data as binary """
-        
-        if not self.connected: 
-            raise RuntimeError("Not connected to the fpga (_send_data function)")
-        
-        # convert array to binary
-        data_bytes = data_array.tobytes()
-
-        # send data lenght first 
-        lenght = len(data_bytes)
-        lenght_bytes = lenght.to_bytes(4, byteorder="little")
-        self.ser.write(lenght_bytes)
-
-        # send actual data
-        self.ser.write(data_bytes)
-        self.ser.flush()
-
-
-        # wait for acknowledgment
-        response = self._read_response()
-        if response != "ACK":
-            raise RuntimeError(f"FPGA data send error {response}")
-
-    def _read_data(self, expected_size):
-        """Read binary data into numpy array"""
+    def _send_fp64(self, value):
+        """Send 64-bit float in little-endian format"""
         if not self.connected:
             raise RuntimeError("Not connected to FPGA")
-            
-        # Read binary data
-        data_bytes = self.ser.read(expected_size * 8)  # 8 bytes per complex number (2 floats)
-        
-        if len(data_bytes) != expected_size * 8:
-            raise RuntimeError(f"Expected {expected_size * 8} bytes but got {len(data_bytes)}")
-            
-        # Convert to numpy array
-        return np.frombuffer(data_bytes, dtype=np.complex64)
-    
+        data = struct.pack('<d', value)
+        self.ser.write(data)
+        time.sleep(1e-5)
 
-    def load_data(self, diag_hamiltonian, initial_state, theta):
-        """ send problem data to fpga
+    def _send_int64(self, value):
+        """Send 64-bit integer in little-endian format"""
+        if not self.connected:
+            raise RuntimeError("Not connected to FPGA")
+        data = value.to_bytes(8, byteorder='little', signed=False)
+        self.ser.write(data)
+        time.sleep(1e-5)
+
+    def _fetch_fp64(self):
+        """Fetch 64-bit float from FPGA"""
+        if not self.connected:
+            raise RuntimeError("Not connected to FPGA")
+        data = self.ser.read(8)
+        if len(data) != 8:
+            raise RuntimeError(f"Expected 8 bytes, got {len(data)}")
+        return struct.unpack('<d', data)[0]
+
+    def _write_bram_fp64(self, bram_bank, addr, value):
+        """
+        Write a 64-bit float to BRAM
         
         Args:
-          diag_hamiltonian: Cost diagonal array
-          initial_state: Initial quantum state 2**N size
-          """
-        if not self.connected:
-            return False
+            bram_bank: BRAM bank selector (BRAM_STATE_REAL, etc.)
+            addr: Address within BRAM (0 to 2^13-1)
+            value: Float64 value to write
+        """
+        full_addr = bram_bank | addr
+        
+        # Set address in rA
+        self._send_opcode(self.OP_SEND8T)
+        self._send_int64(full_addr)
+        self._send_opcode(self.OP_MOV_T2A)
+        
+        # Write value
+        self._send_opcode(self.OP_SEND8T)
+        self._send_fp64(value)
+        self._send_opcode(self.OP_WRITE_T2RAM)
 
-
-        try:
-            #send command to prepare data
-            self._send_command("LOAD_DATA")
-            response = self._read_response()
-            if response != "READY":
-                raise RuntimeError(f"FPGA not ready : {response}")
+    def _read_bram_fp64(self, bram_bank, addr):
+        """
+        Read a 64-bit float from BRAM
+        
+        Args:
+            bram_bank: BRAM bank selector
+            addr: Address within BRAM
             
-            # send the diogonal hailtonian
-            self._send_data(diag_hamiltonian.astype(np.complex64))
-
-            # send the initial state
-            self._send_data(initial_state.astype(np.complex64))
-            # send theta parameters
-            self._send_data(theta.astype(np.float64))
-
-            print("Data loaded to FPGA")
-            return True
-        except Exception as e:
-            print(f"Error loading data to fpga is {e}")
-  
+        Returns:
+            Float64 value
+        """
+        full_addr = bram_bank | addr
         
-    def execute(self):
-        print("Executing QAOA simulation on FPGA...")
+        # Set address in rA
+        self._send_opcode(self.OP_SEND8T)
+        self._send_int64(full_addr)
+        self._send_opcode(self.OP_MOV_T2A)
+        
+        # Read to rU and fetch
+        self._send_opcode(self.OP_READ_RAM2U)
+        self._send_opcode(self.OP_FETCH8U)
+        
+        return self._fetch_fp64()
+
+    def load_data(self, diag_hamiltonian, initial_state, gammas, betas):
+        """
+        Load QAOA problem data to FPGA
+        
+        Args:
+            diag_hamiltonian: Cost diagonal array (length 2^n_qubits)
+            initial_state: Initial quantum state (complex128, length 2^n_qubits)
+            gammas: Gamma parameters for each layer
+            betas: Beta parameters for each layer
+        """
         if not self.connected:
-            return False
-      
+            raise RuntimeError("Not connected to FPGA")
+        
+        print("Loading data to FPGA...")
+        n_states = len(initial_state)
+        n_layers = len(gammas)
         
         try:
-            # send excecute command
-            self._send_command("EXCECUTE")
-
-            # waite for completion
-            response = self._read_response()
-            if response != "COMPLETE":
-                raise RuntimeError(f"fpga excecution error: {response}")
-            print(" QAOA simulation complete on FPGA")
+            # 1. Initialize QAOA system
+            print("  Initializing QAOA system...")
+            self._send_opcode(self.OP_SEND1T)
+            self._send_byte(self.qa_INIT)
+            self._send_opcode(self.OP_SEND_CMD)
+            time.sleep(0.01)
+            
+            # 2. Write cost function to BRAM[2]
+            print(f"  Writing {n_states} cost values to BRAM[2]...")
+            for i in range(n_states):
+                self._write_bram_fp64(self.BRAM_COST_FUNC, i, float(diag_hamiltonian[i]))
+            
+            # 3. Write initial state to BRAM[0] (real) and BRAM[1] (imaginary)
+            print(f"  Writing {n_states} state amplitudes to BRAM[0,1]...")
+            for i in range(n_states):
+                self._write_bram_fp64(self.BRAM_STATE_REAL, i, initial_state[i].real)
+                self._write_bram_fp64(self.BRAM_STATE_IMAG, i, initial_state[i].imag)
+            
+            # 4. Write parameters to BRAM[5]
+            # Format: [cos(β₀), sin(β₀), γ₀, cos(β₁), sin(β₁), γ₁, ...]
+            print(f"  Writing {n_layers} layer parameters to BRAM[5]...")
+            for layer in range(n_layers):
+                base_addr = layer * 3
+                self._write_bram_fp64(self.BRAM_PARAMS, base_addr + 0, np.cos(betas[layer]))
+                self._write_bram_fp64(self.BRAM_PARAMS, base_addr + 1, np.sin(betas[layer]))
+                self._write_bram_fp64(self.BRAM_PARAMS, base_addr + 2, gammas[layer])
+            
+            print("✓ Data loaded successfully")
             return True
-        
+            
         except Exception as e:
-            print(f"Error during FPGA excution: {e}")
+            print(f"✗ Error loading data: {e}")
             return False
-          
+
+    def execute(self, n_layers):
+        """
+        Execute QAOA simulation on FPGA
+        
+        Args:
+            n_layers: Number of QAOA layers to execute
+        """
+        if not self.connected:
+            raise RuntimeError("Not connected to FPGA")
+        
+        print(f"Executing {n_layers} QAOA layers on FPGA...")
+        
+        try:
+            # Send RUN command to start QAOA execution
+            self._send_opcode(self.OP_SEND1T)
+            self._send_byte(self.qa_RUN)
+            self._send_opcode(self.OP_SEND_CMD)
+            
+            # Wait for execution (estimate: ~1ms per layer per state)
+            # You may need to adjust this based on your FPGA clock speed
+            # Or implement status polling
+            time.sleep(0.1 * n_layers)
+            
+            print("✓ QAOA execution complete")
+            return True
+            
+        except Exception as e:
+            print(f"✗ Execution error: {e}")
+            return False
 
     def read_result(self, n_states):
-        """read result which is updated statevectore from fpga
-
-        Args:
-            n_states (_type_): number of qubits
-
-        Returns:
-            numpy array with final statevector
         """
-        print(f"Reading {n_states} state amplitudes from FPGA...")
+        Read result statevector from FPGA
+        
+        Args:
+            n_states: Number of states (2^n_qubits)
+            
+        Returns:
+            Complex numpy array with final statevector
+        """
         if not self.connected:
-            return np.ones(n_states, dtype=np.complex64) / np.sqrt(n_states)
+            print("Warning: Not connected, returning uniform state")
+            return np.ones(n_states, dtype=np.complex128) / np.sqrt(n_states)
+        
+        print(f"Reading {n_states} state amplitudes from FPGA...")
         
         try:
-            #send read comand
-            self._send_command("read_data")
-            response = self._read_response()
-            if response != "SENDING":
-                raise RuntimeError(f" fpga result read error: {response}")
-            # read binary data
-            result = self._read_data(n_states)
-            print(f" read {n_states} amplitute from fpga")
+            result = np.zeros(n_states, dtype=np.complex128)
+            
+            # Read from BRAM[0] (real) and BRAM[1] (imaginary)
+            for i in range(n_states):
+                real_part = self._read_bram_fp64(self.BRAM_STATE_REAL, i)
+                imag_part = self._read_bram_fp64(self.BRAM_STATE_IMAG, i)
+                result[i] = complex(real_part, imag_part)
+            
+            print(f"✓ Read {n_states} amplitudes")
             return result
-        
+            
         except Exception as e:
-            print(f"Error reading result from FPGA: {str(e)}")
-            # Return a default result in case of error
-            return np.ones(n_states, dtype=np.complex64) / np.sqrt(n_states)
-
+            print(f"✗ Error reading result: {e}")
+            # Return default uniform state
+            return np.ones(n_states, dtype=np.complex128) / np.sqrt(n_states)
 
     def disconnect(self):
-        print("Disconnecting from FPGA board")
+        """Disconnect from FPGA"""
         if self.connected and self.ser:
+            print("Disconnecting from FPGA...")
             try:
-                self._send_command("GOODBYE")
+                # Send WAIT command before closing
+                self._send_opcode(self.OP_SEND1T)
+                self._send_byte(self.qa_WAIT)
+                self._send_opcode(self.OP_SEND_CMD)
+                time.sleep(0.01)
                 self.ser.close()
+                print("✓ Disconnected")
             except:
                 pass
         self.connected = False
-        print("DInsconnected from FPGA bpard")
-        return True
 
-class FPGASimulator(SimulationBase):
+
+class FPGASimulator(Sim_Base):
+    """
+    FPGA-based QAOA Simulator for NTU Hardware
+    """
+    
+    _hc_diag: np.ndarray
+
+    def __init__(
+        self,
+        n_qubits: int,
+        costs: CostsType | None = None,
+        terms: TermsType | None = None,
+        fpga_config: dict | None = None,
+    ) -> None:
+        """
+        Initialize FPGA-based QAOA simulator
+        
+        Parameters
+        ----------
+        n_qubits : int
+            Number of qubits (max 13 for NTU FPGA, supporting 2^13=8192 states)
+        costs : CostsType | None
+            Precomputed cost values
+        terms : TermsType | None
+            Hamiltonian terms
+        fpga_config : dict, optional
+            Configuration: {'port': 'COM3', 'baudrate': 115200, 'max_qubits': 13}
+        """
+        # Initialize base class
+        super().__init__(n_qubits=n_qubits, costs=costs, terms=terms)
+        
+        # FPGA configuration
+        self.fpga_config = fpga_config or {}
+        default_config = {
+            'port': 'COM3',
+            'baudrate': 115200,
+            'max_qubits': 13,  # NTU FPGA supports 2^13 = 8192 states
+        }
+        for key, value in default_config.items():
+            if key not in self.fpga_config:
+                self.fpga_config[key] = value
+        
+        # Validate qubit count
+        if n_qubits > self.fpga_config['max_qubits']:
+            raise ValueError(
+                f"Number of qubits ({n_qubits}) exceeds FPGA maximum "
+                f"({self.fpga_config['max_qubits']})"
+            )
+        
+        # Initialize driver
+        self.fpga = FpgaDriver(
+            port=self.fpga_config['port'],
+            baudrate=self.fpga_config['baudrate']
+        )
+        self.connected = False
+
+    def _diag_from_terms(self, terms: TermsType) -> np.ndarray:
+        """Compute cost diagonal from Hamiltonian terms"""
+        costs = np.zeros(self.n_states)
+        for coeff, qubits in terms:
+            for i in range(self.n_states):
+                binary = [(i >> j) & 1 for j in range(self.n_qubits)]
+                spins = [1 - 2 * binary[j] for j in qubits]
+                costs[i] += coeff * np.prod(spins)
+        return costs
+
+    def _diag_from_costs(self, costs: CostsType) -> np.ndarray:
+        """Convert costs to numpy array"""
+        return np.array(costs)
+
+    def get_cost_diagonal(self) -> np.ndarray:
+        """Return cost diagonal"""
+        return np.array(self._hc_diag)
+
+    def simulate_qaoa(
+        self,
+        gammas: ParamType,
+        betas: ParamType,
+        sv0: np.ndarray | None = None,
+        **kwargs,
+    ) -> np.ndarray:
+        """
+        Simulate QAOA on FPGA hardware
+        
+        Parameters
+        ----------
+        gammas : ParamType
+            Phase separation parameters
+        betas : ParamType
+            Mixing parameters
+        sv0 : np.ndarray | None
+            Initial state (default: uniform superposition)
+            
+        Returns
+        -------
+        np.ndarray
+            Final statevector
+        """
+        gammas_np = np.asarray(gammas)
+        betas_np = np.asarray(betas)
+        
+        if len(gammas_np) != len(betas_np):
+            raise ValueError(f"Parameter count mismatch: {len(gammas_np)} gammas vs {len(betas_np)} betas")
+        
+        # Initialize state
+        if sv0 is None:
+            sv0 = np.ones(self.n_states, dtype=np.complex128) / np.sqrt(self.n_states)
+        
+        n_layers = len(gammas_np)
+        
+        try:
+            # Connect to FPGA
+            if not self.connected:
+                self.connected = self.fpga.connect()
+                if not self.connected:
+                    raise RuntimeError("Failed to connect to FPGA")
+            
+            # Load data
+            success = self.fpga.load_data(self._hc_diag, sv0, gammas_np, betas_np)
+            if not success:
+                raise RuntimeError("Failed to load data to FPGA")
+            
+            # Execute
+            success = self.fpga.execute(n_layers)
+            if not success:
+                raise RuntimeError("FPGA execution failed")
+            
+            # Read result
+            result = self.fpga.read_result(self.n_states)
+            
+            return result
+            
+        except Exception as e:
+            raise RuntimeError(f"FPGA simulation error: {str(e)}")
+        
+        finally:
+            # Keep connection open for multiple calls
+            pass
+
+    def get_expectation(self, result, costs: typing.Any = None, optimization_type="min", **kwargs) -> float:
+        """Calculate expectation value"""
+        if costs is None:
+            costs = self._hc_diag
+        probs = np.abs(result) ** 2
+        expectation = np.sum(costs * probs)
+        return -expectation if optimization_type == "max" else expectation
+
+    def get_overlap(
+        self, result, costs: CostsType | None = None, 
+        indices: np.ndarray | typing.Sequence[int] | None = None,
+        optimization_type="min", **kwargs
+    ) -> float:
+        """Calculate overlap with optimal states"""
+        if indices is None:
+            if costs is None:
+                costs = self._hc_diag
+            optimal_value = np.max(costs) if optimization_type == "max" else np.min(costs)
+            optimal_indices = np.where(np.isclose(costs, optimal_value))[0]
+        else:
+            optimal_indices = indices
+        
+        overlap = 0.0
+        for idx in optimal_indices:
+            overlap += np.abs(result[idx]) ** 2
+        return overlap
+
+    def get_statevector(self, result: typing.Any, **kwargs) -> np.ndarray:
+        """Return statevector"""
+        return np.array(result)
+
+    def get_probabilities(self, result: typing.Any, **kwargs) -> np.ndarray:
+        """Return probabilities"""
+        return np.abs(result) ** 2
+
+    def __del__(self):
+        """Cleanup: disconnect on deletion"""
+        if self.connected:
+            self.fpga.disconnect()
 
     _hc_diag: np.ndarray
 
