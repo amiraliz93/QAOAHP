@@ -1,20 +1,18 @@
-from precomputation import precompute_vectorized_cpu_parallel
+from .Base.precomputation import precompute_vectorized_cpu_parallel
 import numpy as np
-from maxcut_utils import maxcut_obj, get_maxcut_terms, adjacency_matrix
 
 from qiskit import transpile
 from qiskit.quantum_info import Statevector
-from qiskit_aer import Aer
-from qiskit_aer import AerSimulator
+from qiskit_aer import Aer, AerSimulator
 from functools import reduce
 import numba.cuda
 
 # qiskit import 
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
-
-from .parameters_utils import QAOAParameterization 
-from .Base import parameters_utils
+from .Base.maxcut import maxcut_obj, get_maxcut_terms, get_adjacency_matrix
+from .parameter_utils import QAOAParameterization 
 from .Base import choose_simulator
+from . import parameter_utils
 
 
 def get_qaoa_objective(
@@ -96,8 +94,8 @@ def _create_qiskit_objective(
     
     # Get or create parameterized circuit
     if parameterized_circuit is None:
-        from qaoa_circuit import get_parameterized_qaoa_circuit
-        from create_ciecuit import get_parameterized_qaoa_circuit_from_terms
+        from .Base.create_QAOA_circuit import get_parameterized_qaoa_circuit
+        from .Base.create_QAOA_circuit import get_parameterized_qaoa_circuit_from_terms
         
         # For MaxCut problems with terms
         if terms is not None:
@@ -108,6 +106,7 @@ def _create_qiskit_objective(
                 save_statevector=False
             )
         else:
+            raise ValueError("Either terms or precomputed costs must be provided for Qiskit simulation")
             # Generic QAOA
             circuit_creator = lambda p: get_parameterized_qaoa_circuit(
                 p=p,
@@ -135,7 +134,7 @@ def _create_qiskit_objective(
         
     def objective_function(*params):
         # Convert parameters to gamma/beta format
-        gamma, beta = parameters_utils.convert_to_gamma_beta(
+        gamma, beta = parameter_utils.convert_to_gamma_beta(
             *params, parameterization=parameterization
         )
         
