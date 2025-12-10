@@ -5,79 +5,21 @@ from qiskit import transpile
 from qiskit.quantum_info import Statevector
 from qiskit_aer import Aer
 from functools import reduce
-import numba.cuda
+from qiskit_aer import AerSimulator
+import typing
+import networkx as nx
 
 from .Base import choose_simulator, qaoa_simulator_base
-from .parameter_utils import from_fourier_basis, QAOAParameterization
-
+from . import parameter_utils
+from .parameter_utils import QAOAParameterization
 #from .qaoa_circuit_portfolio import measure_circuit
-
 from .Base.precomputation import precompute_vectorized_cpu_parallel
+from .Base.maxcut import get_maxcut_terms
 
+# ============================================================================
+# QISKIT SIMULATOR BACKEND
+# ============================================================================
 
-def _get_qiskit_objective(
-    parameterized_circuit,
-    precomputed_objectives=None,
-    precomputed_optimal_bitstrings=None,
-    objective: str = "expectation", 
-    terms=None,
-    parameterization: str | QAOAParameterization = "theta",
-    mixer: str = "x",
-    optimization_type="min"):
-
-    N = parameterized_circuit.num_qubits
-    if objective == "expectation":
-        if  precomputed_objectives is None:
-             if terms is None:
-                 raise ValueError(f"precomputed_objectives or terms are required when using the {objective} objective")
-             else:
-                 precomputed_objectives = precompute_vectorized_cpu_parallel(terms, 0.0, N)
-    
-        def compute_objective_from_probabilities(probabilities):  
-             if optimization_type == "max":
-                 return -1 * precomputed_objectives.dot(probabilities)
-             else:
-                 return precomputed_objectives.dot(probabilities)
-
-    elif objective == "overlap":
-        if precomputed_optimal_bitstrings is None:
-            if precomputed_objectives is None:
-                if terms is None:
-                        raise ValueError(f"precomputed_objectives or terms are required when using the {objective} objective")
-                else:
-                      precomputed_objectives = precompute_vectorized_cpu_parallel(terms, 0.0, N)
-            
-            if optimization_type == "max":
-                precomputed_objectives = -1 * np.asarray(precomputed_objectives)
-                minval = precomputed_objectives.min()
-                assert len(bitstring_loc) == 1
-                bitstring_loc = bitstring_loc[0]
-        else:
-              # extract locations of the optimal_bitstrings in 2**N
-              bitstring_loc = np.array([reduce(lambda a, b: 2 * a + b, x) for x in precomputed_optimal_bitstrings])
-        
-        def compute_objective_from_probabilities(probabilities):
-             # compute overlap
-            overlap = 0
-            for i in range(len(bitstring_loc)):
-                overlap += probabilities[bitstring_loc[i]]
-            return 1 - overlap
-    
-    else:
-        raise ValueError(f"Unknown objective passed to get_qaoa_objective: {objective}, allowed ['expectation', 'overlap']")
-    
-    if mixer == "x":
-        backend = Aer.get_backend("aer_simulator_statevector")
-
-        def g(gamma, beta):
-            qc = parameterized_circuit.assign_parameters(list(np.hstack([beta, gamma])))
-            sv = np.asarray(backend.run(qc).result().get_statevector())
-            probs = np.abs(sv) ** 2
-            return compute_objective_from_probabilities(probs)
-        
-    else:
-        raise ValueError(f"Unknown mixer type passed to get_qaoa_objective: {mixer}, allowed ['x']")
-    return g    
 
 def _create_qiskit_objective(
     N, precomputed_diagonal_hamiltonian, precomputed_costs,
@@ -105,24 +47,13 @@ def _create_qiskit_objective(
     
     # Get or create parameterized circuit
     if parameterized_circuit is None:
-        from qaoa_circuit import get_parameterized_qaoa_circuit
-        from create_ciecuit import get_parameterized_qaoa_circuit_from_terms
-        
+        from .Base.create_QAOA_circuit import get_parameterized_qaoa_circuit_from_terms        
         # For MaxCut problems with terms
         if terms is not None:
             circuit_creator = lambda p: get_parameterized_qaoa_circuit_from_terms(
-                N=N, 
-                terms=terms, 
-                p=p, 
-                save_statevector=False
-            )
+                N=N, terms=terms, p=p, save_statevector=False)
         else:
-            # Generic QAOA
-            circuit_creator = lambda p: get_parameterized_qaoa_circuit(
-                p=p,
-                N=N,
-                save_statevector=False
-            )
+            raise ValueError("Either 'parameterized_circuit' or 'terms' must be provided")
     else:
         # Use provided circuit
         circuit_creator = lambda p: parameterized_circuit
@@ -140,13 +71,14 @@ def _create_qiskit_objective(
     # Process optimal bitstring indices if needed
     optimal_indices = None
     if precomputed_optimal_bitstrings is not None and objective == "overlap":
-        optimal_indices = _convert_bitstrings_to_indices(precomputed_optimal_bitstrings)
-        
+        optimal_indices = np.array([reduce(lambda a, b: 2 * a + b, x)
+                                    for x in precomputed_optimal_bitstrings
+        ])
+   
     def objective_function(*params):
         # Convert parameters to gamma/beta format
-        gamma, beta = parameters_utils.convert_to_gamma_beta(
-            *params, parameterization=parameterization
-        )
+        gamma, beta = parameter_utils.convert_to_gamma_beta(
+              *params, parameterization=parameterization)
         
         # Get parameterized circuit with appropriate depth
         p = len(gamma)
@@ -156,52 +88,47 @@ def _create_qiskit_objective(
         parameter_values = []
         for g, b in zip(gamma, beta):
             parameter_values.extend([g, b])
-            
+
+
+        # Run Circuit
         # Transpile circuit for the simulator
         bound_qc = qc.bind_parameters(parameter_values)
         transpiled_qc = transpile(bound_qc, simulator)
-        
-        # Run the circuit and get statevector
         job = simulator.run(transpiled_qc)
         result = job.result()
         statevector = result.get_statevector()
         
+        # Calculate expectation value <ψ|H|ψ>
+        probabilities = np.abs(statevector.data)**2
+
         # Calculate objective value
         if objective == "expectation":
-            # Calculate expectation value <ψ|H|ψ>
-            probabilities = np.abs(statevector.data)**2
             expectation = costs.dot(probabilities)
-            
             # Adjust sign based on optimization direction
             return -expectation if optimization_type == "max" else expectation
         
         elif objective == "overlap":
             # Calculate overlap with optimal states
-            probabilities = np.abs(statevector.data)**2
             overlap = sum(probabilities[idx] for idx in optimal_indices)
             
             # Return 1-overlap for minimization
             return 1.0 - overlap
-        
         else:
             raise ValueError(f"Unknown objective type: {objective}")
     
     return objective_function
 
-def _get_simulator_implementation(simulator_name):
-    """Get the appropriate simulator implementation class"""
-    if simulator_name in ["fpga", "auto"]:
-        return choose_simulator(name=simulator_name)
-    else:
-        raise ValueError(f"Unsupported simulator: {simulator_name}. Use 'fpga' or 'auto'.")
-
+# ============================================================================
+# MAIN QAOA OBJECTIVE FUNCTION (CPU/GPU/FPGA)
+# ============================================================================
 
 def get_qaoa_objective(
-    N: int,
+    N: int |None = None,
+    G: nx.Graph | None = None,
+    terms = None, # we define this terms
     precomputed_diagonal_hamiltonian=None, # not define
-    precomputed_costs=None,
-    terms=None, # we define this terms
-    precomputed_optimal_bitstrings=None,
+    precomputed_costs: np.ndarray | None = None,
+    precomputed_optimal_bitstrings: np.ndarray | None = None,
     parameterization: str | QAOAParameterization = "theta",
     objective: str = "expectation",
     parameterized_circuit=None,
@@ -210,7 +137,7 @@ def get_qaoa_objective(
     initial_state: np.ndarray | None = None,
     n_trotters: int = 1,
     optimization_type="min",
-) -> typing.Callable:
+    ) -> typing.Callable:
 
     """Return QAOA objective to be minimized
  Parameters
@@ -246,7 +173,24 @@ def get_qaoa_objective(
         Function returning the negative of expected value of QAOA with parameters theta
 """
 
-# -- Qiskit edge case
+# 1. HANDLE MAXCUT GRAPH INPUT
+# ============================================
+
+    if G is not None:
+        if N is None:
+            N = G.number_of_nodes()  # Auto-detect N
+        if terms is None:
+            terms = get_maxcut_terms(G)  # Auto-generate terms
+        if optimization_type == "min":
+            optimization_type = "max"  # MaxCut is maximization
+    
+    if N is None: 
+        raise ValueError("N must be specified if G is not provided")
+    
+    # 2. QISKIT SIMULATOR
+# ============================================
+
+#  Qiskit edge case
     if simulator == "qiskit":
         """
         if precomputed_costs is None:
@@ -274,28 +218,29 @@ def get_qaoa_objective(
             terms, precomputed_optimal_bitstrings, parameterization,
             objective, parameterized_circuit, optimization_type
         )
-    # --------------
+# ============================================
+
+# 3. REGULAR SIMULATOR (CPU/GPU/FPGA)
+# ============================================
     if mixer == "x": # for x mixer 
-        simulator_cls = choose_simulator(name=simulator)
-    
+        sim = choose_simulator(name= simulator)(N, terms=terms, costs=precomputed_diagonal_hamiltonian)
     else:
         raise ValueError(f"Unknown mixer type passed to get_qaoa_objective: {mixer}, allowed ['x', 'xy']")
-
-    # Get appropriate simulator implementation
-    simulator_implementation = _get_simulator_implementation(simulator)
-
-    sim = simulator_implementation(N, terms=terms, costs=precomputed_diagonal_hamiltonian)
+    
+    # -- Precomputations
     if precomputed_costs is None:
         precomputed_costs = sim.get_cost_diagonal()
 
+    # Convert optimal bitstrings to indices
     bitstring_loc = None
-
     if precomputed_optimal_bitstrings is not None and objective != "expectation":
         bitstring_loc = np.array([reduce(lambda a, b: 2 * a + b, x) for x in precomputed_optimal_bitstrings])
 
+# 4. Create objective function
+#===== ======================================
     # -- Final function
-    # 
-    def f(*args):
+
+    def objective_fun(*args):
         gamma, beta = parameter_utils.convert_to_gamma_beta(*args, parameterization=parameterization)
 
         result = sim.simulate_qaoa(gamma, beta, initial_state, n_trotters=n_trotters)
@@ -308,6 +253,6 @@ def get_qaoa_objective(
         else:
             raise ValueError(f"Unknown objective: {objective}")
 
-    return f
+    return objective_fun
 
 
