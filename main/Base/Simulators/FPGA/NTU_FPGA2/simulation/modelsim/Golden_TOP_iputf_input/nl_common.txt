@@ -1,0 +1,7 @@
+family_language_pairs
+stratixv verilog
+stratixv verilog
+stratixv verilog
+stratixv verilog
+stratixv verilog
+end family_language pairs
