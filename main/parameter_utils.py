@@ -3,17 +3,18 @@
 # // Copyright : JP Morgan Chase & Co
 ###############################################################################
 
-# Utilities for parameter initialization
+"""
+Utilities for QAOA parameter transformations and conversions.
+
+Supports multiple parameterization schemes:
+- Standard (gamma, beta)
+- Concatenated (theta)
+- Fourier basis (u, v)
+"""
 
 from __future__ import annotations
 import numpy as np
-from pathlib import Path
-import pandas as pd
-from importlib_resources import files
 from enum import Enum
-from typing import Callable
-from functools import lru_cache, cached_property, cache
-from datetime import datetime
 from scipy.fft import dct, dst, idct, idst
 
 
@@ -34,8 +35,8 @@ def from_fourier_basis(u, v):
     """
     assert len(u) == len(v)
 
-    gamma = 0.5 * idst(u, type=4, norm="forward")  # difference of 1/2 due to normalization of idst
-    beta = 0.5 * idct(v, type=4, norm="forward")  # difference of 1/2 due to normalization of idct
+    gamma = 0.5 * np.array(idst(u, type=4, norm="forward"))  # difference of 1/2 due to normalization of idst
+    beta = 0.5 * np.array(idct(v, type=4, norm="forward"))  # difference of 1/2 due to normalization of idct
 
     return gamma, beta
 

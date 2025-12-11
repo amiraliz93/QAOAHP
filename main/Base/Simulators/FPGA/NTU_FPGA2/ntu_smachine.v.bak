@@ -1,0 +1,150 @@
+module ntu_smachine(
+  #(parameter UART_CLKS_PER_BIT = 434 // 50 MHz with 115200 baud rate
+  )(
+   input       CLK,
+   input       RST,
+   input       i_Rx_Serial,
+   output      o_Tx_Serial,
+   output [31:0]  o_Status,
+);
+
+reg [7:0] tx_data_in;
+reg tx_dv;
+wire tx_active;
+
+receiver #(.CLKS_PER_BIT(UART_CLKS_PER_BIT)) uart1 
+(
+      .i_Clock       (clk),
+      .RST       (RST),
+      .i_Rx_Serial   (UART_RX),
+	.o_Rx_DV   (rx_DV),
+      .o_Rx_Byte       (o_Rx_Byte)     // Connect to the LED output wire
+);
+	
+transmitter #(.CLKS_PER_BIT(UART_CLKS_PER_BIT) // 50 MHz
+) t0(
+      .i_Clock(clk),
+      .RST(RST),
+      .i_Tx_DV(tx_dv),
+      .i_Tx_Byte(tx_data_in), 
+      .o_Tx_Active(tx_active),
+      .o_Tx_Serial(o_Tx_Serial),
+      .o_Tx_Done()
+);
+  
+reg [31:0] CP; // program counter
+
+reg [7:0] state;
+reg [7:0] rA;
+reg [7:0] rB;
+reg [7:0] rT;
+wire [7:0] ope_state;
+wire [7:0] rfifo_data;
+reg rdreq;
+wire empty;
+wire full;
+wire tx_empty;
+wire tx_full;
+wire tx_fifo_write;
+wire tx_fifo_rqd = ~tx_active;
+reg [7:0] tx_fifo_data;
+
+parameter s_IDLE = 0;
+parameter s_TXData = 208;
+parameter s_Fetch = 209;
+parameter s_FetchData = 210;
+parameter s_WAIT = 211;
+parameter s_Operation = 212;
+parameter s_Operand = 213;
+parameter OP_MOV_rA = 1;
+parameter OP_MOV_rB = 2;
+parameter OP_ADD_rB2rA = 3;
+parameter OP_ADD_inc2rA = 4;
+parameter OP_READ_rA = 31;
+parameter OP_READ_rB = 32;
+
+fifo1	fifo1_inst (
+.clock ( clk ),
+.data ( o_Rx_Byte ), //input
+.rdreq ( rdreq ),
+.wrreq ( rx_DV ),
+.empty ( empty ),
+.full ( full ),
+.q ( rfifo_data ) // output
+);
+
+fifo1	fifoW_inst (
+.clock ( clk ),
+.data ( tx_fifo_data ), //input
+.rdreq ( tx_fifo_rqd ),
+.wrreq ( tx_fifo_write ),
+.empty ( tx_empty ),
+.full ( tx_full ),
+.q ( tx_data_in ) // output
+);
+
+always @(posedge clk) begin
+	if (RST) begin
+		CP <= 0;
+            state <= 0;
+            rdreq <= 0;
+            ope_state <= 0;
+            tx_dv <= 0:
+            tx_fifo_write <= 0;
+            tx_fifo_data <= 0;
+	end
+      else begin
+            
+            tx_dv <=  ~tx_empty & tx_fifo_rqd; // out fifo is not empty and request was sent.
+            // so at the next clock, the data will be read on the input of tx of UART.
+
+            if(state == s_IDLE) begin
+                  if(~empty) begin 
+                        rdreq <= 1; // get operation anyway. 
+                        state = s_Fetch;
+                  end
+            end
+            else if(state == s_Fetch) begin
+                  if(~empty) begin 
+                        ope_state <= rfifo_data; // fetch operation. 
+                        state <= s_Operation;
+                        rdreq <= 0;  // make fifo wait for the next fetch, although it is the waste of the time to keep the fifo inactive,
+                        // this is for the sake of simple implementation.  
+                  end
+            end
+            else if(state == s_FetchData) begin
+                  if(~empty) begin 
+                        rT <= rfifo_data;
+                        state <= s_Operand;
+                        rdreq <= 0;
+                  end
+            end
+            else if(state == s_Operation) begin
+                  if(ope_state == OP_MOV_rA) begin
+                        rdreq <= 1;
+                        state = s_FetchData;
+                  end
+                  if(ope_state == OP_ADD_inc2rA) begin
+                        rA <= rA + 1;
+                        state = s_IDLE;
+                  end
+                  if(ope_state == OP_READ_rA) begin
+                        tx_fifo_data <= rA;
+                        tx_fifo_write <= 1;
+                        state = s_TXData;
+                  end
+            end
+            else if(state == s_Operand) begin
+                  if(ope_state == OP_MOV_rA) begin
+                        rA <= rT;
+                        state = s_IDLE;
+                  end
+            end 
+            else if(state == s_TXData) begin
+                  tx_fifo_write <= 0;
+                  state = s_IDLE;
+            end
+      end
+end
+endmodule
+

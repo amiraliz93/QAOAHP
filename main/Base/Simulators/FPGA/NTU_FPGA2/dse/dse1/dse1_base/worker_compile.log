@@ -1,0 +1,525 @@
+Info: *******************************************************************
+Info: Running Quartus Prime Shell
+Info: Command: quartus_sh --flow compile Golden_TOP.qsf
+Info: Quartus(args): compile Golden_TOP.qsf
+Info: Project Name = C:/home/verilog_sources/NTU_FPGA2/dse/dse1/dse1_base/Golden_TOP
+Info: Revision Name = Golden_TOP
+{"object_type": "report_status", "percent" : 0}
+Info: *******************************************************************
+Info: Running Quartus Prime Signal Tap
+Info: Command: quartus_stp Golden_TOP -c Golden_TOP
+Info: Quartus Prime Signal Tap was successful. 0 errors, 0 warnings
+{"object_type": "report_status", "percent" : 16}
+{"object_type": "report_status", "percent" : 16}
+{"object_type": "report_status", "percent" : 17}
+Info: *******************************************************************
+Info: Running Quartus Prime Analysis & Synthesis
+Info: Command: quartus_map --read_settings_files=off --write_settings_files=off Golden_TOP -c Golden_TOP
+Info: Aggressive Performance optimization mode selected -- timing performance will be prioritized at the potential cost of increased logic area and compilation time
+{"object_type": "refresh_report"}
+Warning: Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
+Info: Parallel compilation is enabled and will use 12 of the 12 processors detected
+Info: Found 1 design units, including 1 entities, in source file ntu_smachine.sv
+Info: Found 1 design units, including 1 entities, in source file alutest.v
+Info: Found 1 design units, including 1 entities, in source file alutest_tb.v
+Info: Found 1 design units, including 1 entities, in source file golden_top2.v
+Info: Found 1 design units, including 1 entities, in source file transmitter.v
+Warning: Can't analyze file -- file simulation/questa/uart_my2_tb.v is missing
+Info: Found 1 design units, including 1 entities, in source file receiver.v
+Info: Found 1 design units, including 1 entities, in source file fan/i2c_config.v
+Info: Found 1 design units, including 1 entities, in source file fan/i2c_bus_controller.v
+Info: Found 1 design units, including 1 entities, in source file fan/fan_control.v
+Info: Found 1 design units, including 1 entities, in source file golden_top.v
+Info: Found 1 design units, including 1 entities, in source file fifo1.v
+Info: Found 1 design units, including 1 entities, in source file pll2.v
+Info: Found 1 design units, including 1 entities, in source file pll2/pll2_0002.v
+Info: Found 1 design units, including 1 entities, in source file addfix8.v
+Info: Found 1 design units, including 1 entities, in source file mulfpf64.v
+Info: Found 1 design units, including 0 entities, in source file mulfpf64/dspba_library_package.vhd
+Info: Found 6 design units, including 3 entities, in source file mulfpf64/dspba_library.vhd
+Info: Found 2 design units, including 1 entities, in source file mulfpf64/mulfpf64_0002.vhd
+Info: Found 1 design units, including 1 entities, in source file mulfix8.v
+Info: Found 1 design units, including 1 entities, in source file addfpf64.v
+Info: Found 1 design units, including 0 entities, in source file addfpf64/dspba_library_package.vhd
+Info: Found 6 design units, including 3 entities, in source file addfpf64/dspba_library.vhd
+Info: Found 2 design units, including 1 entities, in source file addfpf64/addfpf64_0002.vhd
+Info: Found 1 design units, including 1 entities, in source file ram.v
+{"object_type": "report_status", "percent" : 17}
+{"object_type": "report_status", "percent" : 18}
+Warning: Verilog HDL Parameter Declaration warning at receiver.v(19): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at receiver.v(20): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at receiver.v(21): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at receiver.v(22): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at receiver.v(23): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at transmitter.v(31): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at transmitter.v(32): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at transmitter.v(33): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at transmitter.v(34): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at transmitter.v(35): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(192): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(193): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(194): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(195): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(196): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(197): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(198): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(199): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(200): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(201): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(202): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(203): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(204): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(205): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(206): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(207): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(208): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(209): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(210): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(211): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(212): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(213): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(214): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(215): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(216): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(218): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(219): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(220): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(221): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(249): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(250): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(251): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(252): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(262): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(263): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(264): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(265): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(266): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(275): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(276): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(277): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(278): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(279): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(280): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(281): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(282): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(283): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(284): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(285): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(286): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at ntu_smachine.sv(287): Parameter Declaration in module "ntu_smachine" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Warning: Verilog HDL Parameter Declaration warning at alutest.v(17): Parameter Declaration in module "alu_test" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List
+Critical Warning: Verilog HDL Instantiation warning at Golden_TOP2.v(331): instance has no name
+Critical Warning: Verilog HDL Instantiation warning at Golden_TOP.v(330): instance has no name
+{"object_type": "report_status", "percent" : 18}
+Info: Elaborating entity "Golden_TOP2" for the top level hierarchy
+Warning: Verilog HDL or VHDL warning at Golden_TOP2.v(321): object "clk50" assigned a value but never read
+Warning: Net "dt[1]" at Golden_TOP2.v(366) has no driver or initial value, using a default initial value '0'
+Warning: Output port "FSM_A" at Golden_TOP2.v(86) has no driver
+Warning: Output port "FMCA_GA" at Golden_TOP2.v(189) has no driver
+Warning: Output port "FMCB_GA" at Golden_TOP2.v(212) has no driver
+Warning: Output port "FMCC_GA" at Golden_TOP2.v(235) has no driver
+Warning: Output port "FMCD_GA" at Golden_TOP2.v(274) has no driver
+Warning: Output port "SSRAM_CLK" at Golden_TOP2.v(67) has no driver
+Warning: Output port "SSRAM_CKE_n" at Golden_TOP2.v(68) has no driver
+Warning: Output port "SSRAM_CE_n" at Golden_TOP2.v(69) has no driver
+Warning: Output port "SSRAM_WE_n" at Golden_TOP2.v(70) has no driver
+Warning: Output port "SSRAM_OE_n" at Golden_TOP2.v(71) has no driver
+Warning: Output port "SSRAM_ADV" at Golden_TOP2.v(72) has no driver
+Warning: Output port "SSRAM_BWA_n" at Golden_TOP2.v(73) has no driver
+Warning: Output port "SSRAM_BWB_n" at Golden_TOP2.v(74) has no driver
+Warning: Output port "FLASH_CLK" at Golden_TOP2.v(77) has no driver
+Warning: Output port "FLASH_CE_n" at Golden_TOP2.v(78) has no driver
+Warning: Output port "FLASH_WE_n" at Golden_TOP2.v(79) has no driver
+Warning: Output port "FLASH_OE_n" at Golden_TOP2.v(80) has no driver
+Warning: Output port "FLASH_ADV_n" at Golden_TOP2.v(81) has no driver
+Warning: Output port "FLASH_RESET_n" at Golden_TOP2.v(82) has no driver
+Warning: Output port "SD_CLK" at Golden_TOP2.v(90) has no driver
+Warning: Output port "TPS40422_CLK" at Golden_TOP2.v(126) has no driver
+Warning: Output port "LMK04906_CLK" at Golden_TOP2.v(131) has no driver
+Warning: Output port "LMK04906_DATAIN" at Golden_TOP2.v(132) has no driver
+Warning: Output port "LMK04906_LE" at Golden_TOP2.v(134) has no driver
+Warning: Output port "CLOCK_SCL" at Golden_TOP2.v(137) has no driver
+Warning: Output port "FMCA_HA_TX_CLK_p" at Golden_TOP2.v(159) has no driver
+Warning: Output port "FMCA_HA_TX_CLK_n" at Golden_TOP2.v(160) has no driver
+Warning: Output port "FMCA_HB_TX_CLK_p" at Golden_TOP2.v(163) has no driver
+Warning: Output port "FMCA_HB_TX_CLK_n" at Golden_TOP2.v(164) has no driver
+Warning: Output port "FMCA_LA_TX_CLK_p" at Golden_TOP2.v(167) has no driver
+Warning: Output port "FMCA_LA_TX_CLK_n" at Golden_TOP2.v(168) has no driver
+Warning: Output port "FMCB_LA_TX_CLK_p" at Golden_TOP2.v(198) has no driver
+Warning: Output port "FMCB_LA_TX_CLK_n" at Golden_TOP2.v(199) has no driver
+Warning: Output port "FMCC_LA_TX_CLK_p" at Golden_TOP2.v(221) has no driver
+Warning: Output port "FMCC_LA_TX_CLK_n" at Golden_TOP2.v(222) has no driver
+Warning: Output port "FMCD_HA_TX_CLK_p" at Golden_TOP2.v(244) has no driver
+Warning: Output port "FMCD_HA_TX_CLK_n" at Golden_TOP2.v(245) has no driver
+Warning: Output port "FMCD_HB_TX_CLK_p" at Golden_TOP2.v(248) has no driver
+Warning: Output port "FMCD_HB_TX_CLK_n" at Golden_TOP2.v(249) has no driver
+Warning: Output port "FMCD_LA_TX_CLK_p" at Golden_TOP2.v(252) has no driver
+Warning: Output port "FMCD_LA_TX_CLK_n" at Golden_TOP2.v(253) has no driver
+Warning: Output port "SMA_CLKOUT_p" at Golden_TOP2.v(304) has no driver
+Info: Elaborating entity "pll2" for hierarchy "pll2:comb_19"
+Info: Elaborating entity "pll2_0002" for hierarchy "pll2:comb_19|pll2_0002:pll2_inst"
+Info: Elaborating entity "altera_pll" for hierarchy "pll2:comb_19|pll2_0002:pll2_inst|altera_pll:altera_pll_i"
+Info: Verilog HDL or VHDL information: EDA Netlist Writer cannot regroup multidimensional array "wire_to_nowhere_64" into its bus
+Info: Elaborated megafunction instantiation "pll2:comb_19|pll2_0002:pll2_inst|altera_pll:altera_pll_i"
+Info: Instantiated megafunction "pll2:comb_19|pll2_0002:pll2_inst|altera_pll:altera_pll_i" with the following parameter:
+Info: Elaborating entity "Fan_Control" for hierarchy "Fan_Control:u0"
+Warning: Verilog HDL assignment warning at Fan_Control.v(51): truncated value with size 32 to match size of target (5)
+Warning: Verilog HDL assignment warning at Fan_Control.v(58): truncated value with size 32 to match size of target (13)
+Warning: Verilog HDL assignment warning at Fan_Control.v(59): truncated value with size 32 to match size of target (8)
+Info: Elaborating entity "I2C_Config" for hierarchy "Fan_Control:u0|I2C_Config:u0"
+Warning: Verilog HDL Always Construct warning at I2C_Config.v(41): inferring latch(es) for variable "oSlave_Addr", which holds its previous value in one or more paths through the always construct
+Warning: Verilog HDL assignment warning at I2C_Config.v(107): truncated value with size 32 to match size of target (13)
+Warning: Verilog HDL assignment warning at I2C_Config.v(125): truncated value with size 32 to match size of target (4)
+Warning: Verilog HDL Case Statement warning at I2C_Config.v(132): incomplete case statement has no default case item
+Warning: Verilog HDL Always Construct warning at I2C_Config.v(130): inferring latch(es) for variable "FAN_REG_DATA", which holds its previous value in one or more paths through the always construct
+Info: Inferred latch for "FAN_REG_DATA[0]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[1]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[2]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[3]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[4]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[5]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[6]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[7]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[8]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[9]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[10]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[11]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[12]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[13]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[14]" at I2C_Config.v(130)
+Info: Inferred latch for "FAN_REG_DATA[15]" at I2C_Config.v(130)
+Info: Inferred latch for "oSlave_Addr[0]" at I2C_Config.v(41)
+Info: Inferred latch for "oSlave_Addr[1]" at I2C_Config.v(41)
+Info: Inferred latch for "oSlave_Addr[2]" at I2C_Config.v(41)
+Info: Inferred latch for "oSlave_Addr[3]" at I2C_Config.v(41)
+Info: Inferred latch for "oSlave_Addr[4]" at I2C_Config.v(41)
+Info: Inferred latch for "oSlave_Addr[5]" at I2C_Config.v(41)
+Info: Inferred latch for "oSlave_Addr[6]" at I2C_Config.v(41)
+Info: Elaborating entity "I2C_Bus_Controller" for hierarchy "Fan_Control:u0|I2C_Bus_Controller:u1"
+Warning: Verilog HDL or VHDL warning at I2C_Bus_Controller.v(170): object "shift_enable" assigned a value but never read
+Warning: Verilog HDL assignment warning at I2C_Bus_Controller.v(180): truncated value with size 32 to match size of target (1)
+Warning: Verilog HDL assignment warning at I2C_Bus_Controller.v(181): truncated value with size 32 to match size of target (1)
+Warning: Verilog HDL assignment warning at I2C_Bus_Controller.v(229): truncated value with size 32 to match size of target (2)
+Warning: Verilog HDL assignment warning at I2C_Bus_Controller.v(417): truncated value with size 32 to match size of target (3)
+Warning: Verilog HDL assignment warning at I2C_Bus_Controller.v(529): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at I2C_Bus_Controller.v(540): truncated value with size 32 to match size of target (3)
+Warning: Output port "test_start" at I2C_Bus_Controller.v(138) has no driver
+Info: Elaborating entity "ntu_smachine" for hierarchy "ntu_smachine:ntuS"
+Warning: Verilog HDL or VHDL warning at ntu_smachine.sv(27): object "n_w_req" assigned a value but never read
+Warning: Verilog HDL or VHDL warning at ntu_smachine.sv(34): object "CP" assigned a value but never read
+Warning: Verilog HDL or VHDL warning at ntu_smachine.sv(48): object "rA4" assigned a value but never read
+Warning: Verilog HDL or VHDL warning at ntu_smachine.sv(52): object "rB4" assigned a value but never read
+Warning: Verilog HDL or VHDL warning at ntu_smachine.sv(68): object "tf_data" assigned a value but never read
+Warning: Verilog HDL warning at ntu_smachine.sv(237): object txBRPos used but never assigned
+Warning: Verilog HDL or VHDL warning at ntu_smachine.sv(243): object "n_txBRPos" assigned a value but never read
+Warning: Verilog HDL Always Construct warning at ntu_smachine.sv(80): variable "RST" is read inside the Always Construct but isn't in the Always Construct's Event Control
+Warning: Verilog HDL Always Construct warning at ntu_smachine.sv(81): variable "RST" is read inside the Always Construct but isn't in the Always Construct's Event Control
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(84): truncated value with size 144 to match size of target (32)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(190): truncated value with size 64 to match size of target (1)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(191): truncated value with size 64 to match size of target (1)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(328): truncated value with size 32 to match size of target (4)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(339): truncated value with size 32 to match size of target (8)
+Info: Verilog HDL Case Statement information at ntu_smachine.sv(325): all case item expressions in this case statement are onehot
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(352): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(357): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(362): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(366): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(370): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(375): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(380): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(385): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(390): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(395): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(401): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(406): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(410): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(417): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(424): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(428): truncated value with size 32 to match size of target (11)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(431): truncated value with size 32 to match size of target (8)
+Info: Verilog HDL Case Statement information at ntu_smachine.sv(436): all case item expressions in this case statement are onehot
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(473): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(479): truncated value with size 32 to match size of target (4)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(481): truncated value with size 32 to match size of target (8)
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(496): truncated value with size 32 to match size of target (8)
+Info: Verilog HDL Case Statement information at ntu_smachine.sv(323): all case item expressions in this case statement are onehot
+Warning: Verilog HDL assignment warning at ntu_smachine.sv(510): truncated value with size 32 to match size of target (8)
+Warning: Output port "w_req" at ntu_smachine.sv(21) has no driver
+Info: Elaborating entity "receiver" for hierarchy "ntu_smachine:ntuS|receiver:uart1"
+Warning: Verilog HDL assignment warning at receiver.v(84): truncated value with size 32 to match size of target (13)
+Warning: Verilog HDL assignment warning at receiver.v(95): truncated value with size 32 to match size of target (13)
+Warning: Verilog HDL assignment warning at receiver.v(106): truncated value with size 32 to match size of target (3)
+Warning: Verilog HDL assignment warning at receiver.v(124): truncated value with size 32 to match size of target (13)
+Info: Elaborating entity "transmitter" for hierarchy "ntu_smachine:ntuS|transmitter:t0"
+Warning: Verilog HDL assignment warning at transmitter.v(82): truncated value with size 32 to match size of target (13)
+Warning: Verilog HDL assignment warning at transmitter.v(100): truncated value with size 32 to match size of target (13)
+Warning: Verilog HDL assignment warning at transmitter.v(110): truncated value with size 32 to match size of target (3)
+Warning: Verilog HDL assignment warning at transmitter.v(130): truncated value with size 32 to match size of target (13)
+Info: Elaborating entity "fifo1" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst"
+Info: Elaborating entity "scfifo" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component"
+Info: Elaborated megafunction instantiation "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component"
+Info: Instantiated megafunction "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component" with the following parameter:
+Info: Found 1 design units, including 1 entities, in source file db/scfifo_ied1.tdf
+Info: Elaborating entity "scfifo_ied1" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component|scfifo_ied1:auto_generated"
+Info: Found 1 design units, including 1 entities, in source file db/a_dpfifo_pkd1.tdf
+Info: Elaborating entity "a_dpfifo_pkd1" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component|scfifo_ied1:auto_generated|a_dpfifo_pkd1:dpfifo"
+Info: Found 1 design units, including 1 entities, in source file db/a_fefifo_i4e.tdf
+Info: Elaborating entity "a_fefifo_i4e" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component|scfifo_ied1:auto_generated|a_dpfifo_pkd1:dpfifo|a_fefifo_i4e:fifo_state"
+Info: Found 1 design units, including 1 entities, in source file db/cntr_th7.tdf
+Info: Elaborating entity "cntr_th7" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component|scfifo_ied1:auto_generated|a_dpfifo_pkd1:dpfifo|a_fefifo_i4e:fifo_state|cntr_th7:count_usedw"
+Info: Found 1 design units, including 1 entities, in source file db/altsyncram_6212.tdf
+Info: Elaborating entity "altsyncram_6212" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component|scfifo_ied1:auto_generated|a_dpfifo_pkd1:dpfifo|altsyncram_6212:FIFOram"
+Info: Found 1 design units, including 1 entities, in source file db/cntr_hhb.tdf
+Info: Elaborating entity "cntr_hhb" for hierarchy "ntu_smachine:ntuS|fifo1:fifo1_inst|scfifo:scfifo_component|scfifo_ied1:auto_generated|a_dpfifo_pkd1:dpfifo|cntr_hhb:rd_ptr_count"
+Info: Elaborating entity "addFPF64" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64"
+Info: Elaborating entity "addFPF64_0002" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist77_sigY_uid9_fpAddTest_b_2"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist75_expY_uid11_fpAddTest_b_2"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist76_fracY_uid10_fpAddTest_b_2"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist78_xIn_a_2"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist32_xGTEy_uid8_fpAddTest_BitSelect_for_b_c_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist60_sigA_uid50_fpAddTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist69_exp_bSig_uid35_fpAddTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:oFracBREX_uid68_fpAddTest_delay"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist31_oFracBREXC2_uid69_fpAddTest_BitSelect_for_a_c_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist29_oFracBREXC2_uid69_fpAddTest_p2_of_2_q_3"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist30_oFracBREXC2_uid69_fpAddTest_p1_of_2_q_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist7_rightShiftStageSel5Dto4_uid230_alignmentShifter_uid71_fpAddTest_merged_bit_select_b_3"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist8_rightShiftStageSel5Dto4_uid230_alignmentShifter_uid71_fpAddTest_merged_bit_select_c_4"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist9_rightShiftStageSel5Dto4_uid230_alignmentShifter_uid71_fpAddTest_merged_bit_select_d_5"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist34_shiftedOut_uid220_alignmentShifter_uid71_fpAddTest_n_6"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist27_aSig_uid16_fpAddTest_p0_q_9"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist0_fracAddResult_uid72_fpAddTest_BitSelect_for_a_tessel0_2_merged_bit_select_c_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist44_vCount_uid122_lzCountVal_uid74_fpAddTest_q_7"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist45_rVStage_uid121_lzCountVal_uid74_fpAddTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist42_vCount_uid130_lzCountVal_uid74_fpAddTest_q_5"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist6_rVStage_uid129_lzCountVal_uid74_fpAddTest_merged_bit_select_c_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist4_rVStage_uid135_lzCountVal_uid74_fpAddTest_merged_bit_select_c_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist39_r_uid155_lzCountVal_uid74_fpAddTest_q_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist61_sigA_uid50_fpAddTest_b_18"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist65_expXIsMax_uid38_fpAddTest_q_17"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist74_exp_aSig_uid21_fpAddTest_b_17"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist37_and_lev1_uid216_fracXIsZero_uid39_fpAddTest_q_15"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist38_and_lev1_uid186_fracXIsZero_uid25_fpAddTest_q_16"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist57_effSub_uid52_fpAddTest_q_21"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist52_expPostNorm_uid79_fpAddTest_q_3"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist43_vStage_uid124_lzCountVal_uid74_fpAddTest_b_7"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist55_fracAddResultNoSignExt_uid73_fpAddTest_b_8"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist1_leftShiftStageSel5Dto4_uid268_fracPostNorm_uid75_fpAddTest_merged_bit_select_c_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist2_leftShiftStageSel5Dto4_uid268_fracPostNorm_uid75_fpAddTest_merged_bit_select_d_2"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist51_fracPostNormRndRange_uid80_fpAddTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist49_expRPreExc_uid87_fpAddTest_b_3"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist53_aMinusA_uid77_fpAddTest_q_3"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|addFPF64:addFPF64|addFPF64_0002:addfpf64_inst|dspba_delay:redist50_fracRPreExc_uid86_fpAddTest_b_3"
+Info: Elaborating entity "mulFPF64" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i"
+Info: Elaborating entity "mulFPF64_0002" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst"
+Warning: Verilog HDL or VHDL warning at mulFPF64_0002.vhd(259): object "sm0_uid118_prod_uid47_fpMulTest_cma_reset" assigned a value but never read
+Warning: Verilog HDL or VHDL warning at mulFPF64_0002.vhd(277): object "multSumOfTwoTS_uid119_prod_uid47_fpMulTest_cma_reset" assigned a value but never read
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:and_lev0_uid157_fracXIsZero_uid17_fpMulTest_delay"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist7_and_lev1_uid158_fracXIsZero_uid17_fpMulTest_q_9"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist21_expXIsMax_uid16_fpMulTest_q_10"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist17_signR_uid48_fpMulTest_q_11"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist12_rightBottomX_bottomRange_uid112_prod_uid47_fpMulTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist13_topRangeY_uid105_prod_uid47_fpMulTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:multSumOfTwoTS_uid119_prod_uid47_fpMulTest_cma_delay"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist8_highBBits_uid124_prod_uid47_fpMulTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:sm0_uid118_prod_uid47_fpMulTest_cma_delay"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist0_sm0_uid118_prod_uid47_fpMulTest_cma_q_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist10_aboveLeftY_uid117_prod_uid47_fpMulTest_b_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist9_sm0_uid121_prod_uid47_fpMulTest_q_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist2_lev1_a0sumAHighB_uid125_prod_uid47_fpMulTest_p1_of_2_q_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist1_expFracRPostRounding_uid58_fpMulTest_BitSelect_for_b_tessel1_1_b_2"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist18_expSum_uid44_fpMulTest_q_7"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist5_expFracRPostRounding_uid58_fpMulTest_BitSelect_for_a_c_1"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist15_expRPreExc_uid61_fpMulTest_b_3"
+Info: Elaborating entity "dspba_delay" for hierarchy "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|dspba_delay:redist16_fracRPreExc_uid59_fpMulTest_b_3"
+Info: Elaborating entity "mulfix8" for hierarchy "ntu_smachine:ntuS|mulfix8:mulfix8_inst"
+Info: Elaborating entity "lpm_mult" for hierarchy "ntu_smachine:ntuS|mulfix8:mulfix8_inst|lpm_mult:lpm_mult_component"
+Info: Elaborated megafunction instantiation "ntu_smachine:ntuS|mulfix8:mulfix8_inst|lpm_mult:lpm_mult_component"
+Info: Instantiated megafunction "ntu_smachine:ntuS|mulfix8:mulfix8_inst|lpm_mult:lpm_mult_component" with the following parameter:
+Info: Found 1 design units, including 1 entities, in source file db/mult_c0p.v
+Info: Elaborating entity "mult_c0p" for hierarchy "ntu_smachine:ntuS|mulfix8:mulfix8_inst|lpm_mult:lpm_mult_component|mult_c0p:auto_generated"
+Info: Elaborating entity "addfix8" for hierarchy "ntu_smachine:ntuS|addfix8:addix8_inst"
+Info: Elaborating entity "lpm_add_sub" for hierarchy "ntu_smachine:ntuS|addfix8:addix8_inst|lpm_add_sub:LPM_ADD_SUB_component"
+Info: Elaborated megafunction instantiation "ntu_smachine:ntuS|addfix8:addix8_inst|lpm_add_sub:LPM_ADD_SUB_component"
+Info: Instantiated megafunction "ntu_smachine:ntuS|addfix8:addix8_inst|lpm_add_sub:LPM_ADD_SUB_component" with the following parameter:
+Info: Found 1 design units, including 1 entities, in source file db/add_sub_0bj.tdf
+Info: Elaborating entity "add_sub_0bj" for hierarchy "ntu_smachine:ntuS|addfix8:addix8_inst|lpm_add_sub:LPM_ADD_SUB_component|add_sub_0bj:auto_generated"
+{"object_type": "report_status", "percent" : 23}
+{"object_type": "report_status", "percent" : 23}
+Info: Found 1 design units, including 1 entities, in source file db/altsyncram_8pc4.tdf
+Info: Found 1 design units, including 1 entities, in source file db/mux_gmc.tdf
+Info: Found 1 design units, including 1 entities, in source file db/decode_1pf.tdf
+Info: Found 1 design units, including 1 entities, in source file db/cntr_1ai.tdf
+Info: Found 1 design units, including 1 entities, in source file db/cmpr_eac.tdf
+Info: Found 1 design units, including 1 entities, in source file db/cntr_60j.tdf
+Info: Found 1 design units, including 1 entities, in source file db/cntr_2ai.tdf
+Info: Found 1 design units, including 1 entities, in source file db/cntr_msi.tdf
+Info: Found 1 design units, including 1 entities, in source file db/cmpr_bac.tdf
+{"object_type": "report_status", "percent" : 23}
+Info: Analysis and Synthesis generated Signal Tap or debug node instance "auto_signaltap_0"
+{"object_type": "report_status", "percent" : 23}
+Info: Starting IP generation for the debug fabric: alt_sld_fab.
+Info: 2025.09.11.11:44:26 Progress: Loading sld24e5314a/alt_sld_fab_wrapper_hw.tcl
+Info: Alt_sld_fab.alt_sld_fab: SLD fabric agents which did not specify prefer_host were connected to JTAG
+Info: Alt_sld_fab: Generating alt_sld_fab "alt_sld_fab" for QUARTUS_SYNTH
+Info: Alt_sld_fab: "alt_sld_fab" instantiated alt_sld_fab "alt_sld_fab"
+Info: Presplit: "alt_sld_fab" instantiated altera_super_splitter "presplit"
+Info: Splitter: "alt_sld_fab" instantiated altera_sld_splitter "splitter"
+Info: Sldfabric: "alt_sld_fab" instantiated altera_sld_jtag_hub "sldfabric"
+Info: Ident: "alt_sld_fab" instantiated altera_connection_identification_hub "ident"
+Info: Alt_sld_fab: Done "alt_sld_fab" with 6 modules, 6 files
+Info: Finished IP generation for the debug fabric: alt_sld_fab.
+Info: Found 1 design units, including 1 entities, in source file db/ip/sld24e5314a/alt_sld_fab.v
+Info: Found 1 design units, including 1 entities, in source file db/ip/sld24e5314a/submodules/alt_sld_fab_alt_sld_fab.v
+Info: Found 1 design units, including 1 entities, in source file db/ip/sld24e5314a/submodules/alt_sld_fab_alt_sld_fab_ident.sv
+Info: Found 1 design units, including 1 entities, in source file db/ip/sld24e5314a/submodules/alt_sld_fab_alt_sld_fab_presplit.sv
+Info: Found 2 design units, including 1 entities, in source file db/ip/sld24e5314a/submodules/alt_sld_fab_alt_sld_fab_sldfabric.vhd
+Info: Found 1 design units, including 1 entities, in source file db/ip/sld24e5314a/submodules/alt_sld_fab_alt_sld_fab_splitter.sv
+{"object_type": "report_status", "percent" : 23}
+{"object_type": "report_status", "percent" : 23}
+{"object_type": "report_status", "percent" : 24}
+{"object_type": "report_status", "percent" : 23}
+Warning: Synthesized away the following node(s):
+Info: Timing-Driven Synthesis is running on partition "Top"
+{"object_type": "report_status", "percent" : 17}
+{"object_type": "report_status", "percent" : 18}
+{"object_type": "report_status", "percent" : 19}
+{"object_type": "report_status", "percent" : 21}
+{"object_type": "report_status", "percent" : 22}
+{"object_type": "report_status", "percent" : 23}
+{"object_type": "report_status", "percent" : 24}
+{"object_type": "report_status", "percent" : 24}
+Info: Inferred 3 megafunctions from design logic
+Info: Elaborated megafunction instantiation "Fan_Control:u0|lpm_divide:Div1"
+Info: Instantiated megafunction "Fan_Control:u0|lpm_divide:Div1" with the following parameter:
+Info: Found 1 design units, including 1 entities, in source file db/lpm_divide_2em.tdf
+Info: Found 1 design units, including 1 entities, in source file db/sign_div_unsign_7nh.tdf
+Info: Found 1 design units, including 1 entities, in source file db/alt_u_div_m3f.tdf
+Info: Elaborated megafunction instantiation "Fan_Control:u0|lpm_divide:Div0"
+Info: Instantiated megafunction "Fan_Control:u0|lpm_divide:Div0" with the following parameter:
+Info: Found 1 design units, including 1 entities, in source file db/lpm_divide_lcm.tdf
+Info: Found 1 design units, including 1 entities, in source file db/sign_div_unsign_plh.tdf
+Info: Found 1 design units, including 1 entities, in source file db/alt_u_div_q0f.tdf
+Info: Elaborated megafunction instantiation "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|lpm_mult:Mult3"
+Info: Instantiated megafunction "ntu_smachine:ntuS|mulFPF64:mf64i|mulFPF64_0002:mulfpf64_inst|lpm_mult:Mult3" with the following parameter:
+Info: Found 1 design units, including 1 entities, in source file db/mult_sh11.v
+{"object_type": "report_status", "percent" : 23}
+{"object_type": "report_status", "percent" : 23}
+{"object_type": "report_status", "percent" : 23}
+Info: Timing-Driven Synthesis is running on partition "sld_signaltap:auto_signaltap_0"
+Info: Timing-Driven Synthesis is running on partition "sld_hub:auto_hub"
+{"object_type": "report_status", "percent" : 24}
+Warning: 4 hierarchies have connectivity warnings - see the Connectivity Checks report folder
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 27}
+Info: Ignored 25 buffer(s)
+Warning: The following nodes have both tri-state and non-tri-state drivers
+Warning: The following bidirectional pins have no drivers
+Warning: The following tri-state nodes are fed by constants
+{"object_type": "report_status", "percent" : 27}
+Info: Duplicate LATCH primitives merged into single LATCH primitive
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[12] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[11] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[10] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[9] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[2] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[0] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[3] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[1] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[6] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[4] has unsafe behavior
+Warning: Latch Fan_Control:u0|I2C_Config:u0|FAN_REG_DATA[5] has unsafe behavior
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 30}
+Warning: TRI or OPNDRN buffers permanently enabled
+Warning: Output pins are stuck at VCC or GND
+{"object_type": "report_status", "percent" : 31}
+{"object_type": "report_status", "percent" : 32}
+Info: 214 registers lost all their fanouts during netlist optimizations.
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 30}
+{"object_type": "report_status", "percent" : 31}
+{"object_type": "report_status", "percent" : 32}
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 27}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 28}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 29}
+{"object_type": "report_status", "percent" : 30}
+{"object_type": "report_status", "percent" : 31}
+{"object_type": "report_status", "percent" : 32}
+Info: Generated JSON formatted report files in C:/home/verilog_sources/NTU_FPGA2/dse/dse1/dse1_base/db/Golden_TOP.map.json_files/
+Info: Generated JSON formatted report files in C:/home/verilog_sources/NTU_FPGA2/dse/dse1/dse1_base/db/Golden_TOP.flow.json_files/
+{"object_type": "report_status", "percent" : 32}
+Critical Warning: Partially connected in-system debug instance "auto_signaltap_0" to 60 of its 61 required data inputs, trigger inputs, acquisition clocks, and dynamic pins.  There were 0 illegal, 0 inaccessible, and 1 missing sources or connections.
+{"object_type": "report_status", "percent" : 33}
+Info: Generating hard_block partition "hard_block:auto_generated_inst"
+Warning: Design contains 52 input pin(s) that do not drive logic
+Info: Implemented 7803 device resources after synthesis - the final resource count might be different
+Info: Generated JSON formatted report files in C:/home/verilog_sources/NTU_FPGA2/dse/dse1/dse1_base/db/Golden_TOP.map.json_files/
+Info: Generated JSON formatted report files in C:/home/verilog_sources/NTU_FPGA2/dse/dse1/dse1_base/db/Golden_TOP.flow.json_files/
+Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 839 warnings
+{"object_type": "report_status", "percent" : 33}
+{"object_type": "refresh_report"}
+{"object_type": "report_status", "percent" : 33}
+Info: *******************************************************************
+Info: Running Quartus Prime Fitter
+Info: Command: quartus_fit --read_settings_files=off --write_settings_files=off Golden_TOP -c Golden_TOP
+Info: qfit2_default_script.tcl version: #3
+Info: Project  = Golden_TOP
+Info: Revision = Golden_TOP
+{"object_type": "report_status", "percent" : 34}
+{"object_type": "refresh_report"}
+Info: Aggressive Performance optimization mode selected -- timing performance will be prioritized at the potential cost of increased logic area and compilation time
+Warning: Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
+Info: Parallel compilation is enabled and will use 12 of the 12 processors detected
+Info: Selected device 5SGXEABN3F45I3YY for design "Golden_TOP"
+Info: Low junction temperature is -40 degrees C
+Info: High junction temperature is 100 degrees C
+Info: Fitter is performing a Standard Fit compilation using maximum Fitter effort to optimize design performance
+{"object_type": "report_status", "percent" : 35}
+Info: Fitter converted 1 user pins into dedicated programming pins
+{"object_type": "report_status", "percent" : 35}
+Warning: Some pins have incomplete I/O assignments. Refer to the I/O Assignment Warnings report for details
+Info: Design uses memory blocks. Violating setup or hold times of memory block address registers for either read or write operations could cause memory contents to be corrupted. Make sure that all memory block address registers meet the setup and hold time requirements.
+Info: Starting Fitter periphery placement operations
+Info: Promoted 1 clock (1 global)
