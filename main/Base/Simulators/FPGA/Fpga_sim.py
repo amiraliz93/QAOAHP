@@ -485,61 +485,6 @@ class FPGASimulator(Sim_Base):
         """Cleanup: disconnect on deletion"""
         if self.connected:
             self.fpga.disconnect()
-
-    _hc_diag: np.ndarray
-
-    def __init__(
-        self,
-        n_qubits: int,
-        costs: CostsType | None = None,
-        terms: TermsType | None = None,
-        fpga_config: dict | None = None,
-    ) -> None:
-        """
-        Initialize the FPGA-based QAOA simulator.
-        
-        Parameters
-        ----------
-        n_qubits : int
-            Number of qubits in the system
-        costs : CostsType | None
-            Precomputed cost function values for all basis states
-        terms : TermsType | None
-            List of Hamiltonian terms as (coefficient, [qubit_indices])
-        fpga_config : dict, optional
-            Configuration parameters for FPGA hardware:
-            - 'device_id': FPGA device identifier
-            - 'max_qubits': Maximum supported qubits
-            - 'bitstream_path': Path to FPGA bitstream file
-        """
-        # Initialize base class first
-        super().__init__(n_qubits=n_qubits, costs=costs, terms=terms)
-        
-        # Store FPGA configuration
-        self.fpga_config = fpga_config or {}
-        
-        # Default configuration parameters
-        default_config = {
-            'device_id': 0,
-            'max_qubits': 16,  # Typical max qubits for FPGA
-            'bitstream_path': './bitstream/qaoa_default.bit',
-        }
-        
-        # Apply defaults for missing configuration
-        for key, value in default_config.items():
-            if key not in self.fpga_config:
-                self.fpga_config[key] = value
-        
-        # Validate qubit count against FPGA limitations
-        if n_qubits > self.fpga_config['max_qubits']:
-            raise ValueError(
-                f"Number of qubits ({n_qubits}) exceeds maximum supported by FPGA "
-                f"({self.fpga_config['max_qubits']})"
-            )
-        
-        # Initialize FPGA driver
-        self.fpga = FpgaDriver()
-        self.connected = False
     
     def _connect_to_fpga(self):
         """Connect to the FPGA board if not already connected."""
