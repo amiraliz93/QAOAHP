@@ -24,7 +24,7 @@ else:
     ParamType = typing.Union[Sequence[float], np.ndarray]
     from collections.abc import Sequence
 
-class QAOAFastSimulatorBase(ABC):
+class Sim_Base(ABC):
     """
     Base class for QAOA simulator
     """
@@ -55,7 +55,9 @@ class QAOAFastSimulatorBase(ABC):
         """
         self.n_qubits = n_qubits
         self.n_states = 2**n_qubits
-        assert not costs, f"Error: 'costs' parameter should be empty, but received: {costs}"
+        if costs is not None and terms is not None:
+            f"Error: 'costs' parameter should be empty, but received: {costs}"
+        
         if costs is None:
             if terms is None:
                 raise ValueError("Either costs or terms must be provided")

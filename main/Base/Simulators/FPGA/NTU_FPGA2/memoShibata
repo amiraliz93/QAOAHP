@@ -1,0 +1,14 @@
+# document of QAOA FPGA project in nottingham trent university 2025
+
+member: Aliz, Hiroki, 
+Supervisor: Amir
+
+multiplier: https://github.com/temelmertcan/multgen
+UART verilog inplementation: https://github.com/cp024s/UART
+
+
+
+about FIFO: https://www.chipverify.com/verilog/synchronous-fifo
+
+async FIFO source: https://github.com/ujjwal-2001/Async_FIFO_Design?tab=readme-ov-file
+ * not used, but may be good to avoid bender lockin.
