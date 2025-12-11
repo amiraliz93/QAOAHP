@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from itertools import product
+import warnings
 
 
 
@@ -60,19 +61,36 @@ def brute_force(obj_f, num_variables: int, minimize: bool = False, function_take
     """Get the maximum of a function by complete enumeration
     Returns the maximum value and the extremizing bit string
     """
+    if num_variables > 23:
+        warnings.warn(
+            f"Brute force with {num_variables} variables requires evaluating "
+            f"{2**num_variables} configurations. This may take a very long time!"
+        )    
+    
     if minimize:
-        best_cost_brute = float("inf")
-        compare = lambda x, y: x < y
+        best_value = float("inf")
+        is_better = lambda x, y: x < y
     else:
-        best_cost_brute = float("-inf")
-        compare = lambda x, y: x > y
-    bit_strings = (((np.array(range(2**num_variables))[:, None] & (1 << np.arange(num_variables)))) > 0).astype(int)
-    for x in bit_strings:
+        best_value = float("-inf")
+        is_better = lambda x, y: x > y
+    indices = np.arange(2**num_variables)
+    bit_strings = ((indices[:, None] & (1 << np.arange(num_variables))) > 0).astype(int)
+    best_bitstring = None
+    
+    # Evaluate objective for each configuration
+    for bitstring in bit_strings:
         if function_takes == "spins":
-            cost = obj_f(1 - 2 * np.array(x), *args, **kwargs)
+            # Convert 0/1 to -1/+1
+            config = 1 - 2 * bitstring
         elif function_takes == "bits":
-            cost = obj_f(np.array(x), *args, **kwargs)
-        if compare(cost, best_cost_brute):
-            best_cost_brute = cost
-            xbest_brute = x
-    return best_cost_brute, xbest_brute
+            config = bitstring
+        else:
+            raise ValueError(f"function_takes must be 'spins' or 'bits', got '{function_takes}'")
+        
+        value = obj_f(config, *args, **kwargs)
+        
+        if is_better(value, best_value):
+            best_value = value
+            best_bitstring = bitstring
+    
+    return best_value, best_bitstring

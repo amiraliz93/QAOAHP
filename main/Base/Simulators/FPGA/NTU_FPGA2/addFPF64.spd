@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file path="addFPF64_sim/addFPF64.vo" type="VERILOG" />
+ <topLevel name="addFPF64" />
+ <deviceFamily name="stratixv" />
+</simPackage>
