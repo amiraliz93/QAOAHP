@@ -1,3 +1,12 @@
+""" Convert Python floats to hardware test vectors for Verilog testbenches
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+
 import struct
 
 
