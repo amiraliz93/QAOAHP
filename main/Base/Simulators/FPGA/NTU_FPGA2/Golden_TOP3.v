@@ -39,7 +39,7 @@
 //`define ENABLE_FMCC_XCVR
 //`define ENABLE_FMCD_XCVR
 
-module Golden_TOP2(
+module Golden_TOP3(
 
       ///////// CLOCK /////////
       input              OSC_MAIN,
@@ -385,7 +385,7 @@ wire [31:0] o_Status;
 // If you want that, consider to use GPIO. 
 
 // we need transmitter and receiver to tset state machine (ntu_smachine)
-ntu_smachine #(.UART_CLKS_PER_BIT(200000000/115200)) ntuS 
+top1_uart #(.UART_CLKS_PER_BIT(200000000/115200)) ntuS 
 (
 .CLK     (CLK),        // Connect to your system clock wire
 .RST         (RST),        // Connect to your system reset wire
