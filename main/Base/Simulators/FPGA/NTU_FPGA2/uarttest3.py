@@ -24,6 +24,8 @@ OP_MOV_T2B     = ib1(4) # Send: 1, Res: 0.
 OP_MOV_A2U     = ib1(5) # Send: 1, Res: 0.
 OP_MOV_A2B     = ib1(6) # Send: 0, Res: 1.
 OP_MOV_Info2U  = ib1(7) # Send: 0, Res: 1.
+OP_MOV_S2U  = ib1(8) # Send: 0, Res: 1.OP_FETCH1U
+OP_MOV_T2P  = ib1(9) # Send: 0, Res: 1.
 OP_FETCH1U     = ib1(60) # Send: 0, Res: 8.
 OP_FETCH8U     = ib1(61) # Send: 0, Res: 8.
 OP_ADD_B2A     = ib1(80) # Send: 0, Res: 0.
@@ -39,9 +41,11 @@ OP_RUN_COST    = ib1(101) # Send: 0, Res: 0. Run the cost operation 1 step.
 OP_RUN_CONTINUOUS = ib1(103) # Send: 0, Res: 0. Run the cost operation 1 step. 
 OP_ENABLE_INTRUPTION = ib1(121) # Make the state machine send an 1 byte message to PC (always 43), if rS64 was changed. Note that rS64 cannot be changed from PC, so this event occurs from FPGA side only. This intruption may minimize the waiting time of the culculation. You can implement a function so that it will be invoked with this signal, by checking reading the UART port always, and immediately take an action if the state of FPGA changed spontaneously. Such function is called "callback function" or "event handler". event handler minimize the wainting time of external process without wasting computing resouces. Default of this mode is off.
 
-qa_WAIT = ib1(1)
-qa_RUN = ib1(2)
-qa_INIT = ib1(4)
+qa_WAIT =  ib1(1)
+qa_RUN =  ib1(2)
+qa_MIXER =  ib1(4)
+qa_COST =  ib1(8)
+qa_INIT =  ib1(16)
 
 v1 = 0.83134910
 v2 = 0.13134750
@@ -50,8 +54,8 @@ bv1 = fp64b(v1)
 v1t = bfp64(bv1)
 print(bv1.hex(), v1t, v1)
 
-uart_port = 'COM3'
-# uart_port = "/dev/ttyUSB0"
+# uart_port = 'COM3'
+uart_port = "/dev/ttyUSB0"
 # uart_port = None
 baud_rate = 115200
 ser = serial.Serial(port = uart_port, baudrate = baud_rate, timeout=None)
@@ -82,50 +86,92 @@ data_array = [
       OP_WRITE_T2RAM,
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_SEND8T, ib8(0x1000000000000000), # write main BRAM, intended to state vector.
+      OP_SEND8T, ib8(0x0800000000000000), # address to write BRAM, cos(beta)
       OP_MOV_T2A,
-      OP_SEND8T, fp64b(v1),
+      OP_SEND8T, fp64b(10), # 10 write BRAM, cos(beta)
       OP_WRITE_T2RAM,
-      OP_INC_A, # to next address of BRAM. OP_INC_A increment rA by 1, like rA++; in C.
-      OP_SEND8T, fp64b(v2),
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(-0.1), # -0.1 write BRAM, sin(beta)
       OP_WRITE_T2RAM,
-      OP_INC_A, # to next address of BRAM
-      OP_SEND8T, fp64b(v3),
+      OP_SEND8T, ib8(0x1000000000000000), # writing address to write state vector in BRAM
+      OP_MOV_T2A,
+      OP_SEND8T, fp64b(4.540779000000001),
       OP_WRITE_T2RAM,
-      OP_INC_A, # to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(4.751009000000001),
       OP_WRITE_T2RAM,
-      OP_INC_A, # to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(4.961239000000001),
       OP_WRITE_T2RAM,
-      OP_INC_A, # to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(5.171469000000001),
       OP_WRITE_T2RAM,
-      OP_INC_A, # to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
       OP_WRITE_T2RAM,
-      OP_SEND8T, ib8(0x1000000000000000), # read address of BRAM
+      OP_INC_A, # write to next address of BRAM
+      OP_WRITE_T2RAM,
+      OP_INC_A, # write to next address of BRAM
+      OP_WRITE_T2RAM,
+      OP_INC_A, # write to next address of BRAM
+      OP_WRITE_T2RAM,
+
+      OP_SEND8T, ib8(0x2000000000000000), # write address to write state vector in BRAM
+      OP_MOV_T2A,
+      OP_SEND8T, fp64b(5.802159000000001),
+      OP_WRITE_T2RAM,
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(6.0123890000000015),
+      OP_WRITE_T2RAM,
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(6.222619000000002),
+      OP_WRITE_T2RAM,
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(6.432849000000002),
+      OP_WRITE_T2RAM,
+
+      OP_SEND1T, qa_INIT,
+      OP_SEND_CMD, 
+      OP_SEND1T, qa_RUN,
+      OP_SEND_CMD, 
+      OP_NONE, # need to wait for the pipeline end the process
+      OP_SEND1T, qa_WAIT,
+      OP_SEND_CMD, 
+      OP_SEND8T, ib8(0x1000000000000000), # read address of BRAM, real part of state vector
       OP_MOV_T2A,
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, # to next address of BRAM. This OP increment rA by 1, like rA++; in C.
+      OP_INC_A, # write to next address of BRAM
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, # to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, #  to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, #  to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, #  to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, #  to next address of BRAM
+      OP_SEND8T, ib8(0x2000000000000000), # read address of BRAM, imaginary part of state vector
+      OP_MOV_T2A,
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, #  to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
       OP_READ_RAM2U, 
       OP_FETCH8U,
-      OP_INC_A, #  to next address of BRAM
+      OP_INC_A, # write to next address of BRAM
+      OP_READ_RAM2U, 
+      OP_FETCH8U,
+      OP_INC_A, # write to next address of BRAM
+      OP_READ_RAM2U, 
+      OP_FETCH8U,
+      OP_INC_A, # write to next address of BRAM
+      OP_READ_RAM2U, 
+      OP_FETCH8U,
+      OP_INC_A, # write to next address of BRAM
       OP_READ_RAM2U, 
       OP_FETCH8U
 ]
@@ -134,7 +180,7 @@ dr = ser.read(8)
 print("version", dr.decode())
 
 for b in data_array:
-    ser.write(b); time.sleep(1e-5)  # recommend to wait tiny period of time, to prevent UART buffer overflow.
+    ser.write(b); time.sleep(1e-4)  # recommend to wait tiny period of time, to prevent UART buffer overflow.
     if b == OP_FETCH8U:
         dr = ser.read(8)
         fr = bfp64(dr)
@@ -149,11 +195,4 @@ for b in data_array:
 # 18 24
 # 20 32
 # 4.4e-323 0900000000000000
-# 2.3843434815971076e-299 aaaa80aa80efef01
-# 0.8313491 9ae3816d699aea3f
-# 0.8313491 9ae3816d699aea3f
-# 0.1313475 72a774b0fecfc03f
-# 0.4324811 b9d62835c5addb3f
-# 0.0 0000000000000000
-
 ser.close()

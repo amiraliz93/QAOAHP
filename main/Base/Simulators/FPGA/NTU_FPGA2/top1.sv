@@ -23,10 +23,9 @@ wire r_vd;
 wire w_req;
 
 wire [23:0] CMD;
-wire [31:0] nPLayer; // register output.
 wire [63:0] rS; // status of qaoa system.
 // we need transmitter and receiver to tset state machine (ntu_smachine)
-ntu_smachine2 ntuS 
+control_interface CI 
 (
    .CLK(CLK),        // Connect to your system clock wire
    .RST(RST),        // Connect to your system reset wire
@@ -43,8 +42,7 @@ ntu_smachine2 ntuS
    .w_data(w_data),
    .w_req(w_req),
    .CMD(CMD),
-   .rS(rS),
-   .nPLayer(nPLayer)
+   .rS(rS)
 );
 
 
@@ -103,9 +101,7 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni)) qs2
    .Hr_res(Hr_o),
    .Hi_res(Hi_o),
    .info_inGC(info_inGC), // information, like addresses, enabled signal, and so on.
-   .info_outGC(info_outGC), // information, like addresses, enabled signal, and so on.
-
-   .nPLayer(nPLayer)
+   .info_outGC(info_outGC) // information, like addresses, enabled signal, and so on.
 );
 gen_cost  #(.P(P),.Ni(Ni)) genCost
   (
