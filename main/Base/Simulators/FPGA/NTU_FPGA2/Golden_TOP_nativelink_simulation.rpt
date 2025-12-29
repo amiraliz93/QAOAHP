@@ -1,5 +1,5 @@
 Info: Start Nativelink Simulation process
-executing command line: ip-make-simscript --nativelink-mode --output-directory=Golden_TOP_iputf_input --spd=C:/home/verilog_sources/NTU_FPGA2/pll2.spd --spd=C:/home/verilog_sources/NTU_FPGA2/mulFPF64.spd --spd=C:/home/verilog_sources/NTU_FPGA2/addFPF64.spd 
+executing command line: ip-make-simscript --nativelink-mode --output-directory=Golden_TOP_iputf_input --spd=C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordic_sc/cordic.spd --spd=C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2.spd --spd=C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64.spd --spd=C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64.spd --spd=C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/fp2fix64.spd 
 
 ========= EDA Simulation Settings =====================
 
