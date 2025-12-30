@@ -385,13 +385,14 @@ always_comb begin: mainCombBlock
         // assuming qa_INIT is called before this state.
 
         if(addr_c0 != maxAddr) begin // generate addresses for mixer
+            
             n_bram_addr_r[0] = addr_c0;
             n_bram_addr_r[1] = addr_c0;
             n_m_bram_req0[31] = 1;
             n_m_bram_req0[NM-1:0] = addr_c0;
             n_addr_c0 = addr_c0 + 1; 
             // need to mix address bit.
-        end 
+        end
 
         // Pipeline Drain Phase (wait for last results)
         else begin

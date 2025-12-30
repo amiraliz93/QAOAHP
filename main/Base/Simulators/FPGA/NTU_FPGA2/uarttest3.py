@@ -37,8 +37,8 @@ OP_WRITE_T2RAM = ib1(111) # Send: 0, Res: 0.
 OP_READ_RAM2U  = ib1(112) # Send: 0, Res: 0.
 OP_SEND_CMD    = ib1(118) # Send: 0, Res: 0. see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
 OP_RUN_MIXER   = ib1(100) # Send: 0, Res: 0. Run the mixer operation 1 step.
-OP_RUN_COST    = ib1(101) # Send: 0, Res: 0. Run the cost operation 1 step. 
-OP_RUN_CONTINUOUS = ib1(103) # Send: 0, Res: 0. Run the cost operation 1 step. 
+OP_RUN_COST    = ib1(101) # Send: 0, Res: 0. Run the cost operation 1 step.
+OP_RUN_CONTINUOUS = ib1(103) # Send: 0, Res: 0. Run the cost operation 1 step.
 OP_ENABLE_INTRUPTION = ib1(121) # Make the state machine send an 1 byte message to PC (always 43), if rS64 was changed. Note that rS64 cannot be changed from PC, so this event occurs from FPGA side only. This intruption may minimize the waiting time of the culculation. You can implement a function so that it will be invoked with this signal, by checking reading the UART port always, and immediately take an action if the state of FPGA changed spontaneously. Such function is called "callback function" or "event handler". event handler minimize the wainting time of external process without wasting computing resouces. Default of this mode is off.
 
 qa_WAIT =  ib1(1)
@@ -54,15 +54,14 @@ bv1 = fp64b(v1)
 v1t = bfp64(bv1)
 print(bv1.hex(), v1t, v1)
 
-# uart_port = 'COM3'
-uart_port = "/dev/ttyUSB0"
+uart_port = 'COM4'
+# uart_port = "/dev/ttyUSB0"
 # uart_port = None
 baud_rate = 115200
-ser = serial.Serial(port = uart_port, baudrate = baud_rate, timeout=None)
 
 # there are registers, rA, rB, rU, rT in the state machine
 # all data sent to state machine will be firstly stored into rT. you need to move value in rT to write anoter register. e.g., call OP_MOV_T2A
-# all data sent from state machine must be in rU. i.e., You need to move any value to rU before issue fetch command. e.g., OP_MOV_A2U if you want the value of rA then call OP_FETCH8U. 
+# all data sent from state machine must be in rU. i.e., You need to move any value to rU before issue fetch command. e.g., OP_MOV_A2U if you want the value of rA then call OP_FETCH8U.
 # OP_FETCH8U fetch 64 bit of rU. OP_FETCH1U fetch first 8 bit in rU. For OP_SEND1T, 8T similarly.
 
 data_array = [
@@ -71,20 +70,20 @@ data_array = [
       OP_MOV_A2B, OP_ADD_B2A,OP_MOV_A2U, OP_FETCH1U, OP_MUL_B2A,
       OP_MOV_A2U, OP_FETCH1U,
       OP_SEND1T, qa_WAIT,
-      OP_SEND_CMD, 
+      OP_SEND_CMD,
       OP_SEND8T, ib8(0x0100000000000000),  # write BRAM, like, beta, gamma, and so on. Parameters for the algorithm.
       OP_MOV_T2A,
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_SEND8T, ib8(0x0200000000000000),  # write BRAM0, for cost function?
       OP_MOV_T2A,
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_SEND8T, ib8(0x0400000000000000),  # write BRAM1, for sin(gamma H), cos(gamma H)?. These 2 value also can be computed inside the FPGA.
       OP_MOV_T2A,
       OP_SEND8T, fp64b(v1),
       OP_WRITE_T2RAM,
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_SEND8T, ib8(0x0800000000000000), # address to write BRAM, cos(beta)
       OP_MOV_T2A,
@@ -120,7 +119,10 @@ data_array = [
       OP_SEND8T, fp64b(5.802159000000001),
       OP_WRITE_T2RAM,
       OP_INC_A, # write to next address of BRAM
-      OP_SEND8T, fp64b(6.0123890000000015),
+      OP_SEND8T, fp64b(5.802159000000001),
+      OP_WRITE_T2RAM,
+      OP_INC_A, # write to next address of BRAM
+      OP_SEND8T, fp64b(6.0323890000000015),
       OP_WRITE_T2RAM,
       OP_INC_A, # write to next address of BRAM
       OP_SEND8T, fp64b(6.222619000000002),
@@ -130,55 +132,68 @@ data_array = [
       OP_WRITE_T2RAM,
 
       OP_SEND1T, qa_INIT,
-      OP_SEND_CMD, 
+      OP_SEND_CMD,
       OP_SEND1T, qa_RUN,
-      OP_SEND_CMD, 
+      OP_SEND_CMD,
       OP_NONE, # need to wait for the pipeline end the process
       OP_SEND1T, qa_WAIT,
-      OP_SEND_CMD, 
+      OP_SEND_CMD,
       OP_SEND8T, ib8(0x1000000000000000), # read address of BRAM, real part of state vector
       OP_MOV_T2A,
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_SEND8T, ib8(0x2000000000000000), # read address of BRAM, imaginary part of state vector
       OP_MOV_T2A,
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U,
       OP_INC_A, # write to next address of BRAM
-      OP_READ_RAM2U, 
+      OP_READ_RAM2U,
       OP_FETCH8U
 ]
-ser.write(OP_MOV_Info2U + OP_FETCH8U);  # check the version.
-dr = ser.read(8)
-print("version", dr.decode())
+f = open("uarttest_veri.sv", "w") # generate the same byte sequence above in verilog format so that we can run the testbench simulation with the same input to be supplied here by this python code.
 
+AC = [b"".join(data_array)]
+f.write("{\n")
+for i, b in enumerate(data_array):
+    print(type(b), b, len(b))
+    for j in range(len(b)):
+        f.write(f"8'h{ib1(b[j]).hex()}")
+        if j != len(b)-1:
+            f.write(", ")
+
+    if i != len(data_array) -1:
+        f.write(",\n")
+f.write("}\n")
+f.close()
+
+ser = serial.Serial(port = uart_port, baudrate = baud_rate, timeout=None)
 for b in data_array:
     ser.write(b); time.sleep(1e-4)  # recommend to wait tiny period of time, to prevent UART buffer overflow.
     if b == OP_FETCH8U:
