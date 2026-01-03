@@ -6,7 +6,8 @@
 module mixer2
   #(
   parameter P=64, // number of word width
-  parameter Ni=32) // width of additional information
+  parameter Ni=32, // width of additional information. Biggest 3 bits are reserved.
+  ) 
   (
    input       CLK,
    input       RST,
@@ -16,14 +17,16 @@ module mixer2
    input  [P-1:0]   p_ai,
    output  [P-1:0]   p_ar_o,
    output  [P-1:0]   p_ai_o,
-   input  [Ni-1:0]    info_in, // information, like addresses, enabled signal, and so on.
+   input  [1:0]    switch_in,  // operation switch. 2'b01 is mixer for p_a, 2'b10 is mixer for p_b, else for cost function. p_a and p_b must be supplied sequencially and altanatively.
+   input  [Ni-1:0]    info_in,  // information, like addresses, enabled signal, and so on.
    output  [Ni-1:0]    info_out // information, like addresses, enabled signal, and so on.
 );
 parameter N1 = 21 + 1;
 parameter N3 = 21 + 1 + 2 + 27 + 1;
 parameter NPip = N3; // number of pipeline. Depends on IP core like addFPF64 used in this module.
-parameter mBit = 30;
+
 reg [Ni-1:0] p_info [NPip-1:0];
+reg [Ni-1:0] p_switch [NPip-1:0];
 wire [P-1:0] n_prc_N1Pip;
 wire [P-1:0] n_prs_N1Pip;
 wire [P-1:0] n_pic_N1Pip;
@@ -110,6 +113,7 @@ always @(posedge CLK) begin
 	if (RST) begin
             for (i = 0; i < NPip; i = i + 1) begin
                   p_info[i] <= 0;
+                  p_switch[i] <= 0;
             end
             cb_0Pip <= 1; // 0.5000000000000001
             sb_0Pip <= 0; // 0.8660254037844386
@@ -126,6 +130,7 @@ always @(posedge CLK) begin
             pr_0Pip <= p_ar;
             pi_0Pip <= p_ai;
             p_info[0] <= info_in;
+            p_switch[0] <= switch_in;
             prc_N1Pip[0] <= n_prc_N1Pip;
             prs_N1Pip[0] <= n_prs_N1Pip;
             pic_N1Pip[0] <= n_pic_N1Pip;
@@ -138,25 +143,38 @@ always @(posedge CLK) begin
             end
             for (i = 0; i <= NPip-2; i = i + 1) begin
                   p_info[i+1] <= p_info[i];
+                  p_switch[i+1] <= p_switch[i];
             end
-            if(p_info[N1][mBit]) begin
-                  // it is assumed in this case, N1Pip[1] has p_a, and N1Pip[0] has p_b. Generate p'_a.
-                  // adder 1 will performe, pp_ar = cosb * p_ar - sinb *p_bi
-                  // adder 2 will performe, pp_ai = cosb * p_ai + sinb *p_br
-                  add1_a <= prc_N1Pip[1];
-                  add1_b <= pis_N1Pip[0] ^ SIGN_MASK;
-                  add2_a <= pic_N1Pip[1];
-                  add2_b <= prs_N1Pip[0];
-            end
-            else begin
-                   // it is assumed in this case, N1Pip[2] has p_a, and N1Pip[1] has p_b. Generate p'_b.
-                  // adder 1 will performe, pp_br = - sinb* p_ai + cosb *p_br
-                  // adder 2 will performe, pp_bi = sinb *p_ar + cosb *p_bi
-                  add1_a <= prc_N1Pip[1];
-                  add1_b <= pis_N1Pip[2] ^ SIGN_MASK;
-                  add2_a <= pic_N1Pip[1];
-                  add2_b <= prs_N1Pip[2];
-            end
+
+            case(p_switch[N1])
+                  2'b01: begin
+                        // it is assumed in this case, N1Pip[1] has p_a, and N1Pip[0] has p_b. Generate p'_a.
+                        // adder 1 will performe, pp_ar = cosb * p_ar - sinb *p_bi
+                        // adder 2 will performe, pp_ai = cosb * p_ai + sinb *p_br
+                        add1_a <= prc_N1Pip[1];
+                        add1_b <= pis_N1Pip[0] ^ SIGN_MASK;
+                        add2_a <= pic_N1Pip[1];
+                        add2_b <= prs_N1Pip[0];
+                  end
+                  2'b10: begin
+                        // it is assumed in this case, N1Pip[2] has p_a, and N1Pip[1] has p_b. Generate p'_b.
+                        // adder 1 will performe, pp_br = - sinb* p_ai + cosb *p_br
+                        // adder 2 will performe, pp_bi = sinb *p_ar + cosb *p_bi
+                        add1_a <= prc_N1Pip[1];
+                        add1_b <= pis_N1Pip[2] ^ SIGN_MASK;
+                        add2_a <= pic_N1Pip[1];
+                        add2_b <= prs_N1Pip[2];
+                  end
+                  default: begin
+                        // this is for cost function operator
+                        // adder 1 will performe, pp_ar = - sinb* p_ai + cosb *p_ar
+                        // adder 2 will performe, pp_ai = sinb *p_ar + cosb *p_ai
+                        add1_a <= prc_N1Pip[1];
+                        add1_b <= pis_N1Pip[1] ^ SIGN_MASK;
+                        add2_a <= pic_N1Pip[1];
+                        add2_b <= prs_N1Pip[1];
+                  end
+            endcase
             pr_N3Pip <= add1_res;
             pi_N3Pip <= add2_res;
       end
