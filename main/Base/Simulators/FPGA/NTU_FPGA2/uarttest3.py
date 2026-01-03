@@ -16,7 +16,7 @@ def ib1(i):
     return i.to_bytes(1, "little")
 
 OP_NONE        = ib1(0) # Send: 1, Res: 0.
-OP_NONE8        = ib8(0) # Send: 1, Res: 0.
+OP_NONE8       = ib8(0) # Send: 1, Res: 0.
 OP_SEND1T      = ib1(1) # Send: 0, Res: 1.
 OP_SEND8T      = ib1(2) # Send: 0, Res: 1.
 OP_MOV_T2A     = ib1(3) # Send: 1, Res: 0.
@@ -24,8 +24,8 @@ OP_MOV_T2B     = ib1(4) # Send: 1, Res: 0.
 OP_MOV_A2U     = ib1(5) # Send: 1, Res: 0.
 OP_MOV_A2B     = ib1(6) # Send: 0, Res: 1.
 OP_MOV_Info2U  = ib1(7) # Send: 0, Res: 1.
-OP_MOV_S2U  = ib1(8) # Send: 0, Res: 1.OP_FETCH1U
-OP_MOV_T2P  = ib1(9) # Send: 0, Res: 1.
+OP_MOV_S2U     = ib1(8) # Send: 0, Res: 1.OP_FETCH1U
+OP_MOV_T2P     = ib1(9) # Send: 0, Res: 1.
 OP_FETCH1U     = ib1(60) # Send: 0, Res: 8.
 OP_FETCH8U     = ib1(61) # Send: 0, Res: 8.
 OP_ADD_B2A     = ib1(80) # Send: 0, Res: 0.
