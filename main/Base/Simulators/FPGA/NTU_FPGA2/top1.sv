@@ -60,15 +60,14 @@ wire  [P-1:0]  p_ar_o;
 wire  [P-1:0]  p_ai_o;
 wire  [Ni-1:0]  info_in; // information, like addresses, enabled signal, and so on.
 wire  [Ni-1:0]  info_out; // information, like addresses, enabled signal, and so on.
-
+wire  [1:0]  mix_switch; // information, like addresses, enabled signal, and so on.
 
 wire  [P-1:0]  gamma; // cos gamma
-wire  [P-1:0]   H;
+wire  [P-1:0]   HGC;
 wire  [P-1:0]   Hr_o;
 wire  [P-1:0]   Hi_o;
 wire  [Ni-1:0]    info_inGC; // information, like addresses, enabled signal, and so on.
 wire  [Ni-1:0]    info_outGC; // information, like addresses, enabled signal, and so on.
-
 
 wire [Ni-1:0] bs_info_out;
 wire [Ni-1:0] bs_info_in;
@@ -96,16 +95,17 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni) .N_BIT_SWAP_POINTER(N_BIT_
    .r_CMD(CMD),
    .cosb(cosb),
    .sinb(sinb),
-   .m_ar(p_ar),
-   .m_ai(p_ai),
-   .m_info(info_in),
+   .mix_ar(p_ar),
+   .mix_ai(p_ai),
+   .mix_info(info_in),
+   .mix_switch(mix_switch),
    
-   .m_ar_res(p_ar_o),
-   .m_ai_res(p_ai_o),
-   .m_info_res(info_out),
+   .mix_ar_res(p_ar_o),
+   .mix_ai_res(p_ai_o),
+   .mix_info_res(info_out),
    
    .gamma(gamma), //  gamma
-   .HGC(H),
+   .HGC(HGC),
    .Hr_res(Hr_o),
    .Hi_res(Hi_o),
    .info_inGC(info_inGC), // information, like addresses, enabled signal, and so on.
