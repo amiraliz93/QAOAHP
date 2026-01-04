@@ -5,6 +5,11 @@
 
 // todo
 // test transmission
+// todo 2026, 1, 1.
+// set maxAddr, using 64
+// set NQbits, using 65
+// test mixer, we need theoretical value for this test bench. I need to write some python code
+
 module top1_tb ();
 
 // Declare signals to connect to the UART module

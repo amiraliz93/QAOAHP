@@ -14,8 +14,9 @@ module bit_swap#(
     //------------------------------------------------------------------------
     parameter N = 32, // register width.
     parameter Np = 4, // number of pipeline stage. 
-    parameter M = 5  // bit width of pointer. M must be less than or equal to log_2(N)
-    )    
+    parameter M = 5,  // bit width of pointer. M must be less than or equal to log_2(N)
+    parameter Ni = 16 // Auxiliary information
+        )    
   (
     //------------------------------------------------------------------------
     // CLOCK AND RESET
@@ -24,16 +25,19 @@ module bit_swap#(
     input [N-1:0] a_in,
     input [M-1:0] p_in,
     input [M-1:0] q_in,
-    output reg [N-1:0] a_out
+    input [Ni-1:0] info_in,
+    output reg [N-1:0] a_out,
+    output reg [Ni-1:0] info_out
     );
-reg [N-1:0] p_a [Np];
-reg [M-1:0] p_p [Np];
-reg [M-1:0] p_q [Np];
+reg [N-1:0] p_a [Np-1];
+reg [M-1:0] p_p [Np-1];
+reg [M-1:0] p_q [Np-1];
+reg [M-1:0] p_info [Np-1];
 
 logic [N-1:0] n_a_out;
-wire [M-1:0] pl = p_p[Np-1];  // p at the last of pipeline
-wire [M-1:0] ql = p_q[Np-1];  // q at the last of pipeline
-wire [N-1:0] al = p_a[Np-1];  // a at the last of pipeline
+wire [M-1:0] pl = p_p[Np-2];  // p at the last of pipeline
+wire [M-1:0] ql = p_q[Np-2];  // q at the last of pipeline
+wire [N-1:0] al = p_a[Np-2];  // a at the last of pipeline
 always_comb begin: mainCombBlock
     n_a_out = al;
     n_a_out[pl] = al[ql];
@@ -43,15 +47,18 @@ always@(posedge CLK) begin
     p_a[0] <= a_in;
     p_p[0] <= p_in;
     p_q[0] <= q_in;
+    p_info[0] <= info_in;
     a_out <= n_a_out;
+    info_out <= p_info[Np-2];
 end
 genvar i;
 generate
-      for( i=1; i< Np; i++) begin   : stage_gen
+      for( i=1; i < Np-1; i++) begin   : stage_gen
             always@(posedge CLK) begin
                 p_a[i] <= p_a[i-1];
                 p_p[i] <= p_p[i-1];
                 p_q[i] <= p_q[i-1];
+                p_info[i] <= p_info[i-1];
             end
       end
 endgenerate                    
