@@ -1,6 +1,8 @@
 // pipelined ALU test code for 2 floating points.
 // 2025 0903, tested by alutest_tb.v
 // Hiroki Shibata, Tokyo Metropollitan University, created at Nottingham Trent University.
+// Supply p_a, p_b altanatively clock by clock.
+// p_info[m_Bit] == 1 means the input is of p_a.
 module mixer2
   #(
   parameter P=64, // number of word width
@@ -98,7 +100,7 @@ addFPF64 add2(
 
 // pp_ar = cosb *p_ar - sinb *p_bi
 // pp_ai = cosb *p_ai + sinb *p_br
-// pp_br = - sinb* p_ai + cosb *p_bi
+// pp_br = - sinb* p_ai + cosb *p_br
 // pp_bi = sinb *p_ar + cosb *p_bi
 reg [31:0] CP; // program counter
 integer i;
