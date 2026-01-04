@@ -433,6 +433,7 @@ always_comb begin: mainCombBlock
         end else begin
             n_addr_c0 = addr_c0 + 1; 
             n_bs_info_in = 'b1000;
+            n_bs_info_in[0] = ~addr_c0[0];
         end
         // Check Pipeline Completion
         if(mixer_loopend_flag) begin  // pipeline latency + memory latency + bit swaping latency.
