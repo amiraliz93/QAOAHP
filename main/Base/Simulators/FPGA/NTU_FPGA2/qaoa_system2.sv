@@ -37,7 +37,8 @@ module qaoa_system2#(
     parameter NM = 13,   // BRAM address width (2^13 = 8192 elements)
     parameter P = 64,    // Data orecision (64bit FP)
     parameter NBRAM=6,   // number of Bram banks
-    parameter Ni=32)    // Info/ control signal width
+    parameter Ni=32,
+    parameter N_BIT_SWAP_POINTER = $clog2(NM))    // Info/ control signal width
   (
     //------------------------------------------------------------------------
     // CLOCK AND RESET
@@ -90,6 +91,15 @@ module qaoa_system2#(
     input  [Ni-1:0]  info_outGC, // information, like addresses, enabled signal, and so on.
     
     //------------------------------------------------------------------------
+    // BIT SWAPING UNIT INTERFACE (FOR MIXER)
+    //------------------------------------------------------------------------
+    input wire [Ni-1:0] bs_info_out;
+    output reg [Ni-1:0] bs_info_in;
+    output reg [NM-1:0] bswap_in;  // bit swap in swap pointer 1
+    input wire  [NM-1:0] bswap_out;
+    output reg [N_BIT_SWAP_POINTER-1] bsp1; // next bit swap pointer 1
+    output reg [N_BIT_SWAP_POINTER-1] bsp2; // next bit swap pointer 2
+    //------------------------------------------------------------------------
     //BRAM ARRAY INTERFACE (6 banks)
     //------------------------------------------------------------------------
     output reg [NBRAM-1:0] bram_wen,
@@ -102,15 +112,19 @@ module qaoa_system2#(
 //============================================================================
 // LOCALPARAMS - Internal Constants
 //============================================================================
-
+localparam N_BIT_SWAP_POINTER = $clog2(NW);
 //----------------------------------------------------------------------------
 // QAOA State Machine States
 //----------------------------------------------------------------------------
-localparam qa_WAIT  = 8'd1;   // Waiting for command from ntu_smachine
-localparam qa_RUN   = 8'd2;   // Running QAOA layer initialization
-localparam qa_MIXER = 8'd4;   // Executing mixer operation
-localparam qa_COST  = 8'd8;   // Executing cost Hamiltonian
-localparam qa_INIT  = 8'd16;  // Initialization state
+localparam qa_WAIT  = 8'h1;   // Waiting for command from ntu_smachine
+localparam qa_RUN   = 8'h2;   // Running QAOA layer initialization
+localparam qa_MIXER = 8'h4;   // Executing mixer operation
+localparam qa_COST  = 8'h8;   // Executing cost Hamiltonian
+localparam qa_INIT  = 8'h10;  // Initialization state
+localparam qa_MIXER_WAIT_PIPE = 8'h20;
+localparam qa_MIXER_PREPARE = 8'h40;
+
+localparam mixer_PIPLINE_NUM = 22 + 2 + 6;
 
 //============================================================================
 // INTERNAL REGISTERS & SIGNALS
@@ -146,9 +160,12 @@ logic n_r_vd;                 // Next read valid
 // Address Counters
 //----------------------------------------------------------------------------
 reg [NM-1:0] maxAddr;         // Maximum address for mixer (e.g., 8 for 3 qubits)
+reg [NM-1:0] maxAddrM1;         // Maximum address for mixer (e.g., 8 for 3 qubits)
 reg [NM-1:0] addr_c0;         // Current address counter (mixer loop)
-logic [NM-1:0] n_addr_c0;     // Next address counter
 reg [NM-1:0] addr_c;
+logic [NM-1:0] n_maxAddr;         // Maximum address for mixer (e.g., 8 for 3 qubits)
+logic [NM-1:0] n_maxAddrM1;         // Maximum address for mixer (e.g., 8 for 3 qubits)
+logic [NM-1:0] n_addr_c0;     // Next address counter
 logic [NM-1:0] n_addr_c;
 
 //----------------------------------------------------------------------------
@@ -175,7 +192,10 @@ logic [7:0] n_waitPipeline;   // Next wait count
 logic [P-1:0] n_cosb;         // Next cos(β)
 logic [P-1:0] n_sinb;         // Next sin(β)
 logic [P-1:0] n_gamma;        // Next γ
-
+logic [NM-1:0] n_NQbits;
+logic [NM-1:0] n_NQbitsM1;
+reg [NM-1] NQbits;
+reg [NM-1] NQbitsM1;
 //----------------------------------------------------------------------------
 // Mixer Operation Registers
 //----------------------------------------------------------------------------
@@ -205,19 +225,20 @@ logic [NBRAM-1:0] n_bram_wen;          // Next write enables
 reg [P-1:0] testReg;          // Test register for debug reads/writes
 logic [P-1:0] n_testReg;      // Next test register value
 
+// input wire  [NM-1:0] bswap_out;
+// input wire [Ni-1:0] bs_info_out;
+logic [NM-1:0] n_bswap_in;  // bit swap in swap pointer 1
+logic [NM-1:0] n_bs_info_in;
+logic [N_BIT_SWAP_POINTER-1] n_bsp1; // next bit swap pointer 1
+logic [N_BIT_SWAP_POINTER-1] n_bsp2; // next bit swap pointer 2
 
 reg [31:0] nPLayer;
-
-localparam MaxCS = 64;
-
-reg [NM-1:0] c_cur_qpivot; // current pivot index of quivit being computed.
-
-localparam NiBarrel=2;
-// barrel_shifter #(.n(), .Ni(NiBarrel)) b0(.CLK(CLK),
-//     .d_out(n_addr_c0),
-//     .d_in(addr_c),
-//     .sh_amt(c_cur_qpivot));
-
+logic n_mixer_exit_flag;        // pre-compute conditional flag to speed up the logic and keep logics flexible
+logic n_mixer_address_end_flag; // pre-compute conditional flag to speed up the logic and keep logics flexible
+logic n_mixer_loopend_flag;     // pre-compute conditional flag to speed up the logic and keep logics flexible
+reg mixer_exit_flag;
+reg mixer_loopend_flag;
+reg mixer_address_end_flag;
 always_comb begin: mainCombBlock
 
     //------------------------------------------------------------------------
@@ -235,7 +256,7 @@ always_comb begin: mainCombBlock
     n_bram_data_w = bram_data_w;        // Keep write data
     n_m_bram_req0 = 0;                  // No new BRAM request
     n_cmd = cmd;                        // Keep current command
-    n_waitPipeline = 0;                 // Reset wait counter
+    n_waitPipeline = waitPipeline;                 // Reset wait counter
     n_cosb = cosb;                      // Keep cos(β)
     n_sinb = sinb;                      // Keep sin(β)
     n_gamma = gamma;                    // Keep γ
@@ -245,7 +266,13 @@ always_comb begin: mainCombBlock
     n_cPLayer = cPLayer;                // Keep layer counter
     n_runState = runState;              // Keep run state
     n_P5pointer = P5pointer;            // Keep parameter pointer
-
+    n_bsp1 = bsp1;
+    n_bsp2 = bsp2;
+    n_bswap_in = bswap_in;
+    n_bs_info_in = 'b0000;
+    n_mixer_exit_flag = (bsp2 == NQbitsM1) && (waitPipeline == mixer_PIPLINE_NUM-1)
+    n_mixer_loopend_flag = waitPipeline == mixer_PIPLINE_NUM-1;
+    n_mixer_address_end_flag = addr_c0 == maxAddr;
     //------------------------------------------------------------------------
     // MAIN STATE MACHINE
     //------------------------------------------------------------------------
@@ -321,6 +348,14 @@ always_comb begin: mainCombBlock
             n_bram_data_w[1] = w_data;
             n_bram_wen[1] = w_req;
         end 
+        64: begin // set maximum bit swapping pointer. It represents the N + 1, where N is a number of qbits.
+            n_NQbits = w_data; 
+            n_NQbitsM1 = w_data - 1; 
+        end
+        65: begin // set maximum bit swapping pointer. It represents the N + 1, where N is a number of qbits.
+            n_maxAddr = w_data; 
+            n_maxAddrM1 = w_data - 1; 
+        end
         endcase
     end
 
@@ -330,97 +365,102 @@ always_comb begin: mainCombBlock
     qa_INIT: begin
         n_cPLayer = 0;
         n_P5pointer = 0;
-        n_runState = 0;
+        n_runState = 1;
     end
     
     // qa_RUN: Load parameters (cos(β), sin(β), γ) from BRAM[5]
     //========================================================================
     qa_RUN: begin
         // necessary to set this state, before going to Run.
+        // need to wait multiple clocks here because cos, sin, gamma must be read from the same BRAM sequentially.
         case(runState)
-        0: begin
+        1: begin
             n_addr_c0 = 0;
+            n_waitPipeline = 0;
+            n_bsp2 = 0;
+            n_bsp1 = 0;
             n_cPLayer = cPLayer + 1;
         end
-        1: begin
+        2: begin
             // request cos(beta)
             n_bram_addr_r[5] = P5pointer[NM-1:0];
             n_P5pointer = P5pointer + 1;
         end
-        2: begin
+        4: begin
             // request sin(beta)
             n_bram_addr_r[5] = P5pointer[NM-1:0];
             n_P5pointer = P5pointer + 1;
         end
-        3: begin
+        8: begin
             // request gamma
             n_bram_addr_r[5] = P5pointer[NM-1:0];
             n_P5pointer = P5pointer + 1;
         end
-        4: begin
+        16: begin
             // write to cosb
             n_cosb = bram_data_r[5];
         end
-        5: begin
+        32: begin
             // write to sinb
             n_sinb = bram_data_r[5];
         end
-        6: begin
+        64: begin
             // write to gamma
             n_gamma = bram_data_r[5];
         end
-        7: begin
+        128: begin
             n_cmd = qa_MIXER;
         end
         endcase
-        n_runState = runState + 1;
-        
+        n_runState = runState << 1;
     end
 
     // qa_MIXER: Execute mixer operation on state vector
     //========================================================================
-
     qa_MIXER: begin 
         // mixer operation, and cost function generation.
         // assuming qa_INIT is called before this state.
-
-        if(addr_c0 != maxAddr) begin // generate addresses for mixer
-            
-            n_bram_addr_r[0] = addr_c0;
-            n_bram_addr_r[1] = addr_c0;
-            n_m_bram_req0[31] = 1;
-            n_m_bram_req0[NM-1:0] = addr_c0;
-            n_addr_c0 = addr_c0 + 1; 
-            // need to mix address bit.
-        end
-
-        // Pipeline Drain Phase (wait for last results)
-        else begin
+        n_bram_addr_r[0] = bit_swap_out;
+        n_bram_addr_r[1] = bit_swap_out;
+        n_m_bram_req0[31] = bs_info_out[3];
+        n_m_bram_req0[NM-1:0] = bit_swap_out;
+        // need to mix address bit.
+        n_bswap_in = addr_c0;
+        
+        if(mixer_address_end_flag) begin
+            n_bs_info_in = 'b0000;
             n_waitPipeline = waitPipeline + 1;
+        end else begin
+            n_addr_c0 = addr_c0 + 1; 
+            n_bs_info_in = 'b1000;
         end
         // Check Pipeline Completion
-        if(waitPipeline == 22+2) begin // pipeline latence + memory latency.
-            n_cmd = qa_COST;
+        if(mixer_loopend_flag) begin  // pipeline latency + memory latency + bit swaping latency.
+            n_bsp1 = 0; 
+            n_bsp2 = bsp2 + 1; 
+            n_addr_c0 = 0; 
+            n_mixer_address_end_flag = 0;
+            n_waitPipeline = 0;
+            n_mixer_loopend_flag = 0;
+        end
+
+        if(mixer_exit_flag) begin
+            cmd = qa_COST;
         end
 
         // Feed Data to Mixer (when BRAM read completes)
-        if(m_bram_reqR[31]) begin
-            n_m_ar = bram_data_r[0]; 
-            n_m_ai = bram_data_r[1]; 
-            n_m_info = m_bram_reqR[31:0];
-        end
+        n_m_ar = bram_data_r[0]; 
+        n_m_ai = bram_data_r[1]; 
+        n_m_info = m_bram_reqR[31:0];
 
         // Write Mixer Results Back to BRAM
-        if(m_info_res[31]) begin // it must be written to state vector
-            n_bram_addr_w[0] = m_info_res[NM-1:0];
-            n_bram_addr_w[1] = m_info_res[NM-1:0];
-            n_bram_data_w[0] = m_ar_res;
-            n_bram_data_w[1] = m_ai_res;
-            n_bram_wen[0] = 1;
-            n_bram_wen[1] = 1;
-        end
+        n_bram_addr_w[0] = m_info_res[NM-1:0];
+        n_bram_addr_w[1] = m_info_res[NM-1:0];
+        n_bram_data_w[0] = m_ar_res;
+        n_bram_data_w[1] = m_ai_res;
+        n_bram_wen[0] = m_info_res[31];
+        n_bram_wen[1] = m_info_res[31];
     end
-
     // qa_COST: Apply cost Hamiltonian and check layer completion
     //========================================================================
     qa_COST: begin
@@ -432,7 +472,7 @@ always_comb begin: mainCombBlock
         // Else: start next layer
         else begin
             n_cmd = qa_RUN;
-            n_runState = 0;
+            n_runState = 1;
         end
     end
     endcase
@@ -474,6 +514,9 @@ always@(posedge CLK) begin
         waitPipeline <= 0;
         cPLayer <= 0;
         P5pointer <= '0;
+        mixer_exit_flag <= 0;
+        mixer_loopend_flag <= 0;
+        mixer_address_end_flag <= 0;
 
         // QAOA parameters (default values for testing)
         cosb <= 64'h3fb999999999999a;  // cos(0.1) in FP64
@@ -494,8 +537,11 @@ always@(posedge CLK) begin
         testReg <= 0;
 
         // Configuration
-        maxAddr <= 13'h0008;  // Default: 8 states (3 qubits)
+        maxAddr <= 'h0008;  // Default: 8 states (3 qubits)
+        maxAddrM1 <= 'h0008 -1;
         nPLayer <= 1;
+        NQbits <= 1;
+        NQbitsPlus1 <= 2;
     end
 
     // NORMAL OPERATION: Update registers
@@ -519,6 +565,8 @@ always@(posedge CLK) begin
         runState <= n_runState;
         cPLayer <= n_cPLayer;
         waitPipeline <= n_waitPipeline;
+        maxAddr <= n_maxAddr;
+        maxAddrM1 <= n_maxAddrM1;
 
         // BRAM control
         bram_wen <= n_bram_wen;
@@ -546,7 +594,11 @@ always@(posedge CLK) begin
         gamma <= n_gamma;
         cosb <= n_cosb;
         sinb <= n_sinb;
-
+        NQbits <= n_NQbits;
+        NQbitsM1 <= n_NQbitsM1;
+        mixer_exit_flag <= n_mixer_exit_flag;
+        mixer_loopend_flag <= n_mixer_loopend_flag;
+        mixer_address_end_flag <= n_mixer_loopend_flag;
         // Mixer interface
         m_ar <= n_m_ar;
         m_ai <= n_m_ai;
@@ -561,4 +613,5 @@ always@(posedge CLK) begin
 
     end
 end
+
 endmodule
