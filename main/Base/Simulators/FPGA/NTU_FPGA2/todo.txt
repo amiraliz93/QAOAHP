@@ -1,0 +1,10 @@
+## Check mixer2 module including cost function operator.
+Completed on Feb. 16, in 2026. 
+mixer2_tb.py will create test case data. It output test data into mixer2_tb_in.sv
+Paste  contents of mixer2_tb_in.sv into, 
+
+miser2_tb.sv 
+
+This mixer2_tb.sv is a simulation file. If the output of p_ar_o, p_ai_o is the same as sol_ar, sol_ai, then the unit is working correctly. 
+
+## Create Cost function generation unit, with CORDIC function.
