@@ -6,7 +6,7 @@
 module mixer2
   #(
   parameter P=64, // number of word width
-  parameter Ni=32, // width of additional information. Biggest 3 bits are reserved.
+  parameter Ni=32 // width of additional information. Biggest 3 bits are reserved.
   ) 
   (
    input       CLK,
@@ -109,6 +109,7 @@ reg [31:0] CP; // program counter
 integer i;
 
 localparam [63:0] SIGN_MASK = 64'h8000_0000_0000_0000;
+
 always @(posedge CLK) begin
 	if (RST) begin
             for (i = 0; i < NPip; i = i + 1) begin
@@ -142,15 +143,15 @@ always @(posedge CLK) begin
                   pis_N1Pip[i+1] <= pis_N1Pip[i];
             end
             for (i = 0; i <= NPip-2; i = i + 1) begin
-                  p_info[i+1] <= p_info[i];
+                  p_info[i+1]   <= p_info[i];
                   p_switch[i+1] <= p_switch[i];
             end
 
             case(p_switch[N1])
                   2'b01: begin
                         // it is assumed in this case, N1Pip[1] has p_a, and N1Pip[0] has p_b. Generate p'_a.
-                        // adder 1 will performe, pp_ar = cosb * p_ar - sinb *p_bi
-                        // adder 2 will performe, pp_ai = cosb * p_ai + sinb *p_br
+                        // adder 1 will performe, pp_ar = cosb * p_ar - sinb * p_bi
+                        // adder 2 will performe, pp_ai = cosb * p_ai + sinb * p_br
                         add1_a <= prc_N1Pip[1];
                         add1_b <= pis_N1Pip[0] ^ SIGN_MASK;
                         add2_a <= pic_N1Pip[1];
@@ -158,8 +159,8 @@ always @(posedge CLK) begin
                   end
                   2'b10: begin
                         // it is assumed in this case, N1Pip[2] has p_a, and N1Pip[1] has p_b. Generate p'_b.
-                        // adder 1 will performe, pp_br = - sinb* p_ai + cosb *p_br
-                        // adder 2 will performe, pp_bi = sinb *p_ar + cosb *p_bi
+                        // adder 1 will performe, pp_br = - sinb * p_ai + cosb * p_br
+                        // adder 2 will performe, pp_bi = sinb * p_ar + cosb * p_bi
                         add1_a <= prc_N1Pip[1];
                         add1_b <= pis_N1Pip[2] ^ SIGN_MASK;
                         add2_a <= pic_N1Pip[1];
@@ -180,4 +181,3 @@ always @(posedge CLK) begin
       end
 end
 endmodule
-
