@@ -21,7 +21,6 @@ parameter NPip = 21 + 1; // number of pipeline. Depends on IP core like addFPF64
 
 reg [Ni-1:0] p_info [NPip-1:0];
 wire [Ni-1:0] pp_ar_out;
-
 logic [P-1:0] n_pr_NPip;
 logic [P-1:0] n_pi_NPip;
 reg [P-1:0] pi_NPip;
@@ -36,18 +35,18 @@ assign info_out = p_info[NPip-1];
 
 // Instantiate the module
 mulFPF64 mulFPF_rc(
-      .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
-      .a(pr_0Pip),      //      a.a
-      .b(cb_0Pip),      //      b.b
-      .q(n_pr_NPip)       //      q.q
+      .clk(CLK),      //    clk.clk
+      .areset(RST),   // areset.reset
+      .a(pr_0Pip),    //      a.a
+      .b(cb_0Pip),    //      b.b
+      .q(n_pr_NPip)   //      q.q
 );
 mulFPF64 mulFPF_is(
-      .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
-      .a(pi_0Pip),      //      a.a
-      .b(sb_0Pip),      //      b.b
-      .q(n_pi_NPip)       //      q.q
+      .clk(CLK),      //    clk.clk
+      .areset(RST),   // areset.reset
+      .a(pi_0Pip),    //      a.a
+      .b(sb_0Pip),    //      b.b
+      .q(n_pi_NPip)   //      q.q
 );
 
 reg [31:0] CP; // program counter
