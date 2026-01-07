@@ -33,18 +33,18 @@
 //refer to the applicable agreement for further details.
 
 
-//scfifo ADD_RAM_OUTPUT_REGISTER="ON" DEVICE_FAMILY="Stratix V" LPM_NUMWORDS=4 LPM_SHOWAHEAD="OFF" LPM_WIDTH=8 LPM_WIDTHU=2 OVERFLOW_CHECKING="OFF" UNDERFLOW_CHECKING="OFF" USE_EAB="ON" clock data empty full q rdreq wrreq INTENDED_DEVICE_FAMILY="Stratix V"
+//scfifo ADD_RAM_OUTPUT_REGISTER="ON" DEVICE_FAMILY="Stratix V" LPM_NUMWORDS=256 LPM_SHOWAHEAD="OFF" LPM_WIDTH=8 LPM_WIDTHU=8 OVERFLOW_CHECKING="OFF" UNDERFLOW_CHECKING="OFF" USE_EAB="ON" clock data empty full q rdreq wrreq INTENDED_DEVICE_FAMILY="Stratix V"
 //VERSION_BEGIN 17.1 cbx_altdpram 2017:10:25:18:06:52:SJ cbx_altera_counter 2017:10:25:18:06:52:SJ cbx_altera_syncram 2017:10:25:18:06:52:SJ cbx_altera_syncram_nd_impl 2017:10:25:18:06:52:SJ cbx_altsyncram 2017:10:25:18:06:53:SJ cbx_cycloneii 2017:10:25:18:06:53:SJ cbx_fifo_common 2017:10:25:18:06:52:SJ cbx_lpm_add_sub 2017:10:25:18:06:53:SJ cbx_lpm_compare 2017:10:25:18:06:53:SJ cbx_lpm_counter 2017:10:25:18:06:53:SJ cbx_lpm_decode 2017:10:25:18:06:53:SJ cbx_lpm_mux 2017:10:25:18:06:53:SJ cbx_mgl 2017:10:25:18:08:29:SJ cbx_nadder 2017:10:25:18:06:53:SJ cbx_scfifo 2017:10:25:18:06:53:SJ cbx_stratix 2017:10:25:18:06:53:SJ cbx_stratixii 2017:10:25:18:06:53:SJ cbx_stratixiii 2017:10:25:18:06:53:SJ cbx_stratixv 2017:10:25:18:06:53:SJ cbx_util_mgl 2017:10:25:18:06:53:SJ  VERSION_END
 // synthesis VERILOG_INPUT_VERSION VERILOG_2001
 // altera message_off 10463
 
 
 
-//a_dpfifo ADD_RAM_OUTPUT_REGISTER="ON" ALLOW_RWCYCLE_WHEN_FULL="OFF" DEVICE_FAMILY="Stratix V" LPM_NUMWORDS=4 LPM_SHOWAHEAD="OFF" lpm_width=8 lpm_widthu=2 OVERFLOW_CHECKING="OFF" UNDERFLOW_CHECKING="OFF" clock data empty full q rreq sclr wreq INTENDED_DEVICE_FAMILY="Stratix V"
+//a_dpfifo ADD_RAM_OUTPUT_REGISTER="ON" ALLOW_RWCYCLE_WHEN_FULL="OFF" DEVICE_FAMILY="Stratix V" LPM_NUMWORDS=256 LPM_SHOWAHEAD="OFF" lpm_width=8 lpm_widthu=8 OVERFLOW_CHECKING="OFF" UNDERFLOW_CHECKING="OFF" clock data empty full q rreq sclr wreq INTENDED_DEVICE_FAMILY="Stratix V"
 //VERSION_BEGIN 17.1 cbx_altdpram 2017:10:25:18:06:52:SJ cbx_altera_counter 2017:10:25:18:06:52:SJ cbx_altera_syncram 2017:10:25:18:06:52:SJ cbx_altera_syncram_nd_impl 2017:10:25:18:06:52:SJ cbx_altsyncram 2017:10:25:18:06:53:SJ cbx_cycloneii 2017:10:25:18:06:53:SJ cbx_fifo_common 2017:10:25:18:06:52:SJ cbx_lpm_add_sub 2017:10:25:18:06:53:SJ cbx_lpm_compare 2017:10:25:18:06:53:SJ cbx_lpm_counter 2017:10:25:18:06:53:SJ cbx_lpm_decode 2017:10:25:18:06:53:SJ cbx_lpm_mux 2017:10:25:18:06:53:SJ cbx_mgl 2017:10:25:18:08:29:SJ cbx_nadder 2017:10:25:18:06:53:SJ cbx_scfifo 2017:10:25:18:06:53:SJ cbx_stratix 2017:10:25:18:06:53:SJ cbx_stratixii 2017:10:25:18:06:53:SJ cbx_stratixiii 2017:10:25:18:06:53:SJ cbx_stratixv 2017:10:25:18:06:53:SJ cbx_util_mgl 2017:10:25:18:06:53:SJ  VERSION_END
 
 
-//altsyncram ADDRESS_ACLR_A="NONE" ADDRESS_ACLR_B="NONE" ADDRESS_REG_B="CLOCK1" CLOCK_ENABLE_INPUT_B="BYPASS" DEVICE_FAMILY="Stratix V" ENABLE_ECC="FALSE" INDATA_ACLR_A="NONE" NUMWORDS_A=4 NUMWORDS_B=4 OPERATION_MODE="DUAL_PORT" OUTDATA_ACLR_B="NONE" OUTDATA_REG_B="CLOCK1" WIDTH_A=8 WIDTH_B=8 WIDTH_BYTEENA_A=1 WIDTH_ECCSTATUS=2 WIDTHAD_A=2 WIDTHAD_B=2 WRCONTROL_ACLR_A="NONE" address_a address_b clock0 clock1 clocken1 data_a q_b wren_a
+//altsyncram ADDRESS_ACLR_A="NONE" ADDRESS_ACLR_B="NONE" ADDRESS_REG_B="CLOCK1" CLOCK_ENABLE_INPUT_B="BYPASS" DEVICE_FAMILY="Stratix V" ENABLE_ECC="FALSE" INDATA_ACLR_A="NONE" NUMWORDS_A=256 NUMWORDS_B=256 OPERATION_MODE="DUAL_PORT" OUTDATA_ACLR_B="NONE" OUTDATA_REG_B="CLOCK1" WIDTH_A=8 WIDTH_B=8 WIDTH_BYTEENA_A=1 WIDTH_ECCSTATUS=2 WIDTHAD_A=8 WIDTHAD_B=8 WRCONTROL_ACLR_A="NONE" address_a address_b clock0 clock1 clocken1 data_a q_b wren_a
 //VERSION_BEGIN 17.1 cbx_altera_syncram_nd_impl 2017:10:25:18:06:52:SJ cbx_altsyncram 2017:10:25:18:06:53:SJ cbx_cycloneii 2017:10:25:18:06:53:SJ cbx_lpm_add_sub 2017:10:25:18:06:53:SJ cbx_lpm_compare 2017:10:25:18:06:53:SJ cbx_lpm_decode 2017:10:25:18:06:53:SJ cbx_lpm_mux 2017:10:25:18:06:53:SJ cbx_mgl 2017:10:25:18:08:29:SJ cbx_nadder 2017:10:25:18:06:53:SJ cbx_stratix 2017:10:25:18:06:53:SJ cbx_stratixii 2017:10:25:18:06:53:SJ cbx_stratixiii 2017:10:25:18:06:53:SJ cbx_stratixv 2017:10:25:18:06:53:SJ cbx_util_mgl 2017:10:25:18:06:53:SJ  VERSION_END
 
 //synthesis_resources = M20K 1 
@@ -62,8 +62,8 @@ module  fifo1_altsyncram
 	data_a,
 	q_b,
 	wren_a) /* synthesis synthesis_clearbox=1 */;
-	input   [1:0]  address_a;
-	input   [1:0]  address_b;
+	input   [7:0]  address_a;
+	input   [7:0]  address_b;
 	input   clock0;
 	input   clock1;
 	input   clocken1;
@@ -73,7 +73,7 @@ module  fifo1_altsyncram
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
-	tri1   [1:0]  address_b;
+	tri1   [7:0]  address_b;
 	tri1   clock0;
 	tri1   clock1;
 	tri1   clocken1;
@@ -91,8 +91,8 @@ module  fifo1_altsyncram
 	wire  [0:0]   wire_ram_block1a_5portbdataout;
 	wire  [0:0]   wire_ram_block1a_6portbdataout;
 	wire  [0:0]   wire_ram_block1a_7portbdataout;
-	wire  [1:0]  address_a_wire;
-	wire  [1:0]  address_b_wire;
+	wire  [7:0]  address_a_wire;
+	wire  [7:0]  address_b_wire;
 
 	stratixv_ram_block   ram_block1a_0
 	( 
@@ -100,12 +100,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[0]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_0portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -114,7 +115,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -135,7 +135,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_0.clk0_core_clock_enable = "none",
+		ram_block1a_0.clk0_core_clock_enable = "ena0",
 		ram_block1a_0.clk0_input_clock_enable = "none",
 		ram_block1a_0.clk1_core_clock_enable = "none",
 		ram_block1a_0.clk1_input_clock_enable = "none",
@@ -144,23 +144,23 @@ module  fifo1_altsyncram
 		ram_block1a_0.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_0.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_0.operation_mode = "dual_port",
-		ram_block1a_0.port_a_address_width = 2,
+		ram_block1a_0.port_a_address_width = 8,
 		ram_block1a_0.port_a_data_width = 1,
 		ram_block1a_0.port_a_first_address = 0,
 		ram_block1a_0.port_a_first_bit_number = 0,
-		ram_block1a_0.port_a_last_address = 3,
-		ram_block1a_0.port_a_logical_ram_depth = 4,
+		ram_block1a_0.port_a_last_address = 255,
+		ram_block1a_0.port_a_logical_ram_depth = 256,
 		ram_block1a_0.port_a_logical_ram_width = 8,
 		ram_block1a_0.port_b_address_clear = "none",
 		ram_block1a_0.port_b_address_clock = "clock1",
-		ram_block1a_0.port_b_address_width = 2,
+		ram_block1a_0.port_b_address_width = 8,
 		ram_block1a_0.port_b_data_out_clear = "none",
 		ram_block1a_0.port_b_data_out_clock = "clock1",
 		ram_block1a_0.port_b_data_width = 1,
 		ram_block1a_0.port_b_first_address = 0,
 		ram_block1a_0.port_b_first_bit_number = 0,
-		ram_block1a_0.port_b_last_address = 3,
-		ram_block1a_0.port_b_logical_ram_depth = 4,
+		ram_block1a_0.port_b_last_address = 255,
+		ram_block1a_0.port_b_logical_ram_depth = 256,
 		ram_block1a_0.port_b_logical_ram_width = 8,
 		ram_block1a_0.port_b_read_enable_clock = "clock1",
 		ram_block1a_0.ram_block_type = "AUTO",
@@ -171,12 +171,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[1]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_1portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -185,7 +186,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -206,7 +206,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_1.clk0_core_clock_enable = "none",
+		ram_block1a_1.clk0_core_clock_enable = "ena0",
 		ram_block1a_1.clk0_input_clock_enable = "none",
 		ram_block1a_1.clk1_core_clock_enable = "none",
 		ram_block1a_1.clk1_input_clock_enable = "none",
@@ -215,23 +215,23 @@ module  fifo1_altsyncram
 		ram_block1a_1.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_1.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_1.operation_mode = "dual_port",
-		ram_block1a_1.port_a_address_width = 2,
+		ram_block1a_1.port_a_address_width = 8,
 		ram_block1a_1.port_a_data_width = 1,
 		ram_block1a_1.port_a_first_address = 0,
 		ram_block1a_1.port_a_first_bit_number = 1,
-		ram_block1a_1.port_a_last_address = 3,
-		ram_block1a_1.port_a_logical_ram_depth = 4,
+		ram_block1a_1.port_a_last_address = 255,
+		ram_block1a_1.port_a_logical_ram_depth = 256,
 		ram_block1a_1.port_a_logical_ram_width = 8,
 		ram_block1a_1.port_b_address_clear = "none",
 		ram_block1a_1.port_b_address_clock = "clock1",
-		ram_block1a_1.port_b_address_width = 2,
+		ram_block1a_1.port_b_address_width = 8,
 		ram_block1a_1.port_b_data_out_clear = "none",
 		ram_block1a_1.port_b_data_out_clock = "clock1",
 		ram_block1a_1.port_b_data_width = 1,
 		ram_block1a_1.port_b_first_address = 0,
 		ram_block1a_1.port_b_first_bit_number = 1,
-		ram_block1a_1.port_b_last_address = 3,
-		ram_block1a_1.port_b_logical_ram_depth = 4,
+		ram_block1a_1.port_b_last_address = 255,
+		ram_block1a_1.port_b_logical_ram_depth = 256,
 		ram_block1a_1.port_b_logical_ram_width = 8,
 		ram_block1a_1.port_b_read_enable_clock = "clock1",
 		ram_block1a_1.ram_block_type = "AUTO",
@@ -242,12 +242,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[2]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_2portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -256,7 +257,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -277,7 +277,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_2.clk0_core_clock_enable = "none",
+		ram_block1a_2.clk0_core_clock_enable = "ena0",
 		ram_block1a_2.clk0_input_clock_enable = "none",
 		ram_block1a_2.clk1_core_clock_enable = "none",
 		ram_block1a_2.clk1_input_clock_enable = "none",
@@ -286,23 +286,23 @@ module  fifo1_altsyncram
 		ram_block1a_2.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_2.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_2.operation_mode = "dual_port",
-		ram_block1a_2.port_a_address_width = 2,
+		ram_block1a_2.port_a_address_width = 8,
 		ram_block1a_2.port_a_data_width = 1,
 		ram_block1a_2.port_a_first_address = 0,
 		ram_block1a_2.port_a_first_bit_number = 2,
-		ram_block1a_2.port_a_last_address = 3,
-		ram_block1a_2.port_a_logical_ram_depth = 4,
+		ram_block1a_2.port_a_last_address = 255,
+		ram_block1a_2.port_a_logical_ram_depth = 256,
 		ram_block1a_2.port_a_logical_ram_width = 8,
 		ram_block1a_2.port_b_address_clear = "none",
 		ram_block1a_2.port_b_address_clock = "clock1",
-		ram_block1a_2.port_b_address_width = 2,
+		ram_block1a_2.port_b_address_width = 8,
 		ram_block1a_2.port_b_data_out_clear = "none",
 		ram_block1a_2.port_b_data_out_clock = "clock1",
 		ram_block1a_2.port_b_data_width = 1,
 		ram_block1a_2.port_b_first_address = 0,
 		ram_block1a_2.port_b_first_bit_number = 2,
-		ram_block1a_2.port_b_last_address = 3,
-		ram_block1a_2.port_b_logical_ram_depth = 4,
+		ram_block1a_2.port_b_last_address = 255,
+		ram_block1a_2.port_b_logical_ram_depth = 256,
 		ram_block1a_2.port_b_logical_ram_width = 8,
 		ram_block1a_2.port_b_read_enable_clock = "clock1",
 		ram_block1a_2.ram_block_type = "AUTO",
@@ -313,12 +313,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[3]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_3portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -327,7 +328,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -348,7 +348,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_3.clk0_core_clock_enable = "none",
+		ram_block1a_3.clk0_core_clock_enable = "ena0",
 		ram_block1a_3.clk0_input_clock_enable = "none",
 		ram_block1a_3.clk1_core_clock_enable = "none",
 		ram_block1a_3.clk1_input_clock_enable = "none",
@@ -357,23 +357,23 @@ module  fifo1_altsyncram
 		ram_block1a_3.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_3.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_3.operation_mode = "dual_port",
-		ram_block1a_3.port_a_address_width = 2,
+		ram_block1a_3.port_a_address_width = 8,
 		ram_block1a_3.port_a_data_width = 1,
 		ram_block1a_3.port_a_first_address = 0,
 		ram_block1a_3.port_a_first_bit_number = 3,
-		ram_block1a_3.port_a_last_address = 3,
-		ram_block1a_3.port_a_logical_ram_depth = 4,
+		ram_block1a_3.port_a_last_address = 255,
+		ram_block1a_3.port_a_logical_ram_depth = 256,
 		ram_block1a_3.port_a_logical_ram_width = 8,
 		ram_block1a_3.port_b_address_clear = "none",
 		ram_block1a_3.port_b_address_clock = "clock1",
-		ram_block1a_3.port_b_address_width = 2,
+		ram_block1a_3.port_b_address_width = 8,
 		ram_block1a_3.port_b_data_out_clear = "none",
 		ram_block1a_3.port_b_data_out_clock = "clock1",
 		ram_block1a_3.port_b_data_width = 1,
 		ram_block1a_3.port_b_first_address = 0,
 		ram_block1a_3.port_b_first_bit_number = 3,
-		ram_block1a_3.port_b_last_address = 3,
-		ram_block1a_3.port_b_logical_ram_depth = 4,
+		ram_block1a_3.port_b_last_address = 255,
+		ram_block1a_3.port_b_logical_ram_depth = 256,
 		ram_block1a_3.port_b_logical_ram_width = 8,
 		ram_block1a_3.port_b_read_enable_clock = "clock1",
 		ram_block1a_3.ram_block_type = "AUTO",
@@ -384,12 +384,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[4]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_4portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -398,7 +399,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -419,7 +419,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_4.clk0_core_clock_enable = "none",
+		ram_block1a_4.clk0_core_clock_enable = "ena0",
 		ram_block1a_4.clk0_input_clock_enable = "none",
 		ram_block1a_4.clk1_core_clock_enable = "none",
 		ram_block1a_4.clk1_input_clock_enable = "none",
@@ -428,23 +428,23 @@ module  fifo1_altsyncram
 		ram_block1a_4.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_4.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_4.operation_mode = "dual_port",
-		ram_block1a_4.port_a_address_width = 2,
+		ram_block1a_4.port_a_address_width = 8,
 		ram_block1a_4.port_a_data_width = 1,
 		ram_block1a_4.port_a_first_address = 0,
 		ram_block1a_4.port_a_first_bit_number = 4,
-		ram_block1a_4.port_a_last_address = 3,
-		ram_block1a_4.port_a_logical_ram_depth = 4,
+		ram_block1a_4.port_a_last_address = 255,
+		ram_block1a_4.port_a_logical_ram_depth = 256,
 		ram_block1a_4.port_a_logical_ram_width = 8,
 		ram_block1a_4.port_b_address_clear = "none",
 		ram_block1a_4.port_b_address_clock = "clock1",
-		ram_block1a_4.port_b_address_width = 2,
+		ram_block1a_4.port_b_address_width = 8,
 		ram_block1a_4.port_b_data_out_clear = "none",
 		ram_block1a_4.port_b_data_out_clock = "clock1",
 		ram_block1a_4.port_b_data_width = 1,
 		ram_block1a_4.port_b_first_address = 0,
 		ram_block1a_4.port_b_first_bit_number = 4,
-		ram_block1a_4.port_b_last_address = 3,
-		ram_block1a_4.port_b_logical_ram_depth = 4,
+		ram_block1a_4.port_b_last_address = 255,
+		ram_block1a_4.port_b_logical_ram_depth = 256,
 		ram_block1a_4.port_b_logical_ram_width = 8,
 		ram_block1a_4.port_b_read_enable_clock = "clock1",
 		ram_block1a_4.ram_block_type = "AUTO",
@@ -455,12 +455,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[5]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_5portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -469,7 +470,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -490,7 +490,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_5.clk0_core_clock_enable = "none",
+		ram_block1a_5.clk0_core_clock_enable = "ena0",
 		ram_block1a_5.clk0_input_clock_enable = "none",
 		ram_block1a_5.clk1_core_clock_enable = "none",
 		ram_block1a_5.clk1_input_clock_enable = "none",
@@ -499,23 +499,23 @@ module  fifo1_altsyncram
 		ram_block1a_5.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_5.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_5.operation_mode = "dual_port",
-		ram_block1a_5.port_a_address_width = 2,
+		ram_block1a_5.port_a_address_width = 8,
 		ram_block1a_5.port_a_data_width = 1,
 		ram_block1a_5.port_a_first_address = 0,
 		ram_block1a_5.port_a_first_bit_number = 5,
-		ram_block1a_5.port_a_last_address = 3,
-		ram_block1a_5.port_a_logical_ram_depth = 4,
+		ram_block1a_5.port_a_last_address = 255,
+		ram_block1a_5.port_a_logical_ram_depth = 256,
 		ram_block1a_5.port_a_logical_ram_width = 8,
 		ram_block1a_5.port_b_address_clear = "none",
 		ram_block1a_5.port_b_address_clock = "clock1",
-		ram_block1a_5.port_b_address_width = 2,
+		ram_block1a_5.port_b_address_width = 8,
 		ram_block1a_5.port_b_data_out_clear = "none",
 		ram_block1a_5.port_b_data_out_clock = "clock1",
 		ram_block1a_5.port_b_data_width = 1,
 		ram_block1a_5.port_b_first_address = 0,
 		ram_block1a_5.port_b_first_bit_number = 5,
-		ram_block1a_5.port_b_last_address = 3,
-		ram_block1a_5.port_b_logical_ram_depth = 4,
+		ram_block1a_5.port_b_last_address = 255,
+		ram_block1a_5.port_b_logical_ram_depth = 256,
 		ram_block1a_5.port_b_logical_ram_width = 8,
 		ram_block1a_5.port_b_read_enable_clock = "clock1",
 		ram_block1a_5.ram_block_type = "AUTO",
@@ -526,12 +526,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[6]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_6portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -540,7 +541,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -561,7 +561,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_6.clk0_core_clock_enable = "none",
+		ram_block1a_6.clk0_core_clock_enable = "ena0",
 		ram_block1a_6.clk0_input_clock_enable = "none",
 		ram_block1a_6.clk1_core_clock_enable = "none",
 		ram_block1a_6.clk1_input_clock_enable = "none",
@@ -570,23 +570,23 @@ module  fifo1_altsyncram
 		ram_block1a_6.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_6.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_6.operation_mode = "dual_port",
-		ram_block1a_6.port_a_address_width = 2,
+		ram_block1a_6.port_a_address_width = 8,
 		ram_block1a_6.port_a_data_width = 1,
 		ram_block1a_6.port_a_first_address = 0,
 		ram_block1a_6.port_a_first_bit_number = 6,
-		ram_block1a_6.port_a_last_address = 3,
-		ram_block1a_6.port_a_logical_ram_depth = 4,
+		ram_block1a_6.port_a_last_address = 255,
+		ram_block1a_6.port_a_logical_ram_depth = 256,
 		ram_block1a_6.port_a_logical_ram_width = 8,
 		ram_block1a_6.port_b_address_clear = "none",
 		ram_block1a_6.port_b_address_clock = "clock1",
-		ram_block1a_6.port_b_address_width = 2,
+		ram_block1a_6.port_b_address_width = 8,
 		ram_block1a_6.port_b_data_out_clear = "none",
 		ram_block1a_6.port_b_data_out_clock = "clock1",
 		ram_block1a_6.port_b_data_width = 1,
 		ram_block1a_6.port_b_first_address = 0,
 		ram_block1a_6.port_b_first_bit_number = 6,
-		ram_block1a_6.port_b_last_address = 3,
-		ram_block1a_6.port_b_logical_ram_depth = 4,
+		ram_block1a_6.port_b_last_address = 255,
+		ram_block1a_6.port_b_logical_ram_depth = 256,
 		ram_block1a_6.port_b_logical_ram_width = 8,
 		ram_block1a_6.port_b_read_enable_clock = "clock1",
 		ram_block1a_6.ram_block_type = "AUTO",
@@ -597,12 +597,13 @@ module  fifo1_altsyncram
 	.clk1(clock1),
 	.dftout(),
 	.eccstatus(),
+	.ena0(wren_a),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[1:0]}),
+	.portaaddr({address_a_wire[7:0]}),
 	.portadatain({data_a[7]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[1:0]}),
+	.portbaddr({address_b_wire[7:0]}),
 	.portbdataout(wire_ram_block1a_7portbdataout[0:0]),
 	.portbre(1'b1)
 	`ifndef FORMAL_VERIFICATION
@@ -611,7 +612,6 @@ module  fifo1_altsyncram
 	,
 	.clr0(1'b0),
 	.clr1(1'b0),
-	.ena0(1'b1),
 	.ena2(1'b1),
 	.ena3(1'b1),
 	.portaaddrstall(1'b0),
@@ -632,7 +632,7 @@ module  fifo1_altsyncram
 	// synopsys translate_on
 	);
 	defparam
-		ram_block1a_7.clk0_core_clock_enable = "none",
+		ram_block1a_7.clk0_core_clock_enable = "ena0",
 		ram_block1a_7.clk0_input_clock_enable = "none",
 		ram_block1a_7.clk1_core_clock_enable = "none",
 		ram_block1a_7.clk1_input_clock_enable = "none",
@@ -641,23 +641,23 @@ module  fifo1_altsyncram
 		ram_block1a_7.logical_ram_name = "ALTSYNCRAM",
 		ram_block1a_7.mixed_port_feed_through_mode = "dont_care",
 		ram_block1a_7.operation_mode = "dual_port",
-		ram_block1a_7.port_a_address_width = 2,
+		ram_block1a_7.port_a_address_width = 8,
 		ram_block1a_7.port_a_data_width = 1,
 		ram_block1a_7.port_a_first_address = 0,
 		ram_block1a_7.port_a_first_bit_number = 7,
-		ram_block1a_7.port_a_last_address = 3,
-		ram_block1a_7.port_a_logical_ram_depth = 4,
+		ram_block1a_7.port_a_last_address = 255,
+		ram_block1a_7.port_a_logical_ram_depth = 256,
 		ram_block1a_7.port_a_logical_ram_width = 8,
 		ram_block1a_7.port_b_address_clear = "none",
 		ram_block1a_7.port_b_address_clock = "clock1",
-		ram_block1a_7.port_b_address_width = 2,
+		ram_block1a_7.port_b_address_width = 8,
 		ram_block1a_7.port_b_data_out_clear = "none",
 		ram_block1a_7.port_b_data_out_clock = "clock1",
 		ram_block1a_7.port_b_data_width = 1,
 		ram_block1a_7.port_b_first_address = 0,
 		ram_block1a_7.port_b_first_bit_number = 7,
-		ram_block1a_7.port_b_last_address = 3,
-		ram_block1a_7.port_b_logical_ram_depth = 4,
+		ram_block1a_7.port_b_last_address = 255,
+		ram_block1a_7.port_b_logical_ram_depth = 256,
 		ram_block1a_7.port_b_logical_ram_width = 8,
 		ram_block1a_7.port_b_read_enable_clock = "clock1",
 		ram_block1a_7.ram_block_type = "AUTO",
@@ -669,7 +669,7 @@ module  fifo1_altsyncram
 endmodule //fifo1_altsyncram
 
 
-//lpm_compare DEVICE_FAMILY="Stratix V" LPM_WIDTH=2 ONE_INPUT_IS_CONSTANT="YES" aeb dataa datab
+//lpm_compare DEVICE_FAMILY="Stratix V" LPM_WIDTH=8 ONE_INPUT_IS_CONSTANT="YES" aeb dataa datab
 //VERSION_BEGIN 17.1 cbx_cycloneii 2017:10:25:18:06:53:SJ cbx_lpm_add_sub 2017:10:25:18:06:53:SJ cbx_lpm_compare 2017:10:25:18:06:53:SJ cbx_mgl 2017:10:25:18:08:29:SJ cbx_nadder 2017:10:25:18:06:53:SJ cbx_stratix 2017:10:25:18:06:53:SJ cbx_stratixii 2017:10:25:18:06:53:SJ  VERSION_END
 
 //synthesis_resources = 
@@ -682,35 +682,35 @@ module  fifo1_cmpr
 	dataa,
 	datab) /* synthesis synthesis_clearbox=1 */;
 	output   aeb;
-	input   [1:0]  dataa;
-	input   [1:0]  datab;
+	input   [7:0]  dataa;
+	input   [7:0]  datab;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
-	tri0   [1:0]  dataa;
-	tri0   [1:0]  datab;
+	tri0   [7:0]  dataa;
+	tri0   [7:0]  datab;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_on
 `endif
 
 	wire  [0:0]  aeb_result_wire;
 	wire  [0:0]  aneb_result_wire;
-	wire  [3:0]  data_wire;
+	wire  [19:0]  data_wire;
 	wire  eq_wire;
 
 	assign
 		aeb = eq_wire,
 		aeb_result_wire = (~ aneb_result_wire),
-		aneb_result_wire = ((data_wire[0] ^ data_wire[1]) | (data_wire[2] ^ data_wire[3])),
-		data_wire = {datab[1], dataa[1], datab[0], dataa[0]},
+		aneb_result_wire = (((data_wire[0] | data_wire[1]) | data_wire[2]) | data_wire[3]),
+		data_wire = {datab[7], dataa[7], datab[6], dataa[6], datab[5], dataa[5], datab[4], dataa[4], datab[3], dataa[3], datab[2], dataa[2], datab[1], dataa[1], datab[0], dataa[0], ((data_wire[16] ^ data_wire[17]) | (data_wire[18] ^ data_wire[19])), ((data_wire[12] ^ data_wire[13]) | (data_wire[14] ^ data_wire[15])), ((data_wire[8] ^ data_wire[9]) | (data_wire[10] ^ data_wire[11])), ((data_wire[4] ^ data_wire[5]) | (data_wire[6] ^ data_wire[7]))},
 		eq_wire = aeb_result_wire;
 endmodule //fifo1_cmpr
 
 
-//lpm_counter DEVICE_FAMILY="Stratix V" lpm_direction="UP" lpm_port_updown="PORT_UNUSED" lpm_width=1 clock cnt_en q sclr
+//lpm_counter DEVICE_FAMILY="Stratix V" lpm_direction="UP" lpm_port_updown="PORT_UNUSED" lpm_width=7 clock cnt_en q sclr
 //VERSION_BEGIN 17.1 cbx_cycloneii 2017:10:25:18:06:53:SJ cbx_lpm_add_sub 2017:10:25:18:06:53:SJ cbx_lpm_compare 2017:10:25:18:06:53:SJ cbx_lpm_counter 2017:10:25:18:06:53:SJ cbx_lpm_decode 2017:10:25:18:06:53:SJ cbx_mgl 2017:10:25:18:08:29:SJ cbx_nadder 2017:10:25:18:06:53:SJ cbx_stratix 2017:10:25:18:06:53:SJ cbx_stratixii 2017:10:25:18:06:53:SJ  VERSION_END
 
-//synthesis_resources = lut 1 reg 1 
+//synthesis_resources = lut 7 reg 7 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -722,7 +722,7 @@ module  fifo1_cntr
 	sclr) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   cnt_en;
-	output   [0:0]  q;
+	output   [6:0]  q;
 	input   sclr;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
@@ -733,40 +733,118 @@ module  fifo1_cntr
 // synopsys translate_on
 `endif
 
-	reg	[0:0]	counter_reg_bit;
-	wire	wire_counter_reg_bit_ena;
-	wire	wire_counter_reg_bit_sload;
+	wire	[6:0]	wire_counter_reg_bit_d;
+	wire	[6:0]	wire_counter_reg_bit_asdata;
+	reg	[6:0]	counter_reg_bit;
+	wire	[6:0]	wire_counter_reg_bit_ena;
+	wire	[6:0]	wire_counter_reg_bit_sload;
+	wire  [0:0]   wire_counter_comb_bita_0cout;
+	wire  [0:0]   wire_counter_comb_bita_1cout;
+	wire  [0:0]   wire_counter_comb_bita_2cout;
+	wire  [0:0]   wire_counter_comb_bita_3cout;
+	wire  [0:0]   wire_counter_comb_bita_4cout;
+	wire  [0:0]   wire_counter_comb_bita_5cout;
 	wire  [0:0]   wire_counter_comb_bita_0sumout;
+	wire  [0:0]   wire_counter_comb_bita_1sumout;
+	wire  [0:0]   wire_counter_comb_bita_2sumout;
+	wire  [0:0]   wire_counter_comb_bita_3sumout;
+	wire  [0:0]   wire_counter_comb_bita_4sumout;
+	wire  [0:0]   wire_counter_comb_bita_5sumout;
+	wire  [0:0]   wire_counter_comb_bita_6sumout;
 	wire  aclr_actual;
 	wire clk_en;
-	wire [0:0]  data;
+	wire [6:0]  data;
 	wire  external_cin;
 	wire  lsb_cin;
-	wire  [0:0]  s_val;
-	wire  [0:0]  safe_q;
+	wire  [6:0]  s_val;
+	wire  [6:0]  safe_q;
 	wire sload;
 	wire sset;
 	wire  updown_dir;
 	wire  updown_lsb;
+	wire  updown_other_bits;
 
 	// synopsys translate_off
 	initial
-		counter_reg_bit = 0;
+		counter_reg_bit[0:0] = 0;
 	// synopsys translate_on
 	always @ ( posedge clock or  posedge aclr_actual)
-		if (aclr_actual == 1'b1) counter_reg_bit <= 1'b0;
-		else if  (wire_counter_reg_bit_ena == 1'b1) 
-			if (sclr == 1'b1) counter_reg_bit <= 1'b0;
-			else if (wire_counter_reg_bit_sload == 1'b1) counter_reg_bit <= ((sset & s_val) | ((~ sset) & data));
-			else  counter_reg_bit <= {wire_counter_comb_bita_0sumout};
+		if (aclr_actual == 1'b1) counter_reg_bit[0:0] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[0:0] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[0:0] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[0:0] == 1'b1) counter_reg_bit[0:0] <= wire_counter_reg_bit_asdata[0:0];
+			else  counter_reg_bit[0:0] <= wire_counter_reg_bit_d[0:0];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[1:1] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[1:1] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[1:1] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[1:1] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[1:1] == 1'b1) counter_reg_bit[1:1] <= wire_counter_reg_bit_asdata[1:1];
+			else  counter_reg_bit[1:1] <= wire_counter_reg_bit_d[1:1];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[2:2] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[2:2] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[2:2] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[2:2] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[2:2] == 1'b1) counter_reg_bit[2:2] <= wire_counter_reg_bit_asdata[2:2];
+			else  counter_reg_bit[2:2] <= wire_counter_reg_bit_d[2:2];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[3:3] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[3:3] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[3:3] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[3:3] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[3:3] == 1'b1) counter_reg_bit[3:3] <= wire_counter_reg_bit_asdata[3:3];
+			else  counter_reg_bit[3:3] <= wire_counter_reg_bit_d[3:3];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[4:4] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[4:4] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[4:4] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[4:4] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[4:4] == 1'b1) counter_reg_bit[4:4] <= wire_counter_reg_bit_asdata[4:4];
+			else  counter_reg_bit[4:4] <= wire_counter_reg_bit_d[4:4];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[5:5] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[5:5] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[5:5] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[5:5] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[5:5] == 1'b1) counter_reg_bit[5:5] <= wire_counter_reg_bit_asdata[5:5];
+			else  counter_reg_bit[5:5] <= wire_counter_reg_bit_d[5:5];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[6:6] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[6:6] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[6:6] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[6:6] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[6:6] == 1'b1) counter_reg_bit[6:6] <= wire_counter_reg_bit_asdata[6:6];
+			else  counter_reg_bit[6:6] <= wire_counter_reg_bit_d[6:6];
 	assign
-		wire_counter_reg_bit_ena = (clk_en & (((cnt_en | sclr) | sset) | sload)),
-		wire_counter_reg_bit_sload = (sset | sload);
+		wire_counter_reg_bit_asdata = (({7{sset}} & s_val) | ({7{(~ sset)}} & data)),
+		wire_counter_reg_bit_d = {wire_counter_comb_bita_6sumout[0:0], wire_counter_comb_bita_5sumout[0:0], wire_counter_comb_bita_4sumout[0:0], wire_counter_comb_bita_3sumout[0:0], wire_counter_comb_bita_2sumout[0:0], wire_counter_comb_bita_1sumout[0:0], wire_counter_comb_bita_0sumout[0:0]};
+	assign
+		wire_counter_reg_bit_ena = {7{(clk_en & (((cnt_en | sclr) | sset) | sload))}},
+		wire_counter_reg_bit_sload = {7{(sset | sload)}};
 	stratixv_lcell_comb   counter_comb_bita_0
 	( 
 	.cin(lsb_cin),
 	.combout(),
-	.cout(),
+	.cout(wire_counter_comb_bita_0cout[0:0]),
 	.datad(counter_reg_bit[0]),
 	.dataf(updown_lsb),
 	.shareout(),
@@ -783,26 +861,153 @@ module  fifo1_cntr
 		counter_comb_bita_0.lut_mask = 64'h000000000000FF00,
 		counter_comb_bita_0.shared_arith = "off",
 		counter_comb_bita_0.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_1
+	( 
+	.cin(wire_counter_comb_bita_0cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_1cout[0:0]),
+	.datad(counter_reg_bit[1]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_1sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_1.extended_lut = "off",
+		counter_comb_bita_1.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_1.shared_arith = "off",
+		counter_comb_bita_1.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_2
+	( 
+	.cin(wire_counter_comb_bita_1cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_2cout[0:0]),
+	.datad(counter_reg_bit[2]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_2sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_2.extended_lut = "off",
+		counter_comb_bita_2.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_2.shared_arith = "off",
+		counter_comb_bita_2.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_3
+	( 
+	.cin(wire_counter_comb_bita_2cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_3cout[0:0]),
+	.datad(counter_reg_bit[3]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_3sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_3.extended_lut = "off",
+		counter_comb_bita_3.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_3.shared_arith = "off",
+		counter_comb_bita_3.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_4
+	( 
+	.cin(wire_counter_comb_bita_3cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_4cout[0:0]),
+	.datad(counter_reg_bit[4]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_4sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_4.extended_lut = "off",
+		counter_comb_bita_4.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_4.shared_arith = "off",
+		counter_comb_bita_4.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_5
+	( 
+	.cin(wire_counter_comb_bita_4cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_5cout[0:0]),
+	.datad(counter_reg_bit[5]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_5sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_5.extended_lut = "off",
+		counter_comb_bita_5.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_5.shared_arith = "off",
+		counter_comb_bita_5.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_6
+	( 
+	.cin(wire_counter_comb_bita_5cout[0:0]),
+	.combout(),
+	.cout(),
+	.datad(counter_reg_bit[6]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_6sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_6.extended_lut = "off",
+		counter_comb_bita_6.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_6.shared_arith = "off",
+		counter_comb_bita_6.lpm_type = "stratixv_lcell_comb";
 	assign
 		aclr_actual = 1'b0,
 		clk_en = 1'b1,
-		data = 1'b0,
+		data = {7{1'b0}},
 		external_cin = 1'b1,
 		lsb_cin = 1'b0,
 		q = safe_q,
-		s_val = 1'b1,
+		s_val = {7{1'b1}},
 		safe_q = counter_reg_bit,
 		sload = 1'b0,
 		sset = 1'b0,
 		updown_dir = 1'b1,
-		updown_lsb = updown_dir;
+		updown_lsb = updown_dir,
+		updown_other_bits = ((~ external_cin) | updown_dir);
 endmodule //fifo1_cntr
 
 
-//lpm_counter DEVICE_FAMILY="Stratix V" lpm_width=2 clock cnt_en q sclr updown
+//lpm_counter DEVICE_FAMILY="Stratix V" lpm_width=8 clock cnt_en q sclr updown
 //VERSION_BEGIN 17.1 cbx_cycloneii 2017:10:25:18:06:53:SJ cbx_lpm_add_sub 2017:10:25:18:06:53:SJ cbx_lpm_compare 2017:10:25:18:06:53:SJ cbx_lpm_counter 2017:10:25:18:06:53:SJ cbx_lpm_decode 2017:10:25:18:06:53:SJ cbx_mgl 2017:10:25:18:08:29:SJ cbx_nadder 2017:10:25:18:06:53:SJ cbx_stratix 2017:10:25:18:06:53:SJ cbx_stratixii 2017:10:25:18:06:53:SJ  VERSION_END
 
-//synthesis_resources = lut 2 reg 2 
+//synthesis_resources = lut 8 reg 8 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -815,7 +1020,7 @@ module  fifo1_cntr1
 	updown) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   cnt_en;
-	output   [1:0]  q;
+	output   [7:0]  q;
 	input   sclr;
 	input   updown;
 `ifndef ALTERA_RESERVED_QIS
@@ -828,21 +1033,33 @@ module  fifo1_cntr1
 // synopsys translate_on
 `endif
 
-	wire	[1:0]	wire_counter_reg_bit_d;
-	wire	[1:0]	wire_counter_reg_bit_asdata;
-	reg	[1:0]	counter_reg_bit;
-	wire	[1:0]	wire_counter_reg_bit_ena;
-	wire	[1:0]	wire_counter_reg_bit_sload;
+	wire	[7:0]	wire_counter_reg_bit_d;
+	wire	[7:0]	wire_counter_reg_bit_asdata;
+	reg	[7:0]	counter_reg_bit;
+	wire	[7:0]	wire_counter_reg_bit_ena;
+	wire	[7:0]	wire_counter_reg_bit_sload;
 	wire  [0:0]   wire_counter_comb_bita_0cout;
+	wire  [0:0]   wire_counter_comb_bita_1cout;
+	wire  [0:0]   wire_counter_comb_bita_2cout;
+	wire  [0:0]   wire_counter_comb_bita_3cout;
+	wire  [0:0]   wire_counter_comb_bita_4cout;
+	wire  [0:0]   wire_counter_comb_bita_5cout;
+	wire  [0:0]   wire_counter_comb_bita_6cout;
 	wire  [0:0]   wire_counter_comb_bita_0sumout;
 	wire  [0:0]   wire_counter_comb_bita_1sumout;
+	wire  [0:0]   wire_counter_comb_bita_2sumout;
+	wire  [0:0]   wire_counter_comb_bita_3sumout;
+	wire  [0:0]   wire_counter_comb_bita_4sumout;
+	wire  [0:0]   wire_counter_comb_bita_5sumout;
+	wire  [0:0]   wire_counter_comb_bita_6sumout;
+	wire  [0:0]   wire_counter_comb_bita_7sumout;
 	wire  aclr_actual;
 	wire clk_en;
-	wire [1:0]  data;
+	wire [7:0]  data;
 	wire  external_cin;
 	wire  lsb_cin;
-	wire  [1:0]  s_val;
-	wire  [1:0]  safe_q;
+	wire  [7:0]  s_val;
+	wire  [7:0]  safe_q;
 	wire sload;
 	wire sset;
 	wire  updown_dir;
@@ -869,12 +1086,72 @@ module  fifo1_cntr1
 			if (sclr == 1'b1) counter_reg_bit[1:1] <= 1'b0;
 			else if (wire_counter_reg_bit_sload[1:1] == 1'b1) counter_reg_bit[1:1] <= wire_counter_reg_bit_asdata[1:1];
 			else  counter_reg_bit[1:1] <= wire_counter_reg_bit_d[1:1];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[2:2] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[2:2] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[2:2] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[2:2] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[2:2] == 1'b1) counter_reg_bit[2:2] <= wire_counter_reg_bit_asdata[2:2];
+			else  counter_reg_bit[2:2] <= wire_counter_reg_bit_d[2:2];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[3:3] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[3:3] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[3:3] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[3:3] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[3:3] == 1'b1) counter_reg_bit[3:3] <= wire_counter_reg_bit_asdata[3:3];
+			else  counter_reg_bit[3:3] <= wire_counter_reg_bit_d[3:3];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[4:4] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[4:4] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[4:4] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[4:4] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[4:4] == 1'b1) counter_reg_bit[4:4] <= wire_counter_reg_bit_asdata[4:4];
+			else  counter_reg_bit[4:4] <= wire_counter_reg_bit_d[4:4];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[5:5] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[5:5] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[5:5] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[5:5] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[5:5] == 1'b1) counter_reg_bit[5:5] <= wire_counter_reg_bit_asdata[5:5];
+			else  counter_reg_bit[5:5] <= wire_counter_reg_bit_d[5:5];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[6:6] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[6:6] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[6:6] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[6:6] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[6:6] == 1'b1) counter_reg_bit[6:6] <= wire_counter_reg_bit_asdata[6:6];
+			else  counter_reg_bit[6:6] <= wire_counter_reg_bit_d[6:6];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[7:7] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[7:7] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[7:7] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[7:7] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[7:7] == 1'b1) counter_reg_bit[7:7] <= wire_counter_reg_bit_asdata[7:7];
+			else  counter_reg_bit[7:7] <= wire_counter_reg_bit_d[7:7];
 	assign
-		wire_counter_reg_bit_asdata = (({2{sset}} & s_val) | ({2{(~ sset)}} & data)),
-		wire_counter_reg_bit_d = {wire_counter_comb_bita_1sumout[0:0], wire_counter_comb_bita_0sumout[0:0]};
+		wire_counter_reg_bit_asdata = (({8{sset}} & s_val) | ({8{(~ sset)}} & data)),
+		wire_counter_reg_bit_d = {wire_counter_comb_bita_7sumout[0:0], wire_counter_comb_bita_6sumout[0:0], wire_counter_comb_bita_5sumout[0:0], wire_counter_comb_bita_4sumout[0:0], wire_counter_comb_bita_3sumout[0:0], wire_counter_comb_bita_2sumout[0:0], wire_counter_comb_bita_1sumout[0:0], wire_counter_comb_bita_0sumout[0:0]};
 	assign
-		wire_counter_reg_bit_ena = {2{(clk_en & (((cnt_en | sclr) | sset) | sload))}},
-		wire_counter_reg_bit_sload = {2{(sset | sload)}};
+		wire_counter_reg_bit_ena = {8{(clk_en & (((cnt_en | sclr) | sset) | sload))}},
+		wire_counter_reg_bit_sload = {8{(sset | sload)}};
 	stratixv_lcell_comb   counter_comb_bita_0
 	( 
 	.cin(lsb_cin),
@@ -900,7 +1177,7 @@ module  fifo1_cntr1
 	( 
 	.cin(wire_counter_comb_bita_0cout[0:0]),
 	.combout(),
-	.cout(),
+	.cout(wire_counter_comb_bita_1cout[0:0]),
 	.datad(counter_reg_bit[1]),
 	.dataf(updown_other_bits),
 	.shareout(),
@@ -917,14 +1194,140 @@ module  fifo1_cntr1
 		counter_comb_bita_1.lut_mask = 64'h0000FF000000FF00,
 		counter_comb_bita_1.shared_arith = "off",
 		counter_comb_bita_1.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_2
+	( 
+	.cin(wire_counter_comb_bita_1cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_2cout[0:0]),
+	.datad(counter_reg_bit[2]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_2sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_2.extended_lut = "off",
+		counter_comb_bita_2.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_2.shared_arith = "off",
+		counter_comb_bita_2.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_3
+	( 
+	.cin(wire_counter_comb_bita_2cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_3cout[0:0]),
+	.datad(counter_reg_bit[3]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_3sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_3.extended_lut = "off",
+		counter_comb_bita_3.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_3.shared_arith = "off",
+		counter_comb_bita_3.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_4
+	( 
+	.cin(wire_counter_comb_bita_3cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_4cout[0:0]),
+	.datad(counter_reg_bit[4]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_4sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_4.extended_lut = "off",
+		counter_comb_bita_4.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_4.shared_arith = "off",
+		counter_comb_bita_4.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_5
+	( 
+	.cin(wire_counter_comb_bita_4cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_5cout[0:0]),
+	.datad(counter_reg_bit[5]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_5sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_5.extended_lut = "off",
+		counter_comb_bita_5.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_5.shared_arith = "off",
+		counter_comb_bita_5.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_6
+	( 
+	.cin(wire_counter_comb_bita_5cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_6cout[0:0]),
+	.datad(counter_reg_bit[6]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_6sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_6.extended_lut = "off",
+		counter_comb_bita_6.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_6.shared_arith = "off",
+		counter_comb_bita_6.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_7
+	( 
+	.cin(wire_counter_comb_bita_6cout[0:0]),
+	.combout(),
+	.cout(),
+	.datad(counter_reg_bit[7]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_7sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_7.extended_lut = "off",
+		counter_comb_bita_7.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_7.shared_arith = "off",
+		counter_comb_bita_7.lpm_type = "stratixv_lcell_comb";
 	assign
 		aclr_actual = 1'b0,
 		clk_en = 1'b1,
-		data = {2{1'b0}},
+		data = {8{1'b0}},
 		external_cin = 1'b1,
 		lsb_cin = 1'b0,
 		q = safe_q,
-		s_val = {2{1'b1}},
+		s_val = {8{1'b1}},
 		safe_q = counter_reg_bit,
 		sload = 1'b0,
 		sset = 1'b0,
@@ -934,10 +1337,10 @@ module  fifo1_cntr1
 endmodule //fifo1_cntr1
 
 
-//lpm_counter DEVICE_FAMILY="Stratix V" lpm_direction="UP" lpm_port_updown="PORT_UNUSED" lpm_width=2 clock cnt_en q sclr
+//lpm_counter DEVICE_FAMILY="Stratix V" lpm_direction="UP" lpm_port_updown="PORT_UNUSED" lpm_width=8 clock cnt_en q sclr
 //VERSION_BEGIN 17.1 cbx_cycloneii 2017:10:25:18:06:53:SJ cbx_lpm_add_sub 2017:10:25:18:06:53:SJ cbx_lpm_compare 2017:10:25:18:06:53:SJ cbx_lpm_counter 2017:10:25:18:06:53:SJ cbx_lpm_decode 2017:10:25:18:06:53:SJ cbx_mgl 2017:10:25:18:08:29:SJ cbx_nadder 2017:10:25:18:06:53:SJ cbx_stratix 2017:10:25:18:06:53:SJ cbx_stratixii 2017:10:25:18:06:53:SJ  VERSION_END
 
-//synthesis_resources = lut 2 reg 2 
+//synthesis_resources = lut 8 reg 8 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -949,7 +1352,7 @@ module  fifo1_cntr12
 	sclr) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   cnt_en;
-	output   [1:0]  q;
+	output   [7:0]  q;
 	input   sclr;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
@@ -960,21 +1363,33 @@ module  fifo1_cntr12
 // synopsys translate_on
 `endif
 
-	wire	[1:0]	wire_counter_reg_bit_d;
-	wire	[1:0]	wire_counter_reg_bit_asdata;
-	reg	[1:0]	counter_reg_bit;
-	wire	[1:0]	wire_counter_reg_bit_ena;
-	wire	[1:0]	wire_counter_reg_bit_sload;
+	wire	[7:0]	wire_counter_reg_bit_d;
+	wire	[7:0]	wire_counter_reg_bit_asdata;
+	reg	[7:0]	counter_reg_bit;
+	wire	[7:0]	wire_counter_reg_bit_ena;
+	wire	[7:0]	wire_counter_reg_bit_sload;
 	wire  [0:0]   wire_counter_comb_bita_0cout;
+	wire  [0:0]   wire_counter_comb_bita_1cout;
+	wire  [0:0]   wire_counter_comb_bita_2cout;
+	wire  [0:0]   wire_counter_comb_bita_3cout;
+	wire  [0:0]   wire_counter_comb_bita_4cout;
+	wire  [0:0]   wire_counter_comb_bita_5cout;
+	wire  [0:0]   wire_counter_comb_bita_6cout;
 	wire  [0:0]   wire_counter_comb_bita_0sumout;
 	wire  [0:0]   wire_counter_comb_bita_1sumout;
+	wire  [0:0]   wire_counter_comb_bita_2sumout;
+	wire  [0:0]   wire_counter_comb_bita_3sumout;
+	wire  [0:0]   wire_counter_comb_bita_4sumout;
+	wire  [0:0]   wire_counter_comb_bita_5sumout;
+	wire  [0:0]   wire_counter_comb_bita_6sumout;
+	wire  [0:0]   wire_counter_comb_bita_7sumout;
 	wire  aclr_actual;
 	wire clk_en;
-	wire [1:0]  data;
+	wire [7:0]  data;
 	wire  external_cin;
 	wire  lsb_cin;
-	wire  [1:0]  s_val;
-	wire  [1:0]  safe_q;
+	wire  [7:0]  s_val;
+	wire  [7:0]  safe_q;
 	wire sload;
 	wire sset;
 	wire  updown_dir;
@@ -1001,12 +1416,72 @@ module  fifo1_cntr12
 			if (sclr == 1'b1) counter_reg_bit[1:1] <= 1'b0;
 			else if (wire_counter_reg_bit_sload[1:1] == 1'b1) counter_reg_bit[1:1] <= wire_counter_reg_bit_asdata[1:1];
 			else  counter_reg_bit[1:1] <= wire_counter_reg_bit_d[1:1];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[2:2] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[2:2] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[2:2] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[2:2] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[2:2] == 1'b1) counter_reg_bit[2:2] <= wire_counter_reg_bit_asdata[2:2];
+			else  counter_reg_bit[2:2] <= wire_counter_reg_bit_d[2:2];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[3:3] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[3:3] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[3:3] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[3:3] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[3:3] == 1'b1) counter_reg_bit[3:3] <= wire_counter_reg_bit_asdata[3:3];
+			else  counter_reg_bit[3:3] <= wire_counter_reg_bit_d[3:3];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[4:4] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[4:4] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[4:4] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[4:4] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[4:4] == 1'b1) counter_reg_bit[4:4] <= wire_counter_reg_bit_asdata[4:4];
+			else  counter_reg_bit[4:4] <= wire_counter_reg_bit_d[4:4];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[5:5] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[5:5] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[5:5] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[5:5] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[5:5] == 1'b1) counter_reg_bit[5:5] <= wire_counter_reg_bit_asdata[5:5];
+			else  counter_reg_bit[5:5] <= wire_counter_reg_bit_d[5:5];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[6:6] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[6:6] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[6:6] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[6:6] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[6:6] == 1'b1) counter_reg_bit[6:6] <= wire_counter_reg_bit_asdata[6:6];
+			else  counter_reg_bit[6:6] <= wire_counter_reg_bit_d[6:6];
+	// synopsys translate_off
+	initial
+		counter_reg_bit[7:7] = 0;
+	// synopsys translate_on
+	always @ ( posedge clock or  posedge aclr_actual)
+		if (aclr_actual == 1'b1) counter_reg_bit[7:7] <= 1'b0;
+		else if  (wire_counter_reg_bit_ena[7:7] == 1'b1) 
+			if (sclr == 1'b1) counter_reg_bit[7:7] <= 1'b0;
+			else if (wire_counter_reg_bit_sload[7:7] == 1'b1) counter_reg_bit[7:7] <= wire_counter_reg_bit_asdata[7:7];
+			else  counter_reg_bit[7:7] <= wire_counter_reg_bit_d[7:7];
 	assign
-		wire_counter_reg_bit_asdata = (({2{sset}} & s_val) | ({2{(~ sset)}} & data)),
-		wire_counter_reg_bit_d = {wire_counter_comb_bita_1sumout[0:0], wire_counter_comb_bita_0sumout[0:0]};
+		wire_counter_reg_bit_asdata = (({8{sset}} & s_val) | ({8{(~ sset)}} & data)),
+		wire_counter_reg_bit_d = {wire_counter_comb_bita_7sumout[0:0], wire_counter_comb_bita_6sumout[0:0], wire_counter_comb_bita_5sumout[0:0], wire_counter_comb_bita_4sumout[0:0], wire_counter_comb_bita_3sumout[0:0], wire_counter_comb_bita_2sumout[0:0], wire_counter_comb_bita_1sumout[0:0], wire_counter_comb_bita_0sumout[0:0]};
 	assign
-		wire_counter_reg_bit_ena = {2{(clk_en & (((cnt_en | sclr) | sset) | sload))}},
-		wire_counter_reg_bit_sload = {2{(sset | sload)}};
+		wire_counter_reg_bit_ena = {8{(clk_en & (((cnt_en | sclr) | sset) | sload))}},
+		wire_counter_reg_bit_sload = {8{(sset | sload)}};
 	stratixv_lcell_comb   counter_comb_bita_0
 	( 
 	.cin(lsb_cin),
@@ -1032,7 +1507,7 @@ module  fifo1_cntr12
 	( 
 	.cin(wire_counter_comb_bita_0cout[0:0]),
 	.combout(),
-	.cout(),
+	.cout(wire_counter_comb_bita_1cout[0:0]),
 	.datad(counter_reg_bit[1]),
 	.dataf(updown_other_bits),
 	.shareout(),
@@ -1049,14 +1524,140 @@ module  fifo1_cntr12
 		counter_comb_bita_1.lut_mask = 64'h0000FF000000FF00,
 		counter_comb_bita_1.shared_arith = "off",
 		counter_comb_bita_1.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_2
+	( 
+	.cin(wire_counter_comb_bita_1cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_2cout[0:0]),
+	.datad(counter_reg_bit[2]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_2sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_2.extended_lut = "off",
+		counter_comb_bita_2.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_2.shared_arith = "off",
+		counter_comb_bita_2.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_3
+	( 
+	.cin(wire_counter_comb_bita_2cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_3cout[0:0]),
+	.datad(counter_reg_bit[3]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_3sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_3.extended_lut = "off",
+		counter_comb_bita_3.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_3.shared_arith = "off",
+		counter_comb_bita_3.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_4
+	( 
+	.cin(wire_counter_comb_bita_3cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_4cout[0:0]),
+	.datad(counter_reg_bit[4]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_4sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_4.extended_lut = "off",
+		counter_comb_bita_4.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_4.shared_arith = "off",
+		counter_comb_bita_4.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_5
+	( 
+	.cin(wire_counter_comb_bita_4cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_5cout[0:0]),
+	.datad(counter_reg_bit[5]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_5sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_5.extended_lut = "off",
+		counter_comb_bita_5.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_5.shared_arith = "off",
+		counter_comb_bita_5.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_6
+	( 
+	.cin(wire_counter_comb_bita_5cout[0:0]),
+	.combout(),
+	.cout(wire_counter_comb_bita_6cout[0:0]),
+	.datad(counter_reg_bit[6]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_6sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_6.extended_lut = "off",
+		counter_comb_bita_6.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_6.shared_arith = "off",
+		counter_comb_bita_6.lpm_type = "stratixv_lcell_comb";
+	stratixv_lcell_comb   counter_comb_bita_7
+	( 
+	.cin(wire_counter_comb_bita_6cout[0:0]),
+	.combout(),
+	.cout(),
+	.datad(counter_reg_bit[7]),
+	.dataf(updown_other_bits),
+	.shareout(),
+	.sumout(wire_counter_comb_bita_7sumout[0:0]),
+	.dataa(1'b0),
+	.datab(1'b0),
+	.datac(1'b0),
+	.datae(1'b0),
+	.datag(1'b0),
+	.sharein(1'b0)
+	);
+	defparam
+		counter_comb_bita_7.extended_lut = "off",
+		counter_comb_bita_7.lut_mask = 64'h0000FF000000FF00,
+		counter_comb_bita_7.shared_arith = "off",
+		counter_comb_bita_7.lpm_type = "stratixv_lcell_comb";
 	assign
 		aclr_actual = 1'b0,
 		clk_en = 1'b1,
-		data = {2{1'b0}},
+		data = {8{1'b0}},
 		external_cin = 1'b1,
 		lsb_cin = 1'b0,
 		q = safe_q,
-		s_val = {2{1'b1}},
+		s_val = {8{1'b1}},
 		safe_q = counter_reg_bit,
 		sload = 1'b0,
 		sset = 1'b0,
@@ -1065,7 +1666,7 @@ module  fifo1_cntr12
 		updown_other_bits = ((~ external_cin) | updown_dir);
 endmodule //fifo1_cntr12
 
-//synthesis_resources = lut 5 M20K 1 reg 13 
+//synthesis_resources = lut 23 M20K 1 reg 37 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -1098,7 +1699,7 @@ module  fifo1_a_dpfifo
 	wire  [7:0]   wire_FIFOram_q_b;
 	reg	empty_dff;
 	reg	full_dff;
-	reg	[1:0]	low_addressa;
+	reg	[7:0]	low_addressa;
 	reg	rd_ptr_lsb;
 	wire	wire_rd_ptr_lsb_ena;
 	reg	usedw_is_0_dff;
@@ -1106,16 +1707,16 @@ module  fifo1_a_dpfifo
 	reg	wrreq_delay;
 	wire  wire_almost_full_comparer_aeb;
 	wire  wire_two_comparison_aeb;
-	wire  [0:0]   wire_rd_ptr_msb_q;
-	wire  [1:0]   wire_usedw_counter_q;
-	wire  [1:0]   wire_wr_ptr_q;
+	wire  [6:0]   wire_rd_ptr_msb_q;
+	wire  [7:0]   wire_usedw_counter_q;
+	wire  [7:0]   wire_wr_ptr_q;
 	wire aclr;
 	wire  asynch_read_counter_enable;
 	wire  empty_out;
 	wire  full_out;
 	wire  pulse_ram_output;
-	wire  [1:0]  ram_read_address;
-	wire  [1:0]  rd_ptr;
+	wire  [7:0]  ram_read_address;
+	wire  [7:0]  rd_ptr;
 	wire  usedw_is_0;
 	wire  usedw_is_1;
 	wire  usedw_is_2;
@@ -1154,8 +1755,8 @@ module  fifo1_a_dpfifo
 		low_addressa = 0;
 	// synopsys translate_on
 	always @ ( posedge clock or  posedge aclr)
-		if (aclr == 1'b1) low_addressa <= 2'b0;
-		else  low_addressa <= ({2{(~ sclr)}} & (({2{asynch_read_counter_enable}} & rd_ptr) | ({2{(~ asynch_read_counter_enable)}} & low_addressa)));
+		if (aclr == 1'b1) low_addressa <= 8'b0;
+		else  low_addressa <= ({8{(~ sclr)}} & (({8{asynch_read_counter_enable}} & rd_ptr) | ({8{(~ asynch_read_counter_enable)}} & low_addressa)));
 	// synopsys translate_off
 	initial
 		rd_ptr_lsb = 0;
@@ -1189,13 +1790,13 @@ module  fifo1_a_dpfifo
 	fifo1_cmpr   almost_full_comparer
 	( 
 	.aeb(wire_almost_full_comparer_aeb),
-	.dataa({2{1'b1}}),
+	.dataa({8{1'b1}}),
 	.datab(wire_usedw_counter_q));
 	fifo1_cmpr   two_comparison
 	( 
 	.aeb(wire_two_comparison_aeb),
 	.dataa(wire_usedw_counter_q),
-	.datab({1'b1, 1'b0}));
+	.datab({{6{1'b0}}, 1'b1, 1'b0}));
 	fifo1_cntr   rd_ptr_msb
 	( 
 	.clock(clock),
@@ -1224,7 +1825,7 @@ module  fifo1_a_dpfifo
 		full_out = full_dff,
 		pulse_ram_output = valid_rreq,
 		q = wire_FIFOram_q_b,
-		ram_read_address = (({2{(~ asynch_read_counter_enable)}} & low_addressa) | ({2{asynch_read_counter_enable}} & rd_ptr)),
+		ram_read_address = (({8{(~ asynch_read_counter_enable)}} & low_addressa) | ({8{asynch_read_counter_enable}} & rd_ptr)),
 		rd_ptr = {wire_rd_ptr_msb_q, (~ rd_ptr_lsb)},
 		usedw_is_0 = (~ usedw_is_0_dff),
 		usedw_is_1 = usedw_is_1_dff,
@@ -1236,7 +1837,7 @@ module  fifo1_a_dpfifo
 		wait_state = (usedw_will_be_1 & valid_wreq);
 endmodule //fifo1_a_dpfifo
 
-//synthesis_resources = lut 5 M20K 1 reg 13 
+//synthesis_resources = lut 23 M20K 1 reg 37 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -1328,7 +1929,7 @@ endmodule
 // Retrieval info: PRIVATE: AlmostFullThr NUMERIC "-1"
 // Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "1"
 // Retrieval info: PRIVATE: Clock NUMERIC "0"
-// Retrieval info: PRIVATE: Depth NUMERIC "4"
+// Retrieval info: PRIVATE: Depth NUMERIC "256"
 // Retrieval info: PRIVATE: Empty NUMERIC "1"
 // Retrieval info: PRIVATE: Full NUMERIC "1"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Stratix V"
@@ -1357,11 +1958,11 @@ endmodule
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: ADD_RAM_OUTPUT_REGISTER STRING "ON"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Stratix V"
-// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "4"
+// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "256"
 // Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "OFF"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "scfifo"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "8"
-// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "2"
+// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "8"
 // Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "OFF"
 // Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "OFF"
 // Retrieval info: CONSTANT: USE_EAB STRING "ON"
