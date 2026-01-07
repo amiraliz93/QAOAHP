@@ -53,7 +53,7 @@ endmodule
 // Retrieval info: PRIVATE: ConstantB NUMERIC "0"
 // Retrieval info: PRIVATE: Function NUMERIC "0"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Stratix V"
-// Retrieval info: PRIVATE: LPM_PIPELINE NUMERIC "8"
+// Retrieval info: PRIVATE: LPM_PIPELINE NUMERIC "2"
 // Retrieval info: PRIVATE: Latency NUMERIC "1"
 // Retrieval info: PRIVATE: Overflow NUMERIC "0"
 // Retrieval info: PRIVATE: RadixA NUMERIC "10"
@@ -70,7 +70,7 @@ endmodule
 // Retrieval info: LIBRARY: lpm lpm.lpm_components.all
 // Retrieval info: CONSTANT: LPM_DIRECTION STRING "ADD"
 // Retrieval info: CONSTANT: LPM_HINT STRING "ONE_INPUT_IS_CONSTANT=NO,CIN_USED=NO"
-// Retrieval info: CONSTANT: LPM_PIPELINE NUMERIC "8"
+// Retrieval info: CONSTANT: LPM_PIPELINE NUMERIC "2"
 // Retrieval info: CONSTANT: LPM_REPRESENTATION STRING "SIGNED"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "LPM_ADD_SUB"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "64"

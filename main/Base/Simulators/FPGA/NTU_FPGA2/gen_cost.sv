@@ -1,6 +1,8 @@
+`timescale 1ns / 1ns
 // pipelined ALU test code for 2 floating points.
-// 2025 0903, tested by alutest_tb.v
 // Hiroki Shibata, Tokyo Metropollitan University, created at Nottingham Trent University.
+
+// gamma should be in [-pi, pi]. 
 module gen_cost
   #(
   parameter P=64, // number of word width
@@ -15,55 +17,67 @@ module gen_cost
    input  [Ni-1:0]    info_in, // information, like addresses, enabled signal, and so on.
    output  [Ni-1:0]    info_out // information, like addresses, enabled signal, and so on.
 );
-parameter NPip = 58 + 1; // number of pipeline. Depends on IP core like addFPF64 used in this module.
+localparam N0 = 21; // latency FP64 to Fix 56.53(sign)
+localparam N1 = 11; // latency FP64 to Fix 56.53(sign)
+localparam N2 = 167; // latency of CORDIC. 56.53(sign) to 55.53(sign)
+localparam N3 = 15; // latency Fix 55.53(sign) to FP64
+localparam NPip = 1 + N0 + 1 + N1 + 1 + N2 + 1 + N3; // = 218, number of pipeline. Depends on IP core like addFPF64 used in this module.
 
-reg [Ni-1:0] p_info [NPip-1:0];
-wire [Ni-1:0] pp_ar_out;
+wire [P-1:0] n0_out;
+reg [63:0] n1_in;
+wire [55:0] n1_out;
+reg [55:0] n2_in;
+wire [54:0] n2_sin_out;
+wire [54:0] n2_cos_out;
+wire [55:0] cordic_in;
+reg [54:0] n3_sin_in;
+reg [54:0] n3_cos_in;
+wire [63:0] n3_sin_out;
+wire [63:0] n3_cos_out;
 
-logic [P-1:0] n_Hr_NPip;
-logic [P-1:0] n_Hi_NPip;
 reg [P-1:0] Hi_NPip;
 reg [P-1:0] Hr_NPip;
 reg [P-1:0] H_0Pip;
 reg [P-1:0] gamma_0Pip;
 assign Hr_o = Hr_NPip;
 assign Hi_o = Hi_NPip;
+reg [Ni-1:0] p_info [NPip-1:0];
 assign info_out = p_info[NPip-1];
-// cordic (
-//       input  wire [55:0] a,      //      a.a
-//       input  wire        areset, // areset.reset
-//       output wire [54:0] c,      //      c.c
-//       input  wire        clk,    //    clk.clk
-//       output wire [54:0] s       //      s.s
-// );
-// fp2fix64 (
-// 		input  wire        clk,    //    clk.clk
-// 		input  wire        areset, // areset.reset
-// 		input  wire [63:0] a,      //      a.a
-// 		output wire [54:0] q       //      q.q
-// 	);
-// cordic (
-// 		input  wire [55:0] a,      //      a.a
-// 		input  wire        areset, // areset.reset
-// 		output wire [54:0] c,      //      c.c
-// 		input  wire        clk,    //    clk.clk
-// 		output wire [54:0] s       //      s.s
-// 	);
-// Instantiate the module
+
 mulFPF64 mulFPF_rc(
       .clk(CLK),    //    clk.clk
       .areset(RST), // areset.reset
-      .a(H_0Pip),      //      a.a
-      .b(gamma_0Pip),      //      b.b
-      .q(n_Hr_NPip)       //      q.q
+      .a(H_0Pip),      //    a.a, FP64
+      .b(gamma_0Pip),  //    b.b, FP64
+      .q(n0_out)       //    q.q, FP64
 );
-mulFPF64 mulFPF_is(
-      .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
-      .a(H_0Pip),      //      a.a
-      .b(gamma_0Pip),      //      b.b
-      .q(n_Hi_NPip)       //      q.q
-);
+FP2Fix53 inst_FP2Fix53(
+		.clk(CLK),    // clk.clk input  wire        
+		.areset(RST), // areset.reset input  wire        
+		.a(n1_in),    // a.a input  wire [63:0] 
+		.q(n1_out)    // q.q output wire [55:0] 
+	);
+
+Cordic168 inst_cordic(
+		.a(n2_in),  // a.a input  wire [55:0] 
+		.areset(RST),    // areset.reset input  wire        
+		.c(n2_cos_out),         // c.c output wire [54:0] , cosine
+		.clk(CLK),       // clk.clk   input  wire        
+		.s(n2_sin_out)          // s.s     output wire [54:0] , sine
+	);
+
+Fix53toFP64 inst_Fix53toFP64(
+		.clk(CLK),    // clk.clk input  wire       
+		.areset(RST), // areset.reset input  wire        
+		.a(n3_sin_in),    //      a.a   input  wire [54:0] 
+		.q(n3_sin_out)    //      q.q output wire [63:0] 
+	);
+Fix53toFP64 inst2_Fix53toFP64(
+		.clk(CLK),    // clk.clk input  wire       
+		.areset(RST), // areset.reset input  wire        
+		.a(n3_cos_in),    //      a.a   input  wire [54:0] 
+		.q(n3_cos_out)    //      q.q output wire [63:0] 
+	);
 
 reg [31:0] CP; // program counter
 integer i;
@@ -72,16 +86,24 @@ always @(posedge CLK) begin
             for (i = 0; i < NPip; i = i + 1) begin
                   p_info[i] <= 0;
             end
-            gamma_0Pip <= '0;
             Hi_NPip <= '0;
             Hr_NPip <= '0;
             H_0Pip <= '0;
+            gamma_0Pip <= '0;
+            n3_cos_in <= '0;
+            n3_sin_in <= '0;
+            n1_in <= '0;
+            n2_in <= '0;
 	end
       else begin
+            n3_cos_in <= n2_cos_out;
+            n3_sin_in <= n2_sin_out;
+            n1_in <= n0_out;
+            n2_in <= n1_out;
             gamma_0Pip <= gamma;
             H_0Pip <= H;
-            Hi_NPip <= n_Hi_NPip;
-            Hr_NPip <= n_Hr_NPip;
+            Hi_NPip <= n3_sin_out;
+            Hr_NPip <= n3_cos_out;
             p_info[0] <= info_in;
             for (i = 0; i <= NPip-2; i = i + 1) begin
                   p_info[i+1] <= p_info[i];
@@ -89,5 +111,4 @@ always @(posedge CLK) begin
       end
 end
 endmodule
-
 
