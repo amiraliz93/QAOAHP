@@ -7,6 +7,23 @@ from serial.tools import list_ports
 import struct
 import math
 import numpy as np 
+import random
+
+random.seed(7)
+uart_port = 'COM4'
+# uart_port = "/dev/ttyUSB0"
+# uart_port = None
+baud_rate = 115200
+
+beta = 0.1
+gamma = 0.2
+sinb = np.sin(beta)
+cosb = np.cos(beta)
+NQ = 3
+NS = 2**NQ
+Np = 8 # number of p layers.
+lineend = ""
+
 
 def fp64b(f):
     return struct.pack('<d', f)
@@ -75,40 +92,17 @@ qa_MIXER =  ib1(4)
 qa_COST =  ib1(8)
 qa_INIT =  ib1(16)
 
-v1 = 0.83134910
-v2 = 0.13134750
-v3 = 0.43248110
-bv1 = fp64b(v1)
-v1t = bfp64(bv1)
-print(bv1.hex(), v1t, v1)
-
-uart_port = 'COM4'
-# uart_port = "/dev/ttyUSB0"
-# uart_port = None
-baud_rate = 115200
-
-# there are registers, rA, rB, rU, rT in the state machine
-# all data sent to state machine will be firstly stored into rT. you need to move value in rT to write anoter register. e.g., call OP_MOV_T2A
-# all data sent from state machine must be in rU. i.e., You need to move any value to rU before issue fetch command. e.g., OP_MOV_A2U if you want the value of rA then call OP_FETCH8U.
-# OP_FETCH8U fetch 64 bit of rU. OP_FETCH1U fetch first 8 bit in rU. For OP_SEND1T, 8T similarly.
-
-beta = 0.1
-gamma = 0.2
-sinb = np.sin(beta)
-cosb = np.cos(beta)
-NQ = 3
-NS = 2**NQ
-Np = 8 # number of p layers.
-
 # generate ideal result
 sv = []
+H = []
+costFOP = []
 
 # initialize state vector 
 for i in range(NS):
     sv.append(complex(0, 0))
 
 sv[0] = complex(1, 0)
-sv0 = sv # back up the initizal state.
+sv0 = sv.copy() # back up the initizal state.
 def swap_bits(i, a, b):
     # 1. Extract the values of the bits at position a and b
     bit_a = (i >> a) & 1
@@ -125,17 +119,28 @@ def swap_bits(i, a, b):
         i ^= mask
         
     return i
-import random
+# for i in range(16):
+#     a = swap_bits(i, 0, 2)
+#     print(a, i)
+# quit()
+# init cost function.
+for i in range(NS):
+    Ht = random.uniform(-1, 1)
+    costFt = math.cos(gamma*Ht) + 1j*math.sin(gamma*Ht)
+    H.append(Ht)
+    costFOP.append(costFt)
+    print(costFt)
+
 lcq = list(range(NQ))
 random.shuffle(lcq)
 print(lcq)
+
+f = open(f"sim_{0}-th_0.txt", "w")
+for i in range(NS):
+    f.write(f"{sv[i]}\n")
+f.close()
 for p in range(Np):
     # output the current state vector
-    f = open(f"sim_mixer_{p}-th.txt", "w")
-    for i in range(NS):
-        f.write(f"{sv[i]}\n")
-    f.close()
-
     # apply mixer operator
     for cq in lcq: #counter of qbit.
         for id2 in range(NS//2):
@@ -156,10 +161,31 @@ for p in range(Np):
 
             # p'_a = cos p_a + i sin p_b
             # p'_b = i sin p_a + cos p_b
+    # cost function operator
+    
+    f = open(f"sim_{p}-th_mix.txt", "w")
+    for i in range(NS):
+        f.write(f"{sv[i]}\n")
+    f.close()
 
+    for i in range(NS):
+        sv[i] = costFOP[i]*sv[i]
+        
+    f = open(f"sim_{p}-th_cost.txt", "w")
+    for i in range(NS):
+        f.write(f"{sv[i]}\n")
+    f.close()
+    
+    
 data_array = [
       OP_SEND1T,
       ib1(12), OP_MOV_T2A, OP_MOV_A2U, OP_FETCH1U,
+      OP_SEND1T, qa_WAIT,
+      OP_SEND_CMD,
+      OP_SEND1T, qa_INIT,
+      OP_SEND_CMD,
+      OP_SEND1T, qa_RUN,
+      OP_SEND_CMD,
       OP_SEND1T, qa_WAIT,
       OP_SEND_CMD,
       
@@ -167,10 +193,10 @@ data_array = [
       OP_MOV_T2A,
       OP_SEND8T, ib8(0x0100_0000_0000_0000),  # address of number of qbit's register
       OP_MOV_T2B,
-      OP_SEND8T, ib8(NQ-1),
+      OP_SEND8T, ib8(NQ),
       OP_WRITE_T2RAM,
       OP_ADD_B2A, # set address to next, 0x4100_0000_0000_0000
-      OP_SEND8T, ib8(NQ-2),
+      OP_SEND8T, ib8(NQ-1),
       OP_WRITE_T2RAM,
       OP_ADD_B2A,  # set address to next, 0x4200_0000_0000_0000
       OP_SEND8T, ib8(NS-1),
@@ -182,6 +208,14 @@ data_array = [
       OP_SEND8T, ib8(Np),
       OP_WRITE_T2RAM]
 
+data_array += [
+      OP_SEND1T, qa_INIT,
+      OP_SEND_CMD,
+      OP_SEND1T, qa_RUN,
+      OP_SEND_CMD,
+      OP_SEND1T, qa_WAIT,
+      OP_SEND_CMD
+      ]
 
 data_array += [OP_SEND8T, ib8(0x0800_0000_0000_0000),  # write BRAM for cosb, sinb, gamma
       OP_MOV_T2A]
@@ -215,17 +249,25 @@ data_array += [OP_SEND8T, ib8(0x2000_0000_0000_0000), # set the address
 for i in range(NS): 
     value = sv0[i]
     data_array += [OP_SEND8T, fp64b(value.imag), OP_WRITE_T2RAM, OP_INC_A]
+    
+# set the address
+data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # set the address
+      OP_MOV_T2A]
+# send cost function
+for i in range(NS): 
+    value = H[i]
+    data_array += [OP_SEND8T, fp64b(value), OP_WRITE_T2RAM, OP_INC_A]
 
 data_array += [
       OP_SEND1T, qa_INIT,
       OP_SEND_CMD,
       OP_SEND1T, qa_RUN,
-      OP_SEND_CMD,
-      OP_NONE, # need to wait for the pipeline end the process
-      OP_SEND1T, qa_WAIT,
-      OP_SEND_CMD]
+      OP_SEND_CMD
+      ]
 
-data_array += [HOST_WAIT]
+data_array += [HOST_WAIT]  # need to wait for the pipeline end the process
+data_array += [OP_SEND1T, qa_WAIT,
+      OP_SEND_CMD]
 
 data_array += [OP_SEND8T, ib8(0x1000000000000000), # read address of BRAM, real part of state vector
       OP_MOV_T2A]
@@ -236,11 +278,38 @@ for i in range(NS):
     OP_INC_A # move to the next address.
     ]  
 
-f = open("uarttest_veri.sv", "w") # generate the same byte sequence above in verilog format so that we can run the testbench simulation with the same input to be supplied here by this python code.
+data_array += [OP_SEND8T, ib8(0x2000000000000000), # read address of BRAM, imaginary part of state vector
+      OP_MOV_T2A]
+for i in range(NS):
+    data_array += [
+    OP_READ_RAM2U,
+    OP_FETCH8U,
+    OP_INC_A # move to the next address.
+    ]  
+
+data_array += [OP_SEND8T, ib8(0x2100000000000000), # read address of BRAM, imaginary part of state vector
+      OP_MOV_T2A]
+for i in range(NS):
+    data_array += [
+    OP_READ_RAM2U,
+    OP_FETCH8U,
+    OP_INC_A # move to the next address.
+    ]  
+
+data_array += [OP_SEND8T, ib8(0x2200000000000000), # read address of BRAM, imaginary part of state vector
+      OP_MOV_T2A]
+for i in range(NS):
+    data_array += [
+    OP_READ_RAM2U,
+    OP_FETCH8U,
+    OP_INC_A # move to the next address.
+    ]  
+
+f = open("all_test_cmd.sv", "w") # generate the same byte sequence above in verilog format so that we can run the testbench simulation with the same input to be supplied here by this python code.
 AC = [b"".join(data_array)]
-f.write("{\n")
+f.write("data_array={" + lineend)
 for i, b in enumerate(data_array):
-    print(type(b), b, len(b))
+    # print(type(b), b, len(b))
     for j in range(len(b)):
         f.write(f"8'h{ib1(b[j]).hex()}")
         if j != len(b)-1:
@@ -250,10 +319,12 @@ for i, b in enumerate(data_array):
         f.write(f",")
     skey = b.hex()
     if skey in idop:
-        f.write(f" // {idop[skey]}\n")
+        if lineend != "":
+            f.write(f" // {idop[skey]}{lineend}")
     elif len(b) == 8:
-        f.write(f" // {bfp64(b)}\n")
-f.write("}\n")
+        if lineend != "":
+            f.write(f" // {bfp64(b)}{lineend}")
+f.write("};" + lineend)
 f.close()
 quit()
 
