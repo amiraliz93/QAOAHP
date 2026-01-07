@@ -62,7 +62,7 @@ module control_interface#(
     //------------------------------------------------------------------------
     // Interface for testing, not core 
     //------------------------------------------------------------------------
-    input [63:0] rS, // status of qaoa system.
+    input wire [63:0] rS, // status of qaoa system.
     output reg [23:0] CMD
 );
 
@@ -297,7 +297,7 @@ always_comb begin: main_StateBlock
       n_w_addr = rA;                      // BRAM write address = rA
       n_r_addr = rA;                      // BRAM read address = rA
       n_w_data = rT;                      // BRAM write data = rT
-      n_CMD = 0;    
+      n_CMD = 'd0;    
       n_rA = rA;                          // Keep register A value
       n_rB = rB;                          // Keep register B value
       n_rT = rT;                          // Keep temporary register
@@ -383,6 +383,10 @@ always_comb begin: main_StateBlock
             OP_MOV_T2A: begin
                   n_state = s_WRITE_REG;      // Go to write state
                   n_writeReg = WRITE_T2A;     // Set write operation
+            end
+            OP_MOV_T2B: begin
+                  n_state = s_WRITE_REG;      // Go to write state
+                  n_writeReg = WRITE_T2B;     // Set write operation
             end
             // OP_MOV_A2U: Move register A to address register U
             OP_MOV_A2U: begin
@@ -581,6 +585,9 @@ always_comb begin: main_StateBlock
                   // WRITE_BRAM_U: rU = BRAM read data
                   WRITE_BRAM_U: begin
                         n_rU = r_data;
+                  end
+                  WRITE_S2U: begin
+                        n_rU = rS;
                   end
                   
                   WRITE_Info2U: begin
