@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="cordic" kind="cordic" version="1.0" fabric="QSYS">
  <!-- Format version 17.1 590 (Future versions may contain additional information.) -->
- <!-- 2025.10.14.06:19:44 -->
+ <!-- 2026.01.07.04:19:42 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1760390384</value>
+  <value>1767727182</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -124,23 +124,23 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="frequency_target">
    <type>int</type>
-   <value>220</value>
-   <derived>false</derived>
-   <enabled>true</enabled>
-   <visible>true</visible>
-   <valid>true</valid>
-  </parameter>
-  <parameter name="latency_target">
-   <type>int</type>
-   <value>2</value>
+   <value>500</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>false</visible>
    <valid>true</valid>
   </parameter>
+  <parameter name="latency_target">
+   <type>int</type>
+   <value>167</value>
+   <derived>false</derived>
+   <enabled>true</enabled>
+   <visible>true</visible>
+   <valid>true</valid>
+  </parameter>
   <parameter name="performance_goal">
    <type>java.lang.String</type>
-   <value>frequency</value>
+   <value>latency</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>

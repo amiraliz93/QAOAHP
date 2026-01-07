@@ -6,7 +6,7 @@ module top1 (
    output [7:0] tx_data_out,
    input [7:0] rx_data_in,
    input rx_dv,
-   output [31:0]  o_Status // counter to wait read FIFO latency. 
+   output [31:0]  o_Status
 );
 parameter NM = 13; // address width for state vector's and cost function's BRAM. Thus, the number of maximum qubits the system can deal with.
 parameter P = 64; // data width for numerical number
@@ -75,6 +75,7 @@ wire [NM-1:0] bswap_in;  // bit swap in swap pointer 1
 wire [NM-1:0] bswap_out;
 wire [N_BIT_SWAP_POINTER-1:0] bsp1; // next bit swap pointer 1
 wire [N_BIT_SWAP_POINTER-1:0] bsp2; // next bit swap pointer 2
+
 qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER)) qs2
 (
    .CLK(CLK),
@@ -103,6 +104,7 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT
    .mix_ar_res(p_ar_o),
    .mix_ai_res(p_ai_o),
    .mix_info_res(info_out),
+   .Status(rS),
    
    .gamma(gamma), //  gamma
    .HGC(HGC),
@@ -132,7 +134,7 @@ gen_cost  #(.P(P),.Ni(Ni)) genCost
    .CLK(CLK),
    .RST(RST),
    .gamma(gamma), //  gamma
-   .H(H),
+   .H(HGC),
    .Hr_o(Hr_o),
    .Hi_o(Hi_o),
    .info_in(info_inGC), // information, like addresses, enabled signal, and so on.
