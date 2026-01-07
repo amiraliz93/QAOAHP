@@ -36,7 +36,7 @@ solutionC = [N]
 
 gamma = random.uniform(-math.pi, math.pi)
 
-lineend = "\n"
+lineend = ""
 of = open("gen_cost_in.sv", "w")
 comment = ""
 if lineend != "":
