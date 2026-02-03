@@ -4,7 +4,7 @@ Helper functions for the Maximum Cut (MaxCut) problem
 from .qaoa_simulator_base import TermsType
 import numpy as np
 import networkx as nx
-from .create_QAOA_circuit import get_parameterized_qaoa_circuit_from_terms, get_qaoa_circuit_from_terms, get_qaoa_objective
+from .create_QAOA_circuit import get_parameterized_qaoa_circuit_from_terms, get_qaoa_circuit_from_terms
 from typing import Sequence
 from qiskit import QuantumRegister, ClassicalRegister
 
