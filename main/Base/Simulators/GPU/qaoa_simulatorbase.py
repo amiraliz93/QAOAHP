@@ -9,7 +9,7 @@ from ...qaoa_simulator_base import TermsType
 
 from .qaoa_rotation import apply_qaoa_furx
 
-from ...qaoa_simulator_base import QAOAFastSimulatorBase, CostsType, ParamType, TermsType
+from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
 from ...precomputation import precompute_gpu
 from .utils import norm_squared, initialize_uniform, multiply, sum_reduce, copy
 
@@ -17,7 +17,7 @@ DeviceArray = numba.cuda.devicearray.DeviceNDArray
 
 
 
-class QAOAFastSimulatorGPUBase(QAOAFastSimulatorBase):
+class QAOAFastSimulatorGPUBase(Sim_Base):
     def __init__(self, n_qubits: int, costs: CostsType | None = None, terms: TermsType | None = None) -> None:
         super().__init__(n_qubits, costs, terms)
         self._sv_device = numba.cuda.device_array(self.n_states, dtype="complex")  # type: ignore
@@ -56,7 +56,7 @@ class QAOAFastSimulatorGPUBase(QAOAFastSimulatorBase):
         **kwargs,
     ) -> DeviceArray:
         """
-        See QAOAFastSimulatorBase.simulate_qaoa
+        See Sim_Base.simulate_qaoa
         """
         self._initialize(sv0=sv0)
         self._apply_qaoa(list(gammas), list(betas), **kwargs)

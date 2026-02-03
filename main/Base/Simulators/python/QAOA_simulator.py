@@ -4,14 +4,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 import numpy as np
 
-from ...qaoa_simulator_base import QAOAFastSimulatorBase, CostsType, TermsType, ParamType
+from ...qaoa_simulator_base import Sim_Base, CostsType, TermsType, ParamType
 #from ... import precompute_vectorized_cpu_parallel
 from ...precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
 
 from .QAOA_rotation_python import apply_qaoa_furx
 
 
-class QAOAFastSimulatorPythonBase(QAOAFastSimulatorBase):
+class QAOAFastSimulatorPythonBase(Sim_Base):
     _hc_diag: np.ndarray
 
     def _diag_from_costs(self, costs: CostsType):
