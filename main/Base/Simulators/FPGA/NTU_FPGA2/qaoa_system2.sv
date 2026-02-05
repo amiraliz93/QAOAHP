@@ -528,6 +528,9 @@ always@(posedge CLK) begin
         m_ar <= '0;
         m_ai <= '0;
         m_info <= '0;
+        bsp1 <= '0;
+        bsp2 <= '0;
+
 
         // Pipeline
         m_bram_reqR <= 0;
@@ -599,11 +602,13 @@ always@(posedge CLK) begin
         NQbitsM1 <= n_NQbitsM1;
         mixer_exit_flag <= n_mixer_exit_flag;
         mixer_loopend_flag <= n_mixer_loopend_flag;
-        mixer_address_end_flag <= n_mixer_loopend_flag;
+        mixer_address_end_flag <= n_mixer_address_end_flag;
         // Mixer interface
         m_ar <= n_m_ar;
         m_ai <= n_m_ai;
         m_info <= n_m_info;
+        bsp1 <= n_bsp1;
+        bsp2 <= n_bsp2;
         // Address counter
         addr_c0 <= n_addr_c0;
         addr_c0<= n_addr_c;
