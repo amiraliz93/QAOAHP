@@ -8,8 +8,12 @@ from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
 
 class FpgaDriver:
     """
-    FPGA Driver for State Machine QAOA Hardware
-    Based on NEW_smachine.sv and qaoa_system.sv protocol
+    Purpose: Low-level UART serial interface to NTU FPGA hardware
+
+    UART Protocol Implementation: Communicates with FPGA state machine
+      via serial commands (opcode-based)
+
+    Based on **NEW_smachine.sv and qaoa_system.sv** protocol
     AIM: low-level interface  that communicate with FPGA' binary protocol via UART serial port
 
     Data Flow: 
@@ -369,7 +373,7 @@ class FPGASimulator(Sim_Base):
     ---------------------------------------------
     API Compatibility:
         Provides standard methods (get_expectation, get_overlap, get_probabilities)
-          so rest of codebase doesn't know it's using FPGA
+          
     Note:
         Designed for NTU FPGA with specific UART protocol and BRAM layout
     ---------------------------------------------
