@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Stratix V"
 set_global_assignment -name DEVICE 5SGXEABN3F45I3YY
-set_global_assignment -name TOP_LEVEL_ENTITY top1
+set_global_assignment -name TOP_LEVEL_ENTITY bit_swap
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 15.1.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "14:19:17  JULY 07, 2016"
 set_global_assignment -name LAST_QUARTUS_VERSION "17.1.0 Standard Edition"
@@ -1007,100 +1007,12 @@ set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME ntu_smachine_tb -section_
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id alutest_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME alutest_tb -section_id alutest_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE alutest_tb.v -section_id alutest_tb
-set_global_assignment -name SLD_NODE_CREATOR_ID 110 -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_ENTITY_NAME sld_signaltap -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_clk -to OSC_50_B3B -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[0] -to "Fan_Control:u0|Speed_Detected[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[1] -to "Fan_Control:u0|Speed_Detected[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[2] -to "Fan_Control:u0|Speed_Detected[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[3] -to "Fan_Control:u0|Speed_Detected[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[4] -to "Fan_Control:u0|Speed_Detected[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[5] -to "Fan_Control:u0|Speed_Detected[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[6] -to "Fan_Control:u0|Speed_Detected[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[7] -to "Fan_Control:u0|Speed_Detected[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[8] -to "Fan_Control:u0|Speed_Detected[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[9] -to "Fan_Control:u0|Speed_Detected[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[10] -to "Fan_Control:u0|Speed_Detected[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[11] -to "Fan_Control:u0|Speed_Detected[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[12] -to "Fan_Control:u0|Speed_Detected[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[13] -to "Fan_Control:u0|Speed_Detected[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[0] -to "Fan_Control:u0|Speed_Detected[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[1] -to "Fan_Control:u0|Speed_Detected[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[2] -to "Fan_Control:u0|Speed_Detected[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[3] -to "Fan_Control:u0|Speed_Detected[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[4] -to "Fan_Control:u0|Speed_Detected[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[5] -to "Fan_Control:u0|Speed_Detected[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[6] -to "Fan_Control:u0|Speed_Detected[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[7] -to "Fan_Control:u0|Speed_Detected[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[8] -to "Fan_Control:u0|Speed_Detected[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[9] -to "Fan_Control:u0|Speed_Detected[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[10] -to "Fan_Control:u0|Speed_Detected[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[11] -to "Fan_Control:u0|Speed_Detected[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[12] -to "Fan_Control:u0|Speed_Detected[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[13] -to "Fan_Control:u0|Speed_Detected[9]" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_RAM_BLOCK_TYPE=AUTO" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_DATA_BITS=14" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=14" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_BITS=14" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=805334528" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_TRIGGER=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=000000000000000000000000000000000000000000000000000000000000000" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=63" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_INVERSION_MASK_LENGTH=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SEGMENT_SIZE=128" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ATTRIBUTE_MEM_MODE=OFF" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STATE_FLOW_USE_GENERATED=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STATE_BITS=11" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BUFFER_FULL_STOP=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_CURRENT_RESOURCE_WIDTH=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INCREMENTAL_ROUTING=1" -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[0] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[1] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[2] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[3] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[4] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[5] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[6] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[7] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[8] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[9] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[10] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[11] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[12] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[13] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[14] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[15] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[16] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[17] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[18] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[19] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[20] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[21] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[22] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[23] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[24] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[25] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[26] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[27] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[28] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[29] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[30] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[31] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SAMPLE_DEPTH=128" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_IN_ENABLED=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_PIPELINE=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_RAM_PIPELINE=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_COUNTER_PIPELINE=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ADVANCED_TRIGGER_ENTITY=basic,1," -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL_PIPELINE=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ENABLE_ADVANCED_TRIGGER=0" -section_id auto_signaltap_0
 set_global_assignment -name OPTIMIZATION_MODE BALANCED
 set_global_assignment -name ALLOW_REGISTER_RETIMING ON
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "SYSTEMVERILOG HDL" -section_id eda_simulation
 set_global_assignment -name EDA_TIME_SCALE "10 ps" -section_id eda_simulation
 set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
-set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH top1_tb -section_id eda_simulation
+set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH bit_swapper_tb -section_id eda_simulation
 set_global_assignment -name EDA_TEST_BENCH_NAME ntu_smachine_tb -section_id eda_simulation
 set_global_assignment -name ALM_REGISTER_PACKING_EFFORT MEDIUM
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
@@ -1139,6 +1051,47 @@ set_global_assignment -name EDA_TEST_BENCH_FILE top1_uart_tb.sv -section_id top1
 set_global_assignment -name EDA_TEST_BENCH_FILE mixer_tb.sv -section_id mixer_tb -hdl_version SystemVerilog_2005
 set_global_assignment -name EDA_TEST_BENCH_FILE mixer2_tb.sv -section_id mixer2_tb -hdl_version SystemVerilog_2005
 set_global_assignment -name EDA_TEST_BENCH_FILE barrel_shifter.sv -section_id barrel_shifter_tb -hdl_version SystemVerilog_2005
+set_global_assignment -name EDA_TEST_BENCH_NAME bit_swapper_tb -section_id eda_simulation
+set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id bit_swapper_tb
+set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME bit_swapper_tb -section_id bit_swapper_tb
+set_global_assignment -name EDA_TEST_BENCH_FILE bit_swap.sv -section_id bit_swapper_tb -hdl_version SystemVerilog_2005
+set_global_assignment -name SYSTEMVERILOG_FILE bit_swap.sv
+set_global_assignment -name SYSTEMVERILOG_FILE control_interface.sv
+set_global_assignment -name SYSTEMVERILOG_FILE barrel_shifter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE mixer2.sv
+set_global_assignment -name VERILOG_FILE Golden_TOP3.v
+set_global_assignment -name SIP_FILE cordic_sc/simulation/cordic.sip
+set_global_assignment -name QIP_FILE cordic_sc/synthesis/cordic.qip
+set_global_assignment -name SYSTEMVERILOG_FILE gen_cost.sv
+set_global_assignment -name SYSTEMVERILOG_FILE my_bram.sv
+set_global_assignment -name SYSTEMVERILOG_FILE mixer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE top1_uart.sv
+set_global_assignment -name SYSTEMVERILOG_FILE top1.sv
+set_global_assignment -name SYSTEMVERILOG_FILE qaoa_system2.sv
+set_global_assignment -name VERILOG_FILE alutest.v
+set_global_assignment -name VERILOG_FILE alutest_tb.v
+set_global_assignment -name VERILOG_FILE Golden_TOP2.v
+set_global_assignment -name SDC_FILE Golden_TOP.sdc
+set_global_assignment -name VERILOG_FILE transmitter.v
+set_global_assignment -name VERILOG_FILE receiver.v
+set_global_assignment -name VERILOG_FILE Fan/I2C_Config.v
+set_global_assignment -name VERILOG_FILE Fan/I2C_Bus_Controller.v
+set_global_assignment -name VERILOG_FILE Fan/Fan_Control.v
+set_global_assignment -name VERILOG_FILE Golden_TOP.v
+set_global_assignment -name SIGNALTAP_FILE demo_batch/Fan_stp.stp
+set_global_assignment -name SOURCE_FILE db/Golden_TOP.cmp.rdb
+set_global_assignment -name QIP_FILE fifo1.qip
+set_global_assignment -name QIP_FILE pll2.qip
+set_global_assignment -name SIP_FILE pll2.sip
+set_global_assignment -name QIP_FILE addfix8.qip
+set_global_assignment -name QIP_FILE mulFPF64.qip
+set_global_assignment -name SIP_FILE mulFPF64.sip
+set_global_assignment -name QIP_FILE mulfix8.qip
+set_global_assignment -name QIP_FILE addFPF64.qip
+set_global_assignment -name SIP_FILE addFPF64.sip
+set_global_assignment -name QIP_FILE ram.qip
+set_global_assignment -name QIP_FILE fp2fix64.qip
+set_global_assignment -name SIP_FILE fp2fix64.sip
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
@@ -1977,41 +1930,4 @@ set_instance_assignment -name IO_STANDARD LVDS -to SATA_DEVICE_REFCLK_p
 set_instance_assignment -name IO_STANDARD "1.4-V PCML" -to SATA_DEVICE_TX_p
 set_instance_assignment -name IO_STANDARD "1.4-V PCML" -to SATA_DEVICE_RX_p
 set_instance_assignment -name IO_STANDARD "1.5 V" -to OSC_MAIN
-set_global_assignment -name SYSTEMVERILOG_FILE control_interface.sv
-set_global_assignment -name SYSTEMVERILOG_FILE barrel_shifter.sv
-set_global_assignment -name SYSTEMVERILOG_FILE mixer2.sv
-set_global_assignment -name VERILOG_FILE Golden_TOP3.v
-set_global_assignment -name SIP_FILE cordic_sc/simulation/cordic.sip
-set_global_assignment -name QIP_FILE cordic_sc/synthesis/cordic.qip
-set_global_assignment -name SYSTEMVERILOG_FILE gen_cost.sv
-set_global_assignment -name SYSTEMVERILOG_FILE my_bram.sv
-set_global_assignment -name SYSTEMVERILOG_FILE mixer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE top1_uart.sv
-set_global_assignment -name SYSTEMVERILOG_FILE top1.sv
-set_global_assignment -name SYSTEMVERILOG_FILE qaoa_system2.sv
-set_global_assignment -name VERILOG_FILE alutest.v
-set_global_assignment -name VERILOG_FILE alutest_tb.v
-set_global_assignment -name VERILOG_FILE Golden_TOP2.v
-set_global_assignment -name SDC_FILE Golden_TOP.sdc
-set_global_assignment -name VERILOG_FILE transmitter.v
-set_global_assignment -name VERILOG_FILE receiver.v
-set_global_assignment -name VERILOG_FILE Fan/I2C_Config.v
-set_global_assignment -name VERILOG_FILE Fan/I2C_Bus_Controller.v
-set_global_assignment -name VERILOG_FILE Fan/Fan_Control.v
-set_global_assignment -name VERILOG_FILE Golden_TOP.v
-set_global_assignment -name SIGNALTAP_FILE demo_batch/Fan_stp.stp
-set_global_assignment -name SOURCE_FILE db/Golden_TOP.cmp.rdb
-set_global_assignment -name QIP_FILE fifo1.qip
-set_global_assignment -name QIP_FILE pll2.qip
-set_global_assignment -name SIP_FILE pll2.sip
-set_global_assignment -name QIP_FILE addfix8.qip
-set_global_assignment -name QIP_FILE mulFPF64.qip
-set_global_assignment -name SIP_FILE mulFPF64.sip
-set_global_assignment -name QIP_FILE mulfix8.qip
-set_global_assignment -name QIP_FILE addFPF64.qip
-set_global_assignment -name SIP_FILE addFPF64.sip
-set_global_assignment -name QIP_FILE ram.qip
-set_global_assignment -name QIP_FILE fp2fix64.qip
-set_global_assignment -name SIP_FILE fp2fix64.sip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
-set_global_assignment -name SLD_FILE db/Fan_stp_auto_stripped.stp
