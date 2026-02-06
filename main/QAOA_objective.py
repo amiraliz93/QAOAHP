@@ -51,7 +51,7 @@ def _create_qiskit_objective(
         # For MaxCut problems with terms
         if terms is not None:
             circuit_creator = lambda p: get_parameterized_qaoa_circuit_from_terms(
-                N=N, terms=terms, p=p, save_statevector=False)
+                N=N, terms=terms, p=p, save_statevector=True, return_parameter_vectors=False)
         else:
             raise ValueError("Either 'parameterized_circuit' or 'terms' must be provided")
     else:
@@ -85,10 +85,11 @@ def _create_qiskit_objective(
         qc = circuit_creator(p)
         
         # Bind the parameters to the circuit
-        parameter_values = []
-        for g, b in zip(gamma, beta):
-            parameter_values.extend([g, b])
-
+        #parameter_values = []
+        #for g, b in zip(gamma, beta):
+        #    parameter_values.extend([g, b])
+        parameter_values = np.hstack([beta, gamma])
+        
 
         # Run Circuit
         # Transpile circuit for the simulator
@@ -109,10 +110,11 @@ def _create_qiskit_objective(
         
         elif objective == "overlap":
             # Calculate overlap with optimal states
-            overlap = sum(probabilities[idx] for idx in optimal_indices)
+            if optimal_indices is not None:
+                overlap = sum(probabilities[idx] for idx in optimal_indices)
             
             # Return 1-overlap for minimization
-            return 1.0 - overlap
+                return 1.0 - overlap
         else:
             raise ValueError(f"Unknown objective type: {objective}")
     
