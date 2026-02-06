@@ -15,6 +15,7 @@ from .Base import choose_simulator
 from . import parameter_utils
 
 
+
 def get_qaoa_objective(
     N: int,
     precomputed_diagonal_hamiltonian=None, 
@@ -103,16 +104,20 @@ def _create_qiskit_objective(
                 N=N, 
                 terms=terms, 
                 p=p, 
-                save_statevector=False
+                save_statevector=True,
+                return_parameter_vectors=False
             )
+            # Generic QAOA ( extra )
+        elif precomputed_costs is not None or precomputed_diagonal_hamiltonian is not None:
+            costs_array = precomputed_costs if precomputed_costs is not None else precomputed_diagonal_hamiltonian
+            circuit_creator = lambda p: get_parameterized_qaoa_circuit(
+                N=N, p = p,
+                costs = costs_array,
+                save_statevector=True, return_parameter_vectors=False)
+
         else:
             raise ValueError("Either terms or precomputed costs must be provided for Qiskit simulation")
-            # Generic QAOA
-            circuit_creator = lambda p: get_parameterized_qaoa_circuit(
-                p=p,
-                N=N,
-                save_statevector=False
-            )
+
     else:
         # Use provided circuit
         circuit_creator = lambda p: parameterized_circuit
@@ -168,6 +173,8 @@ def _create_qiskit_objective(
         elif objective == "overlap":
             # Calculate overlap with optimal states
             probabilities = np.abs(statevector.data)**2
+            if optimal_indices is None:
+                raise ValueError("Optimal indices must be provided for overlap objective")
             overlap = sum(probabilities[idx] for idx in optimal_indices)
             
             # Return 1-overlap for minimization
@@ -202,7 +209,7 @@ def _build_objective_function(simulator, costs, parameterization, objective_type
     
     def objective_function(*parameters):
         # Convert parameters to standard gamma/beta format
-        angle_gamma, angle_beta = parameters_utils.convert_to_gamma_beta(
+        angle_gamma, angle_beta = parameter_utils.convert_to_gamma_beta(
             *parameters, parameterization=parameterization
         )
         

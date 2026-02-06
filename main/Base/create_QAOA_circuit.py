@@ -149,8 +149,8 @@ def get_qaoa_circuit_from_terms(
     gammas: Sequence[float],
     betas: Sequence[float],
     save_statevector: bool = True,
-    qr: QuantumRegister = None,
-    cr: ClassicalRegister = None
+    qr: QuantumRegister | None = None,
+    cr: ClassicalRegister | None =  None
 ) -> QuantumCircuit:
     """Create a QAOA circuit from Hamiltonian terms with specific angles.
     
@@ -219,8 +219,8 @@ def get_parameterized_qaoa_circuit_from_terms(
     terms: Sequence,
     p: int,
     save_statevector: bool = True,
-    qr: QuantumRegister = None,
-    cr: ClassicalRegister = None,
+    qr: QuantumRegister | None = None,
+    cr: ClassicalRegister | None = None,
     return_parameter_vectors: bool = False,
 ):
     """Create a parameterized QAOA circuit from Hamiltonian terms.
@@ -292,3 +292,164 @@ def get_parameterized_qaoa_circuit_from_terms(
     else:
         return qc
 
+
+
+# generic quantum circuit 
+def get_parameterized_qaoa_circuit(
+    N: int,
+    p: int,
+    costs: np.ndarray | None = None,
+    save_statevector: bool = True,
+    qr: QuantumRegister | None = None,
+    cr: ClassicalRegister | None = None,
+    return_parameter_vectors: bool = False,
+):
+    """Create a parameterized QAOA circuit for a generic diagonal cost Hamiltonian.
+    
+    This version is for when you have a diagonal cost Hamiltonian represented
+    as an array of energy values for each computational basis state, rather
+    than explicit terms.
+    
+    Parameters
+    ----------
+    N : int
+        Number of qubits
+    p : int
+        Number of QAOA layers (will have 2*p parameters total)
+    costs : np.ndarray, optional
+        Diagonal cost Hamiltonian as array of length 2^N
+        If None, creates circuit without cost operator (mixer only)
+    save_statevector : bool, default True
+        Save final statevector for simulation
+    qr : QuantumRegister, optional
+        Custom quantum register
+    cr : ClassicalRegister, optional
+        Custom classical register for measurements
+    return_parameter_vectors : bool, default False
+        If True, return (circuit, betas, gammas)
+        
+    Returns
+    -------
+    QuantumCircuit or tuple
+        Parameterized QAOA circuit
+        If return_parameter_vectors=True, returns (qc, betas, gammas)
+        
+    Notes
+    -----
+    Parameters are ordered alphabetically: beta first, then gamma.
+    To bind: qc.bind_parameters(np.hstack([beta_values, gamma_values]))
+    
+    For diagonal Hamiltonians, the cost operator is applied using
+    phase rotation on the computational basis states.
+    
+    Examples
+    --------
+    >>> costs = np.array([0, 1, 1, 2])  # 2-qubit problem
+    >>> qc = get_parameterized_qaoa_circuit(N=2, p=2, costs=costs)
+    >>> theta = np.array([0.1, 0.2, 0.3, 0.4])  # [beta0, beta1, gamma0, gamma1]
+    >>> bound_qc = qc.bind_parameters(theta)
+    """
+    # Create registers
+    if qr is None:
+        qr = QuantumRegister(N, 'q')
+    elif qr.size < N:
+        raise ValueError(f"Provided register has {qr.size} qubits, need at least {N}")
+    
+    qc = QuantumCircuit(qr, cr) if cr else QuantumCircuit(qr)
+    
+    # Create parameter vectors
+    betas = ParameterVector("beta", p)
+    gammas = ParameterVector("gamma", p)
+    
+    # Initial state: uniform superposition
+    qc.h(range(N))
+    
+    # Apply p QAOA layers
+    for i in range(p):
+        # Cost operator (diagonal Hamiltonian)
+        if costs is not None:
+            _append_diagonal_cost_operator(qc, costs, gammas[i], N)
+        
+        # Mixer operator
+        append_mixer_operator_circuit(qc, betas[i])
+    
+    if save_statevector:
+        qc.save_state()
+    
+    if return_parameter_vectors:
+        return qc, betas, gammas
+    else:
+        return qc
+    
+
+def _append_diagonal_cost_operator(
+    qc: QuantumCircuit, 
+    costs: np.ndarray, 
+    gamma: float, 
+    N: int
+) -> None:
+    """Apply diagonal cost Hamiltonian operator using multi-controlled phase gates.
+    
+    For a diagonal Hamiltonian H = diag(c_0, c_1, ..., c_{2^N-1}),
+    applies exp(-i * gamma * H) by applying phase rotations to each basis state.
+    
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        Circuit to modify
+    costs : np.ndarray
+        Diagonal cost values (length 2^N)
+    gamma : float
+        Cost layer parameter
+    N : int
+        Number of qubits
+    """
+    if len(costs) != 2**N:
+        raise ValueError(f"costs array must have length 2^N = {2**N}, got {len(costs)}")
+    
+    # Apply phase rotation for each basis state
+    for state_idx, cost_value in enumerate(costs):
+        if abs(cost_value) > 1e-10:  # Skip near-zero costs
+            # Convert state index to binary representation
+            binary_state = format(state_idx, f'0{N}b')
+            
+            # Apply controlled phase rotation
+            # For basis state |x⟩, apply phase e^(-i * gamma * cost_value)
+            _apply_controlled_phase(qc, binary_state, -gamma * cost_value, N)
+
+
+def _apply_controlled_phase(
+    qc: QuantumCircuit, 
+    binary_state: str, 
+    phase: float, 
+    N: int
+) -> None:
+    """Apply a phase to a specific computational basis state.
+    
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        Circuit to modify
+    binary_state : str
+        Binary string representation of the state (e.g., "101")
+    phase : float
+        Phase to apply
+    N : int
+        Number of qubits
+    """
+    # Apply X gates to flip 0s to 1s
+    for i, bit in enumerate(binary_state):
+        if bit == '0':
+            qc.x(i)
+    
+    # Apply multi-controlled Z rotation
+    if N == 1:
+        qc.p(phase, 0)
+    else:
+        # Multi-controlled phase gate
+        qc.mcp(phase, list(range(N-1)), N-1)
+    
+    # Undo X gates
+    for i, bit in enumerate(binary_state):
+        if bit == '0':
+            qc.x(i)
