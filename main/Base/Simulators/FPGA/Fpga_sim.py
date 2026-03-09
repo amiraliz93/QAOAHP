@@ -50,15 +50,19 @@ class FpgaDriver:
     OP_SEND_CMD = 118     # Send command to qaoa_system
 
     # QAOA system commands (from qaoa_system.sv)
-    qa_INIT = 4   # Initialize QAOA system
+    qa_INIT = 16   # Initialize QAOA system
     qa_WAIT = 1   # Wait state
     qa_RUN = 2    # Run QAOA layer
+
     
     # BRAM bank identifiers (bits 56-59 in address)
-    BRAM_STATE_REAL = 0x0000000000000000      # BRAM[0]: State vector real part
+    BRAM_CONFIG     = 0x4000000000000000  # Config registers (NQ, NS, Np)
+    BRAM_PARAMS = 0x8000000000000000          # Parameters (cos β, sin β, γ)= 
+
+    BRAM_STATE_REAL = 0x1000000000000000      # BRAM[0]: State vector real part
     BRAM_STATE_IMAG = 0x2000000000000000      # BRAM[1]: State vector imaginary part
-    BRAM_COST_FUNC = 0x4000000000000000       # BRAM[2]: Cost function
-    BRAM_PARAMS = 0x6000000000000000          # BRAM[5]: Parameters (cos β, sin β, γ)
+    BRAM_COST_FUNC  = 0x4000000000000000       # BRAM[2]: Cost function
+    BRAM_CONFIG_STEP = 0x0100000000000000 # Address step for config registers
 
     #new code
     # Aim: 1- Computing intermediate values on FPGA 2- Preprocessing data before BRAM writes 
@@ -66,7 +70,7 @@ class FpgaDriver:
     OP_ADD_B2A = 80   # rA = rA +rB (64bit fixed, 2cycles)
     OP_MUL_B2A = 81   # rA = rA * rB (24bit fixed, 8 cycles)
     OP_ADDFP_B2A = 82 # rA = rA + rB (64bit float, 27 cycles)
-    OP_ADDFP_B2A = 83 # rA = rA * rB (64bit float, 24 cycles)
+    OP_MULFP_B2A = 83 # rA = rA * rB (64bit float, 24 cycles)
 
     # Arithmetic operation latencies (used in state machine timing)
     # Aim: 1)These define how many clock cycles each arithmetic operation takes. -2)Status polling - Knowing when operations complete
@@ -224,6 +228,21 @@ class FpgaDriver:
         self._send_opcode(self.OP_FETCH8U)
         
         return self._fetch_fp64()
+
+    def _sent_int64_raw(self, value):
+
+        if not self.connected or self.ser is None:
+            raise RuntimeError("Not connected to FPGA")
+        data = int(value).to_bytes(8, byteorder='little', signed = False)
+        self.ser.write(data)
+        time.sleep(1e-5)
+
+    def _wait_for_fpga(self, timeout=1000):
+        STATUS_ADDR = 0x0100000000000000
+        for _ in range(timeout):
+            self._send_opcode(self.OP_SEND8T)
+        time.sleep(0.001)
+
 
     def load_data(self, diag_hamiltonian, initial_state, gammas, betas):
         """
