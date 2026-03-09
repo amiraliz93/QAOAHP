@@ -20,7 +20,7 @@ gamma = 0.2
 sinb = np.sin(beta)
 cosb = np.cos(beta)
 NQ = 3
-NS = 2**NQ
+NS = 2**NQ # number of layers
 Np = 8 # number of p layers.
 lineend = ""
 
