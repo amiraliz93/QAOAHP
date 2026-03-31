@@ -274,7 +274,7 @@ We describe an alogorithm tentatively called block mixing algorithm here after i
 We prepare \(K = 2^M\) pipeline blocks defined in the section \ref{spipe}.  
 In these definition, we can formalize the mixer operation that provide the possible implementation for \(K = 2^M \leq 2^\hatM\) paralellization with \(K\) blocks. 
 
-In this document \(\hatM\)-th greatest bits are called global qbits. Remaining \((N-\hatM)\) bits are called local qbits. Size of space that global qbits compose can be greater than number of parallel blocks, thus, \(K = 2^M \leq 2^\hatM\).
+In this document \(\hatM\)-th greatest bits are called global qbits. Remaining \((N-\hatM)=L\) bits are called local qbits. Size of space that global qbits compose can be greater than number of parallel blocks, thus, \(K = 2^M \leq 2^\hatM\).
 
 \textit{Local mixer}: letting 
 \[j=0,1,...,2^{N-\hatM}-1\]
@@ -284,32 +284,33 @@ and \[k=0,1,...,2^{\hatM}-1\]
 \[
 \jbar = k\hatj,
 \]
-mixer operations are applied to \(n\in[N-\hatM]\) qbit for each \(k\)-th block (\(\hatj\) is defined in the same way as in section \ref{sAddrGen}). Note that only the part of \(\hatj\) above is used to access BRAMs. For intuitively, consider the case \(k = 5=101, j=11001\), then this notation means \(\jbar = 10111001\). 
+mixer operations are applied to \(n\in[L]\ (L=N-\hatM)\) qbit for each \(k\)-th block (\(\hatj\) is defined in the same way as in section \ref{sAddrGen}). Note that only the part of \(\hatj\) above is used to access BRAMs. For intuitively, consider the case \(k = 5=101, j=11001\), then this notation means \(\jbar = 10111001\). 
 In this stage, each block of pipeline includes several \(k\), where for special case of \(\hatM = M\), \(k\) is equivalent to the identification of each pipeline block.
 
 \textit{shuffling}: 
 The system will re-arrange the state vector as in,
 \begin{equation}
     \label{esigma}
-    \hpsi_\jbar = \psi_{\sigma(\jbar)}.
+    \psi^{\sigma}_\jbar = \psi_{\sigma(\jbar)}.
 \end{equation}
 \(\sigma:\cbr{0,1}^N\to\cbr{0,1}^N\) is a permutation and defined so that it shuffle the indexes. Precisely, it is defined as,
 \begin{align*}
     \sigma\br{p_N \cdots p_1} &= p_{N-\hatM}\cdots p_1 p_N\cdots p_{N-\hatM+1},\\
     \sigma^{-1}\br{p_N\cdots p_1} &= p_{\hatM}\cdots p_1 p_N\cdots p_{\hatM+1}.
 \end{align*}
+Superscript \(\sigma\) of \(\psi\) just indicates \(\psi^\sigma\) is obtained by applying \(\sigma\). 
 
-Assuming we got \(\psi\in \sC^D\) as an initial state vector and got \(\hpsi\in\sC^D\) by applying mixer operation to the local qbits (qbit such that its number \(n\) satisfies \(n\leq \hatM\).). Then, let \(\hpsi'\) be a state vector that shuffled its amplitude position as,
+Assuming we got \(\psi\in \sC^D\) as an initial state vector and got \(\psi^L\in\sC^D\) by applying mixer operation to the local qbits (qbit such that its number \(n\) satisfies \(n\leq \hatM\).). Superscrpit \(L\) means the vector applied \(L\) bits local mixer operation. Then, let \(\psi^{\sigma L}\) be a state vector that shuffled its amplitude position as,
 \begin{equation}
     \label{eshuffle}
-    \hpsi'_\jbar = \hpsi_{\sigma(\jbar)} , \Leftrightarrow\hpsi'_{p_N\cdots p_1}= \hpsi_{p_{N-\hatM}\cdots p_1 p_N\cdots p_{N-\hatM+1}}
+    \psi^{\sigma L}_\jbar = \psi_{L\sigma(\jbar)} , \Leftrightarrow\psi^{\sigma L}_{p_N\cdots p_1}= \psi^L_{p_{N-\hatM}\cdots p_1 p_N\cdots p_{N-\hatM+1}}
 \end{equation}
 where we took the representation of,
 \[
 \jbar = p_N\cdots p_1.
 \]
 \textit{Global mixer}: 
-Then we apply mixer operation on the qbits of \(n \in[\hatM]\) to \(\hpsi'\) and we obtain \(\psi^@\). It can be done as completely same as in the case of local mixer. In detail, 
+Then we apply mixer operation on the qbits of \(n \in[\hatM]\) to \(\psi^{\sigma L}\) and we obtain \(\psi^{\hatM\sigma L}\). It can be done as completely same as in the case of local mixer. In detail, 
 \[j=0,1,...,2^{\hatM}-1\] be an local index (for originally global), 
 and \[k=0,1,...,2^{N-\hatM}-1\]
  be an global index (originally local). In this stage, the following index,
@@ -318,17 +319,18 @@ and \[k=0,1,...,2^{N-\hatM}-1\]
 \] 
 is used to addressing in section \ref{sAddrGen} for each \(k\)-th block. Note that only the part of \(\hatj\) above is used to access BRAMs.
 
-\textit{Restoration}: Let \(\psi'\in\sC^D\) be a final result of original order, it can be obtained,
+\textit{Restoration}: Let \(\psi^{\sigma^{-1}\hatM\sigma L}\in\sC^D\) be a final result of original order, it can be obtained,
 \begin{equation}
     \label{ereverseshuffle}
-\psi'_\jbar = \psi^@_{\sigma^{-1}(\jbar)}, \Leftrightarrow \psi'_{p_N\cdots p_1}= \psi^@_{p_{\hatM}\cdots p_1 p_N\cdots p_{\hatM+1}}.
+\psi^{\sigma^{-1}\hatM\sigma L}_\jbar = \psi^{\hatM\sigma L}_{\sigma^{-1}(\jbar)}, \Leftrightarrow \psi^{\sigma^{-1}\hatM\sigma L}_{p_N\cdots p_1}= \psi^{\hatM\sigma L}_{p_{\hatM}\cdots p_1 p_N\cdots p_{\hatM+1}}.
 \end{equation}
 
-Let \(\bar{\psi}\) be a result of mixer operation without global qbits. Then, we claim that,
+Let \(\psi^N\) be a result of mixer operation without global qbits. Then, we claim that,
 \begin{equation}
     \label{eblockmixA}
-\bar{\psi} = \psi'.
+\psi^N = \psi^{\sigma^{-1}\hatM\sigma L}.
 \end{equation}
+This proposition holds and it is proved here after in the section \ref{sProofBMA}.
 
 \subsubsection{Sammary of Block Mixing Algorithm}
 Copying data performed in \eqref{eshuffle} and \eqref{ereverseshuffle} to exchange global and local qbits require computational cost. But this copy process can be in parallell. About the amount of data to be copied, for example, \(1/K\) is remained in the original block, and elemenents amount \(1-1/K\) should be moved to another block. But this copy is only once for shuffling (\eqref{eshuffle}) and restoring (\eqref{ereverseshuffle}), it should be the least cost among any parallel algorithm on distributed systems in this order of parallelization \(K\). If it compares to the naive implementation (Fig. \ref{f1} bottom right) in which each mixer oepration for each qbit needs access to inter BRAM, because such qbit by qbit operation needs \(M\ (K=2^M)\) times access totally, this proposed algorithm reduced the chance of global access at the ratio \(1/K\). 
@@ -343,6 +345,7 @@ If we can set \(\hat{M} = N/2\), way of pipline do is totally the same as for bo
 \end{figure}
 
 \subsubsection{Proof of Block Mixing Algorithm yeilds the same result that do not use global qbits}
+\label{sProofBMA}
 To prove this, we need to define mixer operation for qbit \(n\) more generally. Mixer operation on \(n\)-th qbit is expressed as \(U_n\). And from the result of invariance on mixer operation in section \ref{mixerInvariance}, we have,
 \begin{equation}
     \label{emixcomm}
@@ -355,54 +358,61 @@ we want to show,
     U_n \psi = \Theta_{n, 1} U_{1} \Theta_{n, 1}\psi .
 \end{equation}
 
-Proof:  \( U_n \psi\) is described  for all index \(p = 0,1,...,{D-1}, q, (p, q)\in S_n\) (such \(q\) exists uniquely) as,
+\textbf{Proof.}  From the definition of mixer operator \eqref{emg2}, \( U_n \psi\) is described  for all index \(p = 0,1,...,{D-1}, q, (p, q)\in S_n\) (such \(q\) exists uniquely) as,
 \begin{align*}
     \br{U_n \psi}_p &= \psi_p \cos\beta - \ci\psi_q \sin \beta.
 \end{align*}
-When applying \(\Theta_{n,1}\), there exist indexes \(a, b=0,1,...,D-1\) that satisfy for arbitrary \(h\in\sC^D\), 
+When applying \(\Theta_{n,1}\), from its definition of exchanging, there exist indexes \(a, b=0,1,...,D-1\) that satisfy for arbitrary \(h\in\sC^D\), 
+\begin{align}
+    \nonumber
+    \br{\Theta_{n, 1}h}_{p} &= h_{a}, a_N\cdots a_1 = p_N\cdots p_{n+1}p_1 p_{n-1}\cdots p_2 p_n,\\
+    \label{epqab}
+    \br{\Theta_{n, 1}h}_{q} &= h_{b}, b_N\cdots b_1 = q_N\cdots q_{n+1}q_1 q_{n-1}\cdots q_2 q_n.
+\end{align}
+Now we know \(p_n\neq q_n\) from definition \eqref{eSn}, so it can be seen \(a_1 \neq b_1\) holds from the fact \(p_n = a_1, q_n=b_1\) above equations. Similary, \(\forall i\in N_n,  a_i=b_i\). It means \((a, b)\in S_1\). Therefore,
 \begin{align*}
-    \br{\Theta_{n, 1}h}_{p} &= h_{a}, p_N\cdots p_1 = a_N\cdots a_{n+1}a_1 a_{n-1}\cdots a_2 a_n,\\
-    \br{\Theta_{n, 1}h}_{q} &= h_{b}, q_N\cdots q_1 = q_N\cdots b_{n+1}b_1 b_{n-1}\cdots b_2 b_n.
-\end{align*}
-Now we know \(p_n\neq q_n\) from definition, so \(a_1 \neq b_1\) holds. Similary, \(\forall i\neq n,  a_i=b_i\). It means \((a, b)\in S_1\). Therefore,
-\begin{align*}
-    \br{U_1 h}_{a} & = h_a \cos\beta - \ci h_b \sin \beta\quad \because (a, b)\in S_1\\
-    &= \br{\Theta_{n, 1} h}_p\cos\beta - \ci\br{\Theta_{n, 1}h}_q \sin \beta.\\
+    \br{U_1 h}_{a} & = h_a \cos\beta - \ci h_b \sin \beta\quad \because (a, b)\in S_1\land \eqref{emg2}\\
+    &= \br{\Theta_{n, 1} h}_p\cos\beta - \ci\br{\Theta_{n, 1}h}_q \sin \beta.\because\eqref{epqab}\\
    \therefore \br{\Theta_{n,1} U_1 h}_{p} & = \br{\Theta_{n, 1} h}_p\cos\beta - \ci\br{\Theta_{n, 1}h}_q \sin \beta.
 \end{align*}
-If we substitute \(h = \Theta_{n,1}\psi\) and applying \( \Theta_{n,1}\Theta_{n,1}\psi = \psi\), then, for all \(\psi\in\sC^D\),ßß
-\begin{equation}
-   \br{\Theta_{n,1} U_1 \Theta_{n,1}\psi }_{p}  = \br{\psi}_p\cos\beta - \ci\br{\psi}_q \sin \beta = \br{U_n \psi}_p.
-\end{equation}
-Therefore, \eqref{einvn1} holds.
+We can substitute \(h = \Theta_{n,1}\psi\) without changing the domain the above equation defined because \(\Theta_{n,1}\) is a bijection of \(\sC^D\to\sC^D\). With that fact and applying \( \Theta_{n,1}\Theta_{n,1}\psi = \psi\), then, for all \(\psi\in\sC^D\),
+\begin{align*}
+   &\br{\Theta_{n,1} U_1 \Theta_{n,1}\psi }_{p}  = \br{\psi}_p\cos\beta - \ci\br{\psi}_q \sin \beta = \br{U_n \psi}_p.\because (p, q)\in S_n\\
+   &\therefore \Theta_{n,1} U_1 \Theta_{n,1}\psi = U_n \psi.
+\end{align*}
+So we proved \eqref{einvn1}.
 
-Using \eqref{einvn1}, and letting \(U_{n, m}\) is an operator exchanging \(n\) and \(m\)-th qbit index, \(U_{n, m} = U_{n, 1}U_{m, 1}\). So we have,
-\begin{equation}
-    U_n \psi = \Theta_{n, 1} U_{1} \Theta_{n, 1}\psi = \Theta_{n, 1} \Theta_{m, 1} U_{m} \Theta_{1, m}\Theta_{n, 1}\psi = \Theta_{n, m}  U_{m} \Theta_{n, m}\psi 
-\end{equation}
+Using \eqref{einvn1}, and letting \(U_{n, m}\) is an operator exchanging \(n\) and \(m\)-th qbit index, \(U_{n, m} = U_{n, 1}U_{m, 1}\). So we have the folling general case,
+\begin{align}
+    \label{e1nm}
+    &U_n \psi = \Theta_{n, m}  U_{m} \Theta_{n, m}\psi\\
+    \nonumber
+    &\because U_n \psi=\Theta_{n, 1} U_{1} \Theta_{n, 1}\psi = \Theta_{n, 1} \Theta_{m, 1} U_{m} \Theta_{1, m}\Theta_{n, 1}\psi = \Theta_{n, m}  U_{m} \Theta_{n, m}\psi 
+\end{align}
+
 We also want to show,
 \begin{equation}
     \label{eln1}
 l \not\in\cbr{n, 1}\Rightarrow \Theta_{n, 1} U_l = U_l \Theta_{n, 1}.
 \end{equation}
-Proof:  \( U_l \psi\) is described as for all index \(u = 0,1,...,{D-1}, q, (u, v)\in S_l\) (such \(v\) exists uniquely),
+\textbf{Proof.}  \( U_l \psi\) is described as for all index \(u = 0,1,...,{D-1}, v, (u, v)\in S_l\) (such \(v\) exists uniquely),
 \begin{align*}
-    \br{U_l \psi}_u &= \psi_u \cos\beta - \ci\psi_v \sin \beta.
+    \br{U_l \psi}_u &= \psi_u \cos\beta - \ci\psi_v \sin \beta.\quad\because \eqref{emg2}
 \end{align*}
 When applying \(\Theta_{n, 1}, l\not\in\cbr{n, 1}\), there exist indexes \(c, d=0,1,...,D-1\) that satisfy for arbitrary \(h\in\sC^D\), 
 \begin{align*}
-    \br{\Theta_{n, 1}h}_{u} &= h_{c}, u_N\cdots u_1 = c_N\cdots c_{n+1}c_1 c_{n-1}\cdots c_2 c_n,\\
-    \br{\Theta_{n, 1}h}_{v} &= h_{d}, v_N\cdots v_1 = d_N\cdots d_{n+1}d_1 d_{n-1}\cdots d_2 d_n.
+    \br{\Theta_{n, 1}h}_{u} &= h_{c}, c_N\cdots c_1 = u_N\cdots u_{n+1}u_1 u_{n-1}\cdots u_2 u_n,\\
+    \br{\Theta_{n, 1}h}_{v} &= h_{d}, d_N\cdots d_1 = v_N\cdots v_{n+1}v_1 v_{n-1}\cdots v_2 v_n.
 \end{align*}
-Now we know \(u_n = v_n, u_1=v_1\) from definition and \(l\not\in \cbr{n, 1}\). So \(c_l = u_l, d_l= v_l, u_l\neq v_l\), so \(c_l\neq d_l\) holds. For another case, \(\forall i\in N_l,  c_i=d_i\). It means \((c, d)\in S_l\) too. Therefore,
+Now we know \(c_n=d_n, c_1=d_1\) because it follows the above equation with the fact \(u_n = v_n, u_1=v_1\) from the definition of \(S_l\) in \eqref{eSn} and the current assumption \(l\not\in \cbr{n, 1}\). The above equation and \eqref{eSn} also claims that \(c_l = u_l, d_l= v_l, u_l\neq v_l\), therefore we have \(c_l\neq d_l\). For another cases, \(\forall i\in N_l,  c_i=d_i\). It means \((c, d)\in S_l\) too. Therefore,
 \begin{align*}
     \br{U_l h}_{c} & = h_c \cos\beta - \ci h_d \sin \beta\quad \because (c, d)\in S_l\\
     &= \br{\Theta_{n, 1} h}_u\cos\beta - \ci\br{\Theta_{n, 1}h}_v \sin \beta.\\
    \therefore \br{\Theta_{n,1} U_l h}_{u} & = \br{\Theta_{n, 1} h}_u\cos\beta - \ci\br{\Theta_{n, 1}h}_v \sin \beta.
 \end{align*}
-If we substitute \(h = \Theta_{n,1}\psi\) and applying \( \Theta_{n,1}\Theta_{n,1}\psi = \psi\), then, 
+We can substitute \(h = \Theta_{n,1}\psi\) because \(\Theta_{n, 1}\) is a bijection and applying \( \Theta_{n,1}\Theta_{n,1}\psi = \psi\), then, 
 \begin{equation}
-   \br{\Theta_{n,1} U_l \Theta_{n,1}\psi }_{u}  = \br{\psi}_u\cos\beta - \ci\br{\psi}_v \sin \beta = \br{U_l \psi}_u.
+   \br{\Theta_{n,1} U_l \Theta_{n,1}\psi }_{u}  = \br{\psi}_u\cos\beta - \ci\br{\psi}_v \sin \beta = \br{U_l \psi}_u. \because (u, v)\in S_l
 \end{equation}
 Therefore, \eqref{eln1} holds. Similarly it can be generalized from \(1, n\) to \(m, n\), as following, 
 \begin{equation}
@@ -410,39 +420,40 @@ Therefore, \eqref{eln1} holds. Similarly it can be generalized from \(1, n\) to 
 l \not\in\cbr{n, m}\Rightarrow \Theta_{n, m} U_l = U_l \Theta_{n, m}.
 \end{equation}
 
-Rotation can be expressed as finite multiplications of such exchange above. Therefore, if \(R_n\) is a rotation operator that rotate index \(n \br{< N}\) times, it also satisfies, 
+Rotation can be expressed as finite multiplications of such exchange \eqref{elnm} and \eqref{e1nm}. Therefore, if \(R_n\) is a rotation operator that rotate index \(n\in[N-1]\) times, it also satisfies, 
 \begin{equation}
     \label{erotateB}
-    U_{N-n} \psi = R_{-n}  U_{1} R_{n}\psi,
+    U_{n} \psi = R_{-n+1}  U_{1} R_{n-1}\psi,
 \end{equation}
 where,
 \begin{align*}
-R_{n}\psi_{p_N\cdots p_1} &= \psi_{p_{N-n}\cdots p_1p_N\cdots p_{N-n+1}},\\
-R_{-n}\psi_{p_N\cdots p_1}&= \psi_{p_{n}\cdots p_1p_N\cdots p_{n+1}},\\
-R_n = \Theta_{n, m}
+\br{R_{n}\psi}_{p_N\cdots p_1} &= \psi_{p_{N-n}\cdots p_1p_N\cdots p_{N-n+1}},\\
+\br{R_{-n}\psi}_{p_N\cdots p_1}&= \psi_{p_{n}\cdots p_1p_N\cdots p_{n+1}},\\
+R_1 &= \Theta_{2,1}\cdots\Theta_{N-1, N-2}\Theta_{N, N-1}\\
+R_{n+m} &= R_n R_m
 \end{align*}
 Note that this \(R\) corresponds to \(\sigma\) in \eqref{esigma} and \(R_{-n}= \br{R_n}^{-1}\). Combining \eqref{emixcomm} with this result \eqref{erotateB}, we see,
 \[
-    U_{N}U_{N-1} \psi = R_{-n}  U_{2}  R_{n}R_{-n}U_{1} R_n\psi =R_{-n}  U_{2} U_{1} R_n\psi 
+    U_{N}U_{N-1} \psi = R_{-(N-2)}  U_{2}  R_{N-2}R_{-(N-2)}U_{1} R_{N-2}\psi =R_{-(N-2)}  U_{2} U_{1} R_{N-2}\psi ,
 \]
 and by mathematical induction, 
 \begin{equation}
     \label{erotate}
-    U_{N}\cdots U_{\hatM+1} \psi = R_{-\hatM} U_{N-\hatM} \cdots U_{1} R_{\hatM}\psi.
+    U_{N}\cdots U_{N-\hatM+1} \psi = R_{-(N-\hatM)} U_{\hatM} \cdots U_{1} R_{N-\hatM}\psi.
 \end{equation}.
 
 Now we can write \eqref{eblockmixA} formaly. The 2 quantities (result without global qbits, and result with global qbits) in \eqref{eblockmixA} are defined formally as,
 \begin{align*}
-    \bar{\psi} &=  U_{N}\cdots U_{1} \psi\\
-    \psi' &= \br{R_{-\hatM} U_{N-\hatM} \cdots U_{1} R_{\hatM} }U_\hatM \cdots U_1 \psi.
+    \psi^N &=  U_{N}\cdots U_{1} \psi\\
+    \psi^{\sigma^{-1}\hatM\sigma L} &= \br{R_{-(N-\hatM)} U_{\hatM} \cdots U_{1} R_{N-\hatM} }U_{N-\hatM} \cdots U_1 \psi.
 \end{align*}
 But we have \eqref{erotate}, therefore, 
 \begin{align*}
-    \psi' &= R_{-\hatM} U_{N-\hatM} \cdots U_{1} R_{\hatM} U_\hatM \cdots U_1 \psi\\
-    & =  U_{N}\cdots U_{\hatM+1}  U_\hatM \cdots U_1 \psi \quad\because \eqref{erotate}\\
+    \psi^{\sigma^{-1}\hatM\sigma L} &= R_{-(N-\hatM)} U_{\hatM} \cdots U_{1} R_{N-\hatM} U_{N-\hatM} \cdots U_1 \psi\\
+    & =  U_{N}\cdots U_{N-\hatM+1}  U_{N-\hatM} \cdots U_1 \psi \quad\because \eqref{erotate}\\
     & =  U_{N}\cdots U_1 \psi 
 \end{align*}
-It implies \(\bar{\psi} = \psi'\) (\eqref{eblockmixA}).
+It implies \(\psi^N = \psi^{\sigma^{-1}\hatM\sigma L}\ (L=N-\hatM)\) (\eqref{eblockmixA}).
 \section{Problem of Memory bandwidth}
 The problem of memory bandwidth in our FPGA is discussed. As a result I recommend to challenge to the memory bandwidth should be in the future work.
 
