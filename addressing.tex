@@ -206,12 +206,12 @@ Because applying mixer operation in order of \(n, m\) (\eqref{eqn2m}) and that i
 \label{spipe}
 This section formalize a timing of the pipeline as a mathematical functions. The reason both cost function and mixer operator can be computed using the same pipeline introduced here is also explained at end of the section.
 
-The pipeline is defined using the variables \(\phi, c, s, \xi, A\). Meanings are,
+The pipeline is defined using the variables \(\phi, c, s, \chi, A\). Meanings are,
 \begin{itemize}
     \item \(\phi\): amplitude of the state vector
     \item \(c\): Value of cosine or real part of cost function operator
     \item \(s\): Value of sine or imaginary part of cost function operator
-    \item \(\xi\): Switch flag of first componet of amplitude or that of second, or cost function.
+    \item \(\chi\): Switch flag of first componet of amplitude or that of second, or cost function.
     \item \(A\): Index (Address) of the amplitude place to be stored.
 \end{itemize}
 These variables form a serise, like in a way, \(\phi_1, \phi_2, ..., \phi_T\), where  \(T\) is the number of pipeline depth. Subscript of \(1\) like \(\phi_1\) means input stage. This document use \('\) to indicate the next state in terms of discrete time on the clocks, like in a way \(\phi'\). 
@@ -223,25 +223,25 @@ Here, for example, to compute the mixer operation, the input is set as,
         \phi_{1}' = \psi_\hatj\\
         c_1' = \cos\beta\\
         s_1' = \sin\beta\\
-        \xi_1' = 0j_0\\
+        \chi_1' = 0j_0\\
         A_1 = \hatj
     \end{matrix} 
 \end{equation}
-where \(\hatj\) is an index defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\xi_1' = 00\), it must be satisfied that \((\hatj, q)\) is a pair indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \((\hatj, q)\in S_n\). If the input is end of the pair, \(\xi_1'\) must be 01. The way above supplying \(\xi_1' = 0j_0\) will satisfies these restriction.
+where \(\hatj\) is an index defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 00\), it must be satisfied that \((\hatj, q)\) is a pair indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \((\hatj, q)\in S_n\). If the input is end of the pair, \(\chi_1'\) must be 01. The way above supplying \(\chi_1' = 0j_0\) will satisfies these restriction.
 
-The meaning of precedent \(0\) for \(\xi\) is explained in the reuse method of this unit for cost function operation later. First this document describes the use of this pipeline in mixer operation.
+The meaning of precedent \(0\) for \(\chi\) is explained in the reuse method of this unit for cost function operation later. First this document describes the use of this pipeline in mixer operation.
 Updating the pipeline values as,
 \[
-    \br{\phi, \xi, A, c, s}'_{\tau +1} = \br{\phi, \xi, A,c,s}_{\tau}, \tau=1,2,...,T
+    \br{\phi, \chi, A, c, s}'_{\tau +1} = \br{\phi, \chi, A,c,s}_{\tau}, \tau=1,2,...,T
 \]  
 then complex number operation is defined as following.
 \begin{align}
     \label{ep00}
-    \psi_{A_{T}}' &= \xi_{T} - \zeta_{T-1} &\Leftarrow \xi_T = 00,\\
+    \psi_{A_{T}}' &= \xi_{T} - \zeta_{T-1} &\Leftarrow \chi_T = 00,\\
     \label{ep01}
-    \psi_{A_{T}}' &= -\zeta_{T+1} + \xi_{T} &\Leftarrow \xi_T = 01,\\
+    \psi_{A_{T}}' &= -\zeta_{T+1} + \xi_{T} &\Leftarrow \chi_T = 01,\\
     \label{ep10}
-    \psi_{A_{T}}' &= \xi_{T} +  \zeta_{T} &\Leftarrow \xi_T = 10,
+    \psi_{A_{T}}' &= \xi_{T} +  \zeta_{T} &\Leftarrow \chi_T = 10,
 \end{align}
 where, 
 \begin{equation}
@@ -257,7 +257,7 @@ This pipline can be used also for cost function operation. For this, we set the 
         \phi_{1}' = \psi_j,\\
         c_1' = \ORe(H_j),\\
         s_1' = \OIm(H_j),\\
-        \xi_1' = 10,\\
+        \chi_1' = 10,\\
         A_1 = j,
     \end{matrix} 
 \end{equation}
@@ -301,10 +301,10 @@ The system will re-arrange the state vector as in,
 \end{align*}
 Superscript \(\sigma\) of \(\psi\) just indicates \(\psi^\sigma\) is obtained by applying \(\sigma\). 
 
-Assuming we got \(\psi\in \sC^D\) as an initial state vector and got \(\psi^L\in\sC^D\) by applying mixer operation to the local qbits (qbit such that its number \(n\) satisfies \(n\leq \hatM\).). Superscrpit \(L\) means the vector applied \(L\) bits local mixer operation. Then, let \(\psi^{\sigma L}\) be a state vector that shuffled its amplitude position as,
+Assuming we got \(\psi\in \sC^D\) as an initial state vector and got \(\psi^L\in\sC^D\) by applying mixer operation to the local qbits (qbit such that its number \(n\) satisfies \(n\leq \hatM\).). Superscript \(L\) means the vector applied \(L\) bits local mixer operation. Then, let \(\psi^{\sigma L}\) be a state vector that shuffled its amplitude position as,
 \begin{equation}
     \label{eshuffle}
-    \psi^{\sigma L}_\jbar = \psi_{L\sigma(\jbar)} , \Leftrightarrow\psi^{\sigma L}_{p_N\cdots p_1}= \psi^L_{p_{N-\hatM}\cdots p_1 p_N\cdots p_{N-\hatM+1}}
+    \psi^{\sigma L}_\jbar = \psi^L_{\sigma(\jbar)} , \Leftrightarrow\psi^{\sigma L}_{p_N\cdots p_1}= \psi^L_{p_{N-\hatM}\cdots p_1 p_N\cdots p_{N-\hatM+1}}
 \end{equation}
 where we took the representation of,
 \[
