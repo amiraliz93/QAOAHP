@@ -65,6 +65,7 @@
 \begin{document}
 \maketitle
 In this document we describe components of QAOA system mathematically, and introduce a novel parallelization algorithm for QAOA system. I, Shibata, supposes futher discussion to improve and expand the QAOA system needs basic symbols and formulas to define it. Therefore, I wrote an article here. Pleaes tell me any suggestion easily.
+Terminologies may be incorrect.
 
 \section{Address for 1st qubit mixer operation}
 Indexes are critical to implement the QAOA system precisely on FPGAs, rathar than matrix-vector expression because we must calculate equivalent index expressions when those matrix operation is implemented on ogical circuit. So, the indexing and its relation to operation is defined strictly, from actual easy example to general case.
@@ -93,13 +94,14 @@ Letting \(p, q\) have the following binary expression,
 \[
  p = p_N \cdots p_2 p_1, q = q_N \cdots q_2 q_1,
 \]
-then we can see for all \(i = 1,2,...,N\),
+then we can see for all \(i \in [N] = \cbr{1,2,...,N}\),
 \[
 \begin{matrix}
-    i = 1\Rightarrow p_i \neq q_i\\
-    i\neq 1\Rightarrow p_i = q_i
+    i \not\in N_1\Rightarrow p_i \neq q_i,\\
+    i\in N_1\Rightarrow p_i = q_i,
 \end{matrix}
 \]
+where \(N_n = \cbr{i|i\in [N], i\neq n}\).
 So the mixer operation will be,
 \begin{align}
     \nonumber
@@ -108,6 +110,7 @@ So the mixer operation will be,
     \psi_q &= -\ci\psi_p\sin \beta  + \psi_q\cos \beta
 \end{align}
 \section{Addressing for general case of mixer operation}
+\label{sAddrGen}
 To get 2 index for general case of mixer operation, there are several way of addressing. In this section, we introducing a method with swaping 2 bit in a index variable used in the case of 1st qubit mixer operation described in the previous section.
 
 Let \(n\) be a current qubit place we are focusing on for mixer operation, \(\hat{p}, \hat{q}\) be indexes of state vector element that should be applied a mixer operation. Assuming we have index expression,
@@ -124,11 +127,11 @@ Now, we see easily,
 then we can see for all \(i = 1,2,...,N\),
 \[
 \begin{matrix}
-    i = 1\Rightarrow \hatp_i \neq \hatq_i\\
-    i\neq 1\Rightarrow \hatp_i = \hatq_i
+    i \not\in N_1 \Rightarrow \hatp_i \neq \hatq_i,\\
+    i\in N_1 \Rightarrow \hatp_i = \hatq_i,
 \end{matrix}
 \]
-therefore, using these indexes \(\hat{p}, \hat{q}\), we do mixer operation for \(n\)-th qubit as, 
+where \(N_n = \cbr{i|i\in [N], i\neq n}\). Therefore, using these indexes \(\hat{p}, \hat{q}\), we do mixer operation for \(n\)-th qubit as, 
 \begin{align}
     \nonumber
     \psi_\hatp &= \psi_\hatp\cos\beta - \ci\psi_\hatq \sin \beta,\\
@@ -139,24 +142,29 @@ where \(\ci^2 = -1\).
 \subsection{Invariance on exchange of qbits for mixer operation}
 \label{mixerInvariance}
 We further formalize mixer operation here. The sets of index pairs that the mixer operation applied is denoted as \(S_1, ...,S_N\) such that,
-\[
-    S_n = \cbr{(p, q)| P(p, q, n)}, P(p, q, n) \Leftrightarrow p_i\neq q_n \forall i\neq n \br{p_i = q_i}
-\]
-If we have a serise \(p^{kn}, q^{kn}, k=1,2,...,2^{N-1}, (p^{kn}, q^{kn})\in S_n\) where each pair is distinct each other, then, the processing of mixer operation can be,
+\begin{equation}
+    \label{eSn}
+    S_n = \cbr{(p, q)| p_n\neq q_n, \forall i\in N_n \br{p_i = q_i}},
+\end{equation}
+where \(N_n = \cbr{i|i\in [N], i\neq n}, [N] = \cbr{1,2,...,N} \). Note that \(\sum_{i\in [N]}S_i = S, i\neq j \Rightarrow N_i\cap N_j = \emptyset\).
+
+\textbf{Mixer Operatoin} is defined for all qbit here. The processing of mixer operation can be as following. Picking up each \(n\in [N]\) and then for all \((p, q)\in S_n\) 
 \begin{align}
-    \psi_{p^{kn}}' &= \psi_{p^{kn}}\cos\beta - \ci\psi_{q^{kn}} \sin \beta, \\
+    \nonumber
+    \psi_{p}' &= \psi_{p}\cos\beta - \ci\psi_{q} \sin \beta, \\
     \label{emg2}
-    \psi_{q^{kn}}' &= -\ci\psi_{p^{kn}} \sin \beta + \psi_{q^{kn}} \cos \beta.
+    \psi_{q}' &= -\ci\psi_{p} \sin \beta + \psi_{q} \cos \beta.
 \end{align}
-we can exchange any \(n\) and \(m\) in the series. 
+\textbf{Theorem} We can take any order of picking up for \(n\) and for that fixed \(n\) we can take any order of picking up for \(p, q\).
 
-Proof: In the case we apply \(n,m, n\neq m\)-th qbit is considered. If we apply in the order of \(m, n\), for any \(p=0,1,...,D/2-1\), there uniquly exists pairs \((p, q)\in S_{m}, (p, a), (q, b)\in S_{n}\) from the definition of \(S_n\). And because  operator of \(n\)-th qbit is already applied, then,
+\textbf{Proof of the theorem} Because \(p, q\) is evident we see only problem on \(n\) here. The case we apply mixer operator for qbits \(n,m\in [N], n\neq m\) is considered. Application order \(m \to n\) and \(n\to m\) is considered respectively, then it is proved that both results are the same. 
 
+For a result with the order of \(n\to m\) is shown firstly. For any \(p=0,1,...,D/2-1\), there uniquly exists \(q\) that satisfies \((p, q)\in S_{m}\) and a pair \((a, b)\) that satisfies \((p, a), (q, b)\in S_{n}\) from the definition of \eqref{eSn}. And because  operator of \(n\)-th qbit is already applied, then using \eqref{emg2},
 \begin{align}
     \nonumber
     \psi_{p}' &= \psi_p \cos\beta - \ci\psi_q \sin \beta, \\
 \end{align}
-But because operation for \((p, a), (q, b)\) have been done already, we can substitute its result, therefore, obtain
+But because operation for \((p, a), (q, b)\in S_n\) at \(n\)-th qbit have been done already, we can substitute its result, therefore, using \eqref{emg2} again, obtain 
 \begin{align}
     \nonumber
     \psi_{p}' &=  (\psi_{p}\cos\beta - \ci\psi_{a} \sin \beta)\cos\beta - \ci(\psi_q \cos \beta - \ci \psi_b \sin \beta) \sin \beta, \\
@@ -179,11 +187,11 @@ The above logic provides, \(a_m = p_m, b_m = q_m, q_m\neq p_m\)  and \(n\neq m\)
 \]
 It means \((a, b)\in S_m\).
 
-Then in the opossite case, for the same indexes \(p, q, a, b\),
+Then in the opossite case \(m\to n\), for the same indexes \(p, q, a, b\), using the property \((p, a)\in S_n\) and \eqref{emg2},
 \begin{align}
-    \psi_{p}' &= \psi_p\cos\beta - \ci \psi_a \sin \beta
+    \psi_{p}' &= \psi_p\cos\beta - \ci \psi_a \sin \beta.
 \end{align}
-Here, we know \((p, q), (a, b)\in S_m\), therefore,
+Here, we know \((p, q), (a, b)\in S_m\), therefore, with \eqref{emg2} again,
 \begin{align}
     \nonumber
     \psi_{p}' &= (\psi_p\cos\beta - \ci \psi_q \sin \beta)\cos\beta - \ci (\psi_a\cos\beta - \ci \psi_b \sin \beta) \sin \beta, \\
@@ -191,13 +199,13 @@ Here, we know \((p, q), (a, b)\in S_m\), therefore,
     &= \psi_p \cos^2\beta - \psi_b\sin^2\beta -\ci\br{\psi_q\sin\beta\cos\beta + \psi_a\cos\beta\sin\beta}.
 \end{align}
 
-Because applying mixer operation in order of \(n, m\) (\eqref{eqn2m}) and that in order of \(m, n\) (\eqref{eqm2n}) give the same result, any pair of mixer operation to adjacent qbits are commute. Because it is well known any permutation can be expressed with the finite combinations of such adjacent exchange, from the mathematical induction, any sequence of qbit order to apply mixer operation gives the identical result. 
+Because applying mixer operation in order of \(n, m\) (\eqref{eqn2m}) and that in order of \(m, n\) (\eqref{eqm2n}) give the same result, any pair of mixer operation to qbits \(m, n\) are commute. Because it is well known any permutation can be expressed with the finite combinations of such exchange, from the mathematical induction, any sequence of qbit order to apply mixer operation gives the identical result. 
 
 \section{Pipeline element}
 \label{spipe}
-This section formalize a timing of the pipeline as a mathematical functions. The reason both cost function and mixer operator can be computed using the same pipeline introduced here is also explained end of the section.
+This section formalize a timing of the pipeline as a mathematical functions. The reason both cost function and mixer operator can be computed using the same pipeline introduced here is also explained at end of the section.
 
-Let \(T\) be a number of pipeline stages, then for \(j=1,2,...,D-1\), the pipeline is defined using the variables \(\phi, c, s, \xi, A\). Meanings are,
+The pipeline is defined using the variables \(\phi, c, s, \xi, A\). Meanings are,
 \begin{itemize}
     \item \(\phi\): amplitude of the state vector
     \item \(c\): Value of cosine or real part of cost function operator
@@ -218,8 +226,9 @@ Here, for example, to compute the mixer operation, the input is set as,
         A_1 = \hatj
     \end{matrix} 
 \end{equation}
+where \(\hatj\) is an index defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\xi_1' = 00\), it must be satisfied that \((\hatj, q)\) is a pair indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \((\hatj, q)\in S_n\). If the input is end of the pair, \(\xi_1'\) must be 01. The way above supplying \(\xi_1' = 0j_0\) will satisfies these restriction.
 
-The meaning of precedent \(0\) for \(\xi\) is explained in the reuse method of this unit for cost function operation later. First this document describes the use in mixer operation.
+The meaning of precedent \(0\) for \(\xi\) is explained in the reuse method of this unit for cost function operation later. First this document describes the use of this pipeline in mixer operation.
 Updating the pipeline values as,
 \[
     \br{\phi, \xi, A, c, s}'_{\tau +1} = \br{\phi, \xi, A,c,s}_{\tau}, \tau=1,2,...,T
@@ -227,80 +236,92 @@ Updating the pipeline values as,
 then complex number operation is defined as following.
 \begin{align}
     \label{ep00}
-    \psi_{A_{T}}' &= \xi_{T} - \zeta_{T-1} &\Leftarrow \xi_T = 00\\
+    \psi_{A_{T}}' &= \xi_{T} - \zeta_{T-1} &\Leftarrow \xi_T = 00,\\
     \label{ep01}
-    \psi_{A_{T}}' &= -\zeta_{T+1} + \xi_{T} &\Leftarrow \xi_T = 01\\
+    \psi_{A_{T}}' &= -\zeta_{T+1} + \xi_{T} &\Leftarrow \xi_T = 01,\\
     \label{ep10}
-    \psi_{A_{T}}' &= \xi_{T} +  \zeta_{T} &\Leftarrow \xi_T = 10
+    \psi_{A_{T}}' &= \xi_{T} +  \zeta_{T} &\Leftarrow \xi_T = 10,
 \end{align}
 where, 
 \begin{equation}
-    \xi_{\tau} = \phi_\tau c_\tau, \zeta_\tau = \ci\phi_\tau  s_\tau
+    \xi_{\tau} = \phi_\tau c_\tau, \zeta_\tau = \ci\phi_\tau  s_\tau,
 \end{equation}
-must be calculated with 4 multipliers (note that there are 2 real and complex value multiplications).
+must be calculated with 4 multipliers (note that there are 2 real and complex value multiplication. Complex values have 2 real numbers, real part and imaginary part.).
 The notation \('\) means updated value, i.e., if we denote the time stamp as \(t\in\sN\), then \(\psi' = a\) means \(\psi^{t+1} = a^t\) in this context.
 
 This pipline can be used also for cost function operation. For this, we set the inital values in the pipeline system as,
 \begin{equation}
     \label{ecinit}
     \begin{matrix}
-        \phi_{1}' = \psi_j\\
-        c_1' = \ORe(H_j)\\
-        s_1' = \OIm(H_j)\\
-        \xi_1' = 10\\
-        A_1 = j
+        \phi_{1}' = \psi_j,\\
+        c_1' = \ORe(H_j),\\
+        s_1' = \OIm(H_j),\\
+        \xi_1' = 10,\\
+        A_1 = j,
     \end{matrix} 
 \end{equation}
+where \(H_j\in\sC\) is a const function operator.
 When we apply the input with \eqref{eminit}, \eqref{ep00} and \eqref{ep01} is applied alternately to get a result for 2 mixed amplitude in this order. That is, setting \eqref{eminit} make the pipeline calculate 2 mixer operation with 2 clocks. The throughput is 1 per 1 clock. On the other hand, when we apply the input with \eqref{ecinit}, only \eqref{ep10} is applied 
 
 \section{Addressing for parallel processing}
-Letting \(K=2^M\) be a number of parallell blocks. In naive inplementation, if we paralellized the system in \(K=2^M\) blocks, the system need inter local memory (like BRAMs) access \(M\)-times both for read and write. The implementation describes here reduce it to \(1\) regardless \(M\). Whole blocks works parallelly and there is no serial processing in this implementation iether. Fundamental idea to this tricky implementation is that, it re-arrage memory assignment for each amplitude of the state vector at the time of transfor for graear qbits that is used to divide the system into blocks (such qbits refers to global qbits here.), At the time of transfer.
+Letting \(K=2^M\) be a number of parallell blocks. In naive inplementation like in bottom of Fig. \ref{f1}, if we paralellized the system in \(K=2^M\) blocks, the system need inter local memory (like BRAMs) access \(M\)-times both for read and write. The implementation describes here reduce it to \(1\) regardless of \(M\). Whole blocks works parallelly and there is no serial processing in this implementation either. Fundamental idea to this tricky implementation is that, exchange local qbits and global qbits after completing the compute of local qbits. After processing global qbits (place in local qbits), back qbits to the original places. In other words, it re-arrage memory assignment for each amplitude of the state vector at the time of transfor for greater qbits that is used to divide the system into blocks (such qbits refers to global qbits here.).
 
-We prepare \(K\) pipeline defined in the section \ref{spipe}. Serise of index used in each blocks are all the same.
-\[
-    j=0,1,...,\frac{D}{2K}-1. 
-\]
-For \(n=0,1,...,N-1\), we obtain \(\hatj\) here as well. The address in the view of global memory then bocome,
-\[
-    \jbar = kj
-\]
-For intuition, consider the case \(k = 5=101, j=11001\). In this case \(\jbar = 10111001\). 
 
-The system will re-arrange the state vector. The re-arraged state vector is noted as \(\hphi\) here. The relation between original arrangement \(\phi\) to \(\hphi\) is defined using permutation \(\sigma:\cbr{0,1}^N\to\cbr{0,1}^N\),
-\begin{equation}
-    \hphi_\jbar = \phi_{\sigma(\jbar)}.
-\end{equation}
-\(\sigma\) is defined so that it shuffle index. There are several possiblity that yeild same effect to implement \(K\) block parallelization, but for generally, for any \(\hatM \geq M\), 
-\begin{equation}
-    \sigma\br{p_N\cdots p_{\hatM+1} p_{\hatM}\cdots p_1} = p_{\hatM}\cdots p_1 p_N\cdots p_{\hatM+1}
-\end{equation}
-
-In these definition, we can formalize the mixer operation that provide the possible implementation for \(K = 2^M \leq 2^\hatM\) paralellization with \(K\) blocks. 
 
 \subsection{Block Mixing Algorithm} 
 \label{sBMA}
-We describe an alogorithm tentatively called block mixing algorithm here after in the section. It consists of local stage and global stage.
+We describe an alogorithm tentatively called block mixing algorithm here after in the section. It consists of local mixer, shuffling, global mixer, and restoration.
+We prepare \(K = 2^M\) pipeline blocks defined in the section \ref{spipe}.  
+In these definition, we can formalize the mixer operation that provide the possible implementation for \(K = 2^M \leq 2^\hatM\) paralellization with \(K\) blocks. 
 
-\textit{Local stage}: letting \(j=0,1,...,2^{\hatM}-1\) be an local index, and \(k=0,1,...,2^{N-\hatM}-1\) be an global index. In the local stage, using the index,
+In this document \(\hatM\)-th greatest bits are called global qbits. Remaining \((N-\hatM)\) bits are called local qbits. Size of space that global qbits compose can be greater than number of parallel blocks, thus, \(K = 2^M \leq 2^\hatM\).
+
+\textit{Local mixer}: letting 
+\[j=0,1,...,2^{N-\hatM}-1\]
+ be an local index, 
+and \[k=0,1,...,2^{\hatM}-1\]
+ be an global index. In the local mixer stage, using the index,
 \[
-\jbar = kj
+\jbar = k\hatj,
 \]
-mixer operation is applied. In this stage, each block of pipeline includes several \(k\), for special case of \(\hatM = M\), \(k\) is equivalent to the identification of each pipeline block.
+mixer operations are applied to \(n\in[N-\hatM]\) qbit for each \(k\)-th block (\(\hatj\) is defined in the same way as in section \ref{sAddrGen}). Note that only the part of \(\hatj\) above is used to access BRAMs. For intuitively, consider the case \(k = 5=101, j=11001\), then this notation means \(\jbar = 10111001\). 
+In this stage, each block of pipeline includes several \(k\), where for special case of \(\hatM = M\), \(k\) is equivalent to the identification of each pipeline block.
 
-Assuming we got \(\psi\in \sC^D\) as an initial value and got \(\hpsi\in\sC^D\) by applying mixer operation to the local qbits (qbit such that its number \(n\) satisfies \(n\leq \hatM\).). Then, let \(\hpsi'\) be a state vector that shuffled its amplitude position as,
+\textit{shuffling}: 
+The system will re-arrange the state vector as in,
+\begin{equation}
+    \label{esigma}
+    \hpsi_\jbar = \psi_{\sigma(\jbar)}.
+\end{equation}
+\(\sigma:\cbr{0,1}^N\to\cbr{0,1}^N\) is a permutation and defined so that it shuffle the indexes. Precisely, it is defined as,
+\begin{align*}
+    \sigma\br{p_N \cdots p_1} &= p_{N-\hatM}\cdots p_1 p_N\cdots p_{N-\hatM+1},\\
+    \sigma^{-1}\br{p_N\cdots p_1} &= p_{\hatM}\cdots p_1 p_N\cdots p_{\hatM+1}.
+\end{align*}
+
+Assuming we got \(\psi\in \sC^D\) as an initial state vector and got \(\hpsi\in\sC^D\) by applying mixer operation to the local qbits (qbit such that its number \(n\) satisfies \(n\leq \hatM\).). Then, let \(\hpsi'\) be a state vector that shuffled its amplitude position as,
 \begin{equation}
     \label{eshuffle}
-    \hpsi'_\jbar = \hpsi_{\sigma(\jbar)} , \Leftrightarrow\hpsi'_{p_N\cdots p_1}= \hpsi_{p_\hatM\cdots p_1 p_N\cdots p_{\hatM+1}}
+    \hpsi'_\jbar = \hpsi_{\sigma(\jbar)} , \Leftrightarrow\hpsi'_{p_N\cdots p_1}= \hpsi_{p_{N-\hatM}\cdots p_1 p_N\cdots p_{N-\hatM+1}}
 \end{equation}
 where we took the representation of,
 \[
 \jbar = p_N\cdots p_1.
 \]
-\textit{Global stage}: 
-Then we apply mixer operation on the qbits of \(n =1,2,...,N-M\) to \(\hpsi'\) and we obtain \(\psi^@\). Let \(\psi'\in\sC^D\) be a final result of original order, it can be obtained,
+\textit{Global mixer}: 
+Then we apply mixer operation on the qbits of \(n \in[\hatM]\) to \(\hpsi'\) and we obtain \(\psi^@\). It can be done as completely same as in the case of local mixer. In detail, 
+\[j=0,1,...,2^{\hatM}-1\] be an local index (for originally global), 
+and \[k=0,1,...,2^{N-\hatM}-1\]
+ be an global index (originally local). In this stage, the following index,
+\[
+\jbar = k\hatj,
+\] 
+is used to addressing in section \ref{sAddrGen} for each \(k\)-th block. Note that only the part of \(\hatj\) above is used to access BRAMs.
+
+\textit{Restoration}: Let \(\psi'\in\sC^D\) be a final result of original order, it can be obtained,
 \begin{equation}
     \label{ereverseshuffle}
-\psi'_\jbar = \psi^@_{\sigma^{-1}(\jbar)}, \Leftrightarrow \psi'_{p_N\cdots p_1}= \psi^@_{p_{N-M}\cdots p_1 p_N\cdots p_{N-M+1}}
+\psi'_\jbar = \psi^@_{\sigma^{-1}(\jbar)}, \Leftrightarrow \psi'_{p_N\cdots p_1}= \psi^@_{p_{\hatM}\cdots p_1 p_N\cdots p_{\hatM+1}}.
 \end{equation}
 
 Let \(\bar{\psi}\) be a result of mixer operation without global qbits. Then, we claim that,
@@ -310,15 +331,15 @@ Let \(\bar{\psi}\) be a result of mixer operation without global qbits. Then, we
 \end{equation}
 
 \subsubsection{Sammary of Block Mixing Algorithm}
-Cost of copy data exists in \eqref{eshuffle} and \eqref{ereverseshuffle}. But this copy process can be in parallell. About the amount of data to be copied, for example, \(1/K\) is remained in the original block, and elemenents amount of \(1-1/K\) should be moved to another block. But this copy is only once for shuffling (\eqref{eshuffle}) and restoring (\eqref{ereverseshuffle}), it should be the least cost among any parallel algorithm on distributed systems in this order of parallelization \(K\). If it compares to the naive implementation (Fig. \ref{f1} bottom right) in which each mixer oepration for each qbit needs access to inter BRAM, because such qbit by qbit operation needs \(M\ (K=2^M)\) times access totally, this proposed algorithm reduced the chance of global access at the ratio \(1/K\). 
+Copying data performed in \eqref{eshuffle} and \eqref{ereverseshuffle} to exchange global and local qbits require computational cost. But this copy process can be in parallell. About the amount of data to be copied, for example, \(1/K\) is remained in the original block, and elemenents amount \(1-1/K\) should be moved to another block. But this copy is only once for shuffling (\eqref{eshuffle}) and restoring (\eqref{ereverseshuffle}), it should be the least cost among any parallel algorithm on distributed systems in this order of parallelization \(K\). If it compares to the naive implementation (Fig. \ref{f1} bottom right) in which each mixer oepration for each qbit needs access to inter BRAM, because such qbit by qbit operation needs \(M\ (K=2^M)\) times access totally, this proposed algorithm reduced the chance of global access at the ratio \(1/K\). 
 
 Cost function operation can be applied at the stage of restoration between the period after fetching a data from another BRAM and storing it to the original position of the original BRAM. e.g., \(N=2^{20}\) which is a practical number of qbits, we can take \(\hatM=2^{10}\) which ordinally above the avaiable blocks for parallelizations. Note that taiking \(\hatM > M\), where \(M\) is number of physical blocks, is not a problem. We can see that there is no problem in such configuration \(\hatM > M\) in the mathematical proof of the algorithm later.
  
 If we can set \(\hat{M} = N/2\), way of pipline do is totally the same as for both of operations on global and local qbits.
 \begin{figure}
-    \label{f1}
     \includegraphics[width=\linewidth]{diagram.pdf}
     \caption{(Top) Block diagram of current system with only 1 pipeline. Pipeline is exists in the block of QAOA system (invisible in this figure). (Bottom) pipeline's working image to each amplitude. The pipeline takes 2 input sequentially, and it compute them using 2 clocks. So the thoughput is 1 element per 1 clock. (Bottom right) Cross part is described in the case using 2 blocks for 2 paralellization. Generalization of this example to \(K > 2\) parallelization is the main topic of this article.}
+    \label{f1}
 \end{figure}
 
 \subsubsection{Proof of Block Mixing Algorithm yeilds the same result that do not use global qbits}
@@ -327,21 +348,21 @@ To prove this, we need to define mixer operation for qbit \(n\) more generally. 
     \label{emixcomm}
  U_n U_{m}\psi = U_m U_n\psi  
 \end{equation}
-We denote operation exchanging adjacent qbits as \(\Theta_{n, 1}\), then
+We denote operation exchanging qbits \(n, 1\) as \(\Theta_{n, 1}\), then
 we want to show,
 \begin{equation}
     \label{einvn1}
     U_n \psi = \Theta_{n, 1} U_{1} \Theta_{n, 1}\psi .
 \end{equation}
 
-Proof:  \( U_n \psi\) is described as for all index \(p = 0,1,...,{D-1}, q, (p, q)\in S_n\) (such \(q\) exists uniquely),
+Proof:  \( U_n \psi\) is described  for all index \(p = 0,1,...,{D-1}, q, (p, q)\in S_n\) (such \(q\) exists uniquely) as,
 \begin{align*}
     \br{U_n \psi}_p &= \psi_p \cos\beta - \ci\psi_q \sin \beta.
 \end{align*}
 When applying \(\Theta_{n,1}\), there exist indexes \(a, b=0,1,...,D-1\) that satisfy for arbitrary \(h\in\sC^D\), 
 \begin{align*}
     \br{\Theta_{n, 1}h}_{p} &= h_{a}, p_N\cdots p_1 = a_N\cdots a_{n+1}a_1 a_{n-1}\cdots a_2 a_n,\\
-    \br{\Theta_{n, 1}h}_{q} &= h_{b}, p_N\cdots q_1 = q_N\cdots b_{n+1}b_1 b_{n-1}\cdots b_2 b_n.
+    \br{\Theta_{n, 1}h}_{q} &= h_{b}, q_N\cdots q_1 = q_N\cdots b_{n+1}b_1 b_{n-1}\cdots b_2 b_n.
 \end{align*}
 Now we know \(p_n\neq q_n\) from definition, so \(a_1 \neq b_1\) holds. Similary, \(\forall i\neq n,  a_i=b_i\). It means \((a, b)\in S_1\). Therefore,
 \begin{align*}
@@ -349,7 +370,7 @@ Now we know \(p_n\neq q_n\) from definition, so \(a_1 \neq b_1\) holds. Similary
     &= \br{\Theta_{n, 1} h}_p\cos\beta - \ci\br{\Theta_{n, 1}h}_q \sin \beta.\\
    \therefore \br{\Theta_{n,1} U_1 h}_{p} & = \br{\Theta_{n, 1} h}_p\cos\beta - \ci\br{\Theta_{n, 1}h}_q \sin \beta.
 \end{align*}
-If we substitute \(h = \Theta_{n,1}\psi\) and applying \( \Theta_{n,1}\Theta_{n,1}\psi = \psi\), then, 
+If we substitute \(h = \Theta_{n,1}\psi\) and applying \( \Theta_{n,1}\Theta_{n,1}\psi = \psi\), then, for all \(\psi\in\sC^D\),ßß
 \begin{equation}
    \br{\Theta_{n,1} U_1 \Theta_{n,1}\psi }_{p}  = \br{\psi}_p\cos\beta - \ci\br{\psi}_q \sin \beta = \br{U_n \psi}_p.
 \end{equation}
@@ -359,21 +380,50 @@ Using \eqref{einvn1}, and letting \(U_{n, m}\) is an operator exchanging \(n\) a
 \begin{equation}
     U_n \psi = \Theta_{n, 1} U_{1} \Theta_{n, 1}\psi = \Theta_{n, 1} \Theta_{m, 1} U_{m} \Theta_{1, m}\Theta_{n, 1}\psi = \Theta_{n, m}  U_{m} \Theta_{n, m}\psi 
 \end{equation}
+We also want to show,
+\begin{equation}
+    \label{eln1}
+l \not\in\cbr{n, 1}\Rightarrow \Theta_{n, 1} U_l = U_l \Theta_{n, 1}.
+\end{equation}
+Proof:  \( U_l \psi\) is described as for all index \(u = 0,1,...,{D-1}, q, (u, v)\in S_l\) (such \(v\) exists uniquely),
+\begin{align*}
+    \br{U_l \psi}_u &= \psi_u \cos\beta - \ci\psi_v \sin \beta.
+\end{align*}
+When applying \(\Theta_{n, 1}, l\not\in\cbr{n, 1}\), there exist indexes \(c, d=0,1,...,D-1\) that satisfy for arbitrary \(h\in\sC^D\), 
+\begin{align*}
+    \br{\Theta_{n, 1}h}_{u} &= h_{c}, u_N\cdots u_1 = c_N\cdots c_{n+1}c_1 c_{n-1}\cdots c_2 c_n,\\
+    \br{\Theta_{n, 1}h}_{v} &= h_{d}, v_N\cdots v_1 = d_N\cdots d_{n+1}d_1 d_{n-1}\cdots d_2 d_n.
+\end{align*}
+Now we know \(u_n = v_n, u_1=v_1\) from definition and \(l\not\in \cbr{n, 1}\). So \(c_l = u_l, d_l= v_l, u_l\neq v_l\), so \(c_l\neq d_l\) holds. For another case, \(\forall i\in N_l,  c_i=d_i\). It means \((c, d)\in S_l\) too. Therefore,
+\begin{align*}
+    \br{U_l h}_{c} & = h_c \cos\beta - \ci h_d \sin \beta\quad \because (c, d)\in S_l\\
+    &= \br{\Theta_{n, 1} h}_u\cos\beta - \ci\br{\Theta_{n, 1}h}_v \sin \beta.\\
+   \therefore \br{\Theta_{n,1} U_l h}_{u} & = \br{\Theta_{n, 1} h}_u\cos\beta - \ci\br{\Theta_{n, 1}h}_v \sin \beta.
+\end{align*}
+If we substitute \(h = \Theta_{n,1}\psi\) and applying \( \Theta_{n,1}\Theta_{n,1}\psi = \psi\), then, 
+\begin{equation}
+   \br{\Theta_{n,1} U_l \Theta_{n,1}\psi }_{u}  = \br{\psi}_u\cos\beta - \ci\br{\psi}_v \sin \beta = \br{U_l \psi}_u.
+\end{equation}
+Therefore, \eqref{eln1} holds. Similarly it can be generalized from \(1, n\) to \(m, n\), as following, 
+\begin{equation}
+    \label{elnm}
+l \not\in\cbr{n, m}\Rightarrow \Theta_{n, m} U_l = U_l \Theta_{n, m}.
+\end{equation}
+
 Rotation can be expressed as finite multiplications of such exchange above. Therefore, if \(R_n\) is a rotation operator that rotate index \(n \br{< N}\) times, it also satisfies, 
 \begin{equation}
     \label{erotateB}
-    U_{n+1} \psi = R_{-n}  U_{1} R_{n}\psi,
+    U_{N-n} \psi = R_{-n}  U_{1} R_{n}\psi,
 \end{equation}
 where,
+\begin{align*}
+R_{n}\psi_{p_N\cdots p_1} &= \psi_{p_{N-n}\cdots p_1p_N\cdots p_{N-n+1}},\\
+R_{-n}\psi_{p_N\cdots p_1}&= \psi_{p_{n}\cdots p_1p_N\cdots p_{n+1}},\\
+R_n = \Theta_{n, m}
+\end{align*}
+Note that this \(R\) corresponds to \(\sigma\) in \eqref{esigma} and \(R_{-n}= \br{R_n}^{-1}\). Combining \eqref{emixcomm} with this result \eqref{erotateB}, we see,
 \[
-R_n\psi_{p_N\cdots p_1} = \psi_{p_{n}\cdots p_1p_N\cdots p_{n+1}}
-\]
-\[
-R_{-n}\psi_{p_N\cdots p_1} = \psi_{p_{N-n}\cdots p_1p_N\cdots p_{N-n+1}}
-\]
-Combining \eqref{emixcomm} with this result \eqref{erotateB}, we see,
-\[
-    U_{n+2}U_{n+1} \psi = R_{-n}  U_{2}  R_{n}R_{-n}U_{1} R_n\psi =R_{-n}  U_{2} U_{1} R_n\psi 
+    U_{N}U_{N-1} \psi = R_{-n}  U_{2}  R_{n}R_{-n}U_{1} R_n\psi =R_{-n}  U_{2} U_{1} R_n\psi 
 \]
 and by mathematical induction, 
 \begin{equation}
