@@ -58,6 +58,7 @@
 \newcommand{\hatp}{{\hat{p}}}
 \newcommand{\hatq}{{\hat{q}}}
 \newcommand{\hatj}{{\hat{j}}}
+\newcommand{\hatk}{{\hat{k}}}
 \newcommand{\jbar}{{\MidBar{j}}}
 \newcommand{\hatM}{{\hat{M}}}
 \title{Mathematical description and parallelization of QAOA system}
@@ -264,6 +265,13 @@ This pipline can be used also for cost function operation. For this, we set the 
 where \(H_j\in\sC\) is a const function operator.
 When we apply the input with \eqref{eminit}, \eqref{ep00} and \eqref{ep01} is applied alternately to get a result for 2 mixed amplitude in this order. That is, setting \eqref{eminit} make the pipeline calculate 2 mixer operation with 2 clocks. The throughput is 1 per 1 clock. On the other hand, when we apply the input with \eqref{ecinit}, only \eqref{ep10} is applied 
 
+\subsection{Non-stopping pipeline}
+This subsection introduces another addressing by which the system does not require to stop pipeline to flash the elements in its pipeline, for the case \(T > 2^N\). Basically \(T\) is fixed regardless of the state vector size \(2^N\) and usually \(T\approx 100\) and \(2^N > 10000\). So this condition is satisfied in the practical use.
+
+Not swapping bits, but rotate bits positions enables the system compute without stopping the pipeline at the time each qbit is completed.
+
+\textbf{Formal description is under construction (20260401).}
+
 \section{Addressing for parallel processing}
 Letting \(K=2^M\) be a number of parallell blocks. In naive inplementation like in bottom of Fig. \ref{f1}, if we paralellized the system in \(K=2^M\) blocks, the system need inter local memory (like BRAMs) access \(M\)-times both for read and write. The implementation describes here reduce it to \(1\) regardless of \(M\). Whole blocks works parallelly and there is no serial processing in this implementation either. Fundamental idea to this tricky implementation is that, exchange local qbits and global qbits after completing the compute of local qbits. After processing global qbits (place in local qbits), back qbits to the original places. In other words, it re-arrage memory assignment for each amplitude of the state vector at the time of transfor for greater qbits that is used to divide the system into blocks (such qbits refers to global qbits here.).
 
@@ -455,6 +463,32 @@ But we have \eqref{erotate}, therefore,
     & =  U_{N}\cdots U_1 \psi 
 \end{align*}
 It implies \(\psi^N = \psi^{\sigma^{-1}\hatM\sigma L}\ (L=N-\hatM)\) (\eqref{eblockmixA}).
+
+\section{Memory access topology}
+Each block must knwo to which data should be sent and from which data should be fetched. The following equation decribes fetch process.
+\[
+    \psi_{p}^\sigma = \psi_{\sigma\br{p}}\Leftrightarrow \psi_{p_N\cdots p_1}^\sigma = \psi_{p_{N-\hatM}\cdots p_1p_N\cdots p_{N-\hatM+1}}, 
+\]
+By substituting \(p \leftarrow \sigma^{-1}(p)\), we get the following that describes sending process.
+\[
+    \psi_{\sigma^{-1}(p)}^\sigma = \psi_{p}\Leftrightarrow \psi_{p_{\hatM}\cdots p_1p_N\cdots p_{\hatM+1}}^\sigma = \psi_{p_N\cdots p_1}
+\]
+
+The access topology is now considered. In the case of fetching, letting \(\hatk\) denotes the block receiving data, \(k\) denotes that sending, \(\hatj\) denotes the position of the data in the block \(\hatk\), and \(j\) denotes that of \(k\). Then,
+\begin{equation}
+    \begin{split}
+        \hatk &= p_N\cdots p_{N-\hatM+1},\\
+        k &= p_{N-\hatM}\cdots p_{N-2\hatM+1},\\
+        \hatj &= p_{N-\hatM}\cdots p_1,\\
+        j &= p_{N-2\hatM}\cdots p_1p_N\cdots p_{N-\hatM+1}.
+    \end{split}
+\end{equation}
+The above equation simply means, we need complete graph of \(k\to\hatk\). The transfer of data needs the cost order of \(2^\hatM\) . So, rotation intuitvely is not the best solution. But in totall, rotation will reduce total memory access.
+
+Devide \(\sigma\) into \(\sigma_1\sigma_2\cdots\sigma_\hatM\) with each \(\sigma_i\) denotes exchanging 2 qbits will looks reducing memory access. Every exchange require half of data exchange, so \(\hatM\) exhchange will need \(0.5\hatM^2\) data transfer. ON the other hand, rotation exchange only needs \(\hatM\) data transfer and only need one exchange.  
+
+\textbf{More detailed explanation is underconstruction.}
+
 \section{Problem of Memory bandwidth}
 The problem of memory bandwidth in our FPGA is discussed. As a result I recommend to challenge to the memory bandwidth should be in the future work.
 
