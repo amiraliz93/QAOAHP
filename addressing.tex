@@ -23,6 +23,7 @@
 \newcommand{\sC}{\mathbb{C}}
 \newcommand{\ci}{\mathbf{i}}
 \newcommand{\sN}{\mathbb{N}}
+\newcommand{\sZ}{\mathbb{Z}}
 \newcommand{\sR}{\mathbb{R}}
 \newcommand{\sL}{\mathit{\Lambda}}
 \newcommand{\sG}{\mathit{\Gamma}}
@@ -270,10 +271,44 @@ This subsection introduces another addressing by which the system does not requi
 
 Not swapping bits, but rotate bits positions enables the system compute without stopping the pipeline at the time each qbit is completed.
 
+It is assumed that the system is applying mixer operations of \(m, n, n>m\) in this order without flashing the pipeline before start \(n\)-th operation. If \(p, q\in S_n\) is the pair now the system will process. There are indexes \(a, b\), such that \((p, a), (q, b)\in S_{m}\). To process mixer operation of \(n\)-th qbit for \(\psi_p, \psi_q\), these \(\psi_p, \psi_q\) must be finished mixer operation of \(m\)-th qbit. To state that, not only \(\psi_a, \psi_q\), but also all 4 elements \(\psi_a, \psi_p, \psi_b, \psi_q\) must have been finished \(m\)-th mixer operation.
+
+Let \(i_t\) be a series of index pair to be supplied to the pipeline. If \((i_t, i_{t+1})\in S_m\) or \((i_{t-1}, i_t)\in S_m\), the pipeline is preparing to process \(m\)-th operation. For any time \(t\), if \((i_t, i_{t+1})\in S_n\), then with some \(s, r < Y-T\), \((i_{t}, j_s)\in S_m, (i_r, i_{t+1})\in S_m\) must be satisfied.
+
+The following definition satisfies the property above.
+\begin{align*}
+i_t &= \lambda^{n-1}(p_N\cdots p_2 p_1),\\
+p & = r_t,\\
+n & = q_t, \\
+t &= q_t2^N + r_t, 0\leq r_t < 2^N, q_t\in\sN
+\end{align*}
+where, \(\lambda\) is rotation index operator defined as,
+\[
+\lambda(p) = p_1 p_N\cdots p_2,
+\]
+and \(\lambda^n\) means applying \(\lambda\) \(n\)-times. Note that \(q_t\) is the quotient and \(r_t\) is the reminder of division \(t\) by \({2^N}\).
+
+Proof: assuming \((i_t, i_{t+1})\in S_n\). Expressing \(a = i_t, b=i_{t+1}\). Then from the definition of \(S_n\) in \eqref{eSn},
+\begin{align*}
+    a_n\neq b_n, \forall i\in N_n \br{a_i = b_i}.
+\end{align*}
 \textbf{Formal description is under construction (20260401).}
+Exists, \(c, d\) uniquely such that \((a, c), (d, b)\in S_m\).
+\begin{align*}
+    &a_m\neq c_m, \forall i\in N_m \br{a_i = c_i}.\\
+    &b_m\neq d_m, \forall i\in N_m \br{b_i = d_i}.
+\end{align*}
+We want to know, \(s, r\), \(a = i_s, b = i_r\). Let \(n - m = l\). 
+\begin{align*}
+ a_N\cdots a_1 = p_{l-1}\cdots p_1 p_N\cdots p_{n},\\
+ b_N\cdots b_1 = p_{l-1}\cdots \bar{p_1} p_N\cdots p_{n},\\
+ c_N\cdots c_1 = p_{l-1}\cdots p_1 p_N\cdots p_{n},\\
+ b_N\cdots b_1 = p_{l-1}\cdots \bar{p_1} p_N\cdots p_{n},\\
+\end{align*}
+
 
 \section{Addressing for parallel processing}
-Letting \(K=2^M\) be a number of parallell blocks. In naive inplementation like in bottom of Fig. \ref{f1}, if we paralellized the system in \(K=2^M\) blocks, the system need inter local memory (like BRAMs) access \(M\)-times both for read and write. The implementation describes here reduce it to \(1\) regardless of \(M\). Whole blocks works parallelly and there is no serial processing in this implementation either. Fundamental idea to this tricky implementation is that, exchange local qbits and global qbits after completing the compute of local qbits. After processing global qbits (place in local qbits), back qbits to the original places. In other words, it re-arrage memory assignment for each amplitude of the state vector at the time of transfor for greater qbits that is used to divide the system into blocks (such qbits refers to global qbits here.).
+Letting \(K=2^M\) be a number of parallel blocks. In naive implementation like in bottom of Fig. \ref{f1}, if we parallelized the system in \(K=2^M\) blocks, the system need inter local memory (like BRAMs) access \(M\)-times both for read and write. The implementation describes here reduce it to \(1\) regardless of \(M\). Whole blocks work parallely and there is no serial processing in this implementation either. Fundamental idea to this tricky implementation is that, exchange local qbits and global qbits after completing the computing of local qbits. After processing global qbits (place in local qbits), back qbits to the original places. In other words, it re-arrage memory assignment for each amplitude of the state vector at the time of transfer for greater qbits that is used to divide the system into blocks (such qbits refers to global qbits here.).
 
 
 
@@ -342,7 +377,7 @@ Let \(\psi^N\) be a result of mixer operation without global qbits. Then, we cla
 This proposition holds and it is proved here after in the section \ref{sProofBMA}.
 
 \subsubsection{Sammary of Block Mixing Algorithm}
-Copying data performed in \eqref{eshuffle} and \eqref{ereverseshuffle} to exchange global and local qbits require computational cost. But this copy process can be in parallell. About the amount of data to be copied, for example, \(1/K\) is remained in the original block, and elemenents amount \(1-1/K\) should be moved to another block. But this copy is only once for shuffling (\eqref{eshuffle}) and restoring (\eqref{ereverseshuffle}), it should be the least cost among any parallel algorithm on distributed systems in this order of parallelization \(K\). If it compares to the naive implementation (Fig. \ref{f1} bottom right) in which each mixer oepration for each qbit needs access to inter BRAM, because such qbit by qbit operation needs \(M\ (K=2^M)\) times access totally, this proposed algorithm reduced the chance of global access at the ratio \(1/K\). 
+Copying data performed in \eqref{eshuffle} and \eqref{ereverseshuffle} to exchange global and local qbits require computational cost. But this copy process can be in parallel. About the amount of data to be copied, for example, \(1/K\) is remained in the original block, and elemenents amount \(1-1/K\) should be moved to another block. But this copy is only once for shuffling (\eqref{eshuffle}) and restoring (\eqref{ereverseshuffle}), it should be the least cost among any parallel algorithm on distributed systems in this order of parallelization \(K\). If it compares to the naive implementation (Fig. \ref{f1} bottom right) in which each mixer oepration for each qbit needs access to inter BRAM, because such qbit by qbit operation needs \(M\ (K=2^M)\) times access totally, this proposed algorithm reduced the chance of global access at the ratio \(1/K\). 
 
 Cost function operation can be applied at the stage of restoration between the period after fetching a data from another BRAM and storing it to the original position of the original BRAM. e.g., \(N=2^{20}\) which is a practical number of qbits, we can take \(\hatM=2^{10}\) which ordinally above the avaiable blocks for parallelizations. Note that taiking \(\hatM > M\), where \(M\) is number of physical blocks, is not a problem. We can see that there is no problem in such configuration \(\hatM > M\) in the mathematical proof of the algorithm later.
  
