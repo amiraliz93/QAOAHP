@@ -298,12 +298,17 @@ Exists, \(c, d\) uniquely such that \((a, c), (d, b)\in S_m\).
     &a_m\neq c_m, \forall i\in N_m \br{a_i = c_i}.\\
     &b_m\neq d_m, \forall i\in N_m \br{b_i = d_i}.
 \end{align*}
-We want to know, \(s, r\), \(a = i_s, b = i_r\). Let \(n - m = l\). 
+We want to know, \(s, r\), \(a = i_s, b = i_r\). Let \(n - m = 1\). 
+\[
+i_t = \lambda^{n-1}(p), i_{t-2^N} = \lambda^{n-2}(p)
+\]
+\[
+    \lambda\br{i_{t-2^N}} = i_t.
+\]
 \begin{align*}
- a_N\cdots a_1 = p_{l-1}\cdots p_1 p_N\cdots p_{n},\\
- b_N\cdots b_1 = p_{l-1}\cdots \bar{p_1} p_N\cdots p_{n},\\
- c_N\cdots c_1 = p_{l-1}\cdots p_1 p_N\cdots p_{n},\\
- b_N\cdots b_1 = p_{l-1}\cdots \bar{p_1} p_N\cdots p_{n},\\
+ a = p = i_t,\\ ??????????????????
+ c = \lambda^{-1}(a) = a_1 a_{N}\cdots a_2,\\
+ d = p_{m-1}\cdots \bar{p_2} \bar{p_1} p_N\cdots p_{N-m+2} = i_r,\\
 \end{align*}
 
 
