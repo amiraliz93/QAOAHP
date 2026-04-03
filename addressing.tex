@@ -270,7 +270,7 @@ When we apply the input with \eqref{eminit}, \eqref{ep00} and \eqref{ep01} is ap
 This subsection introduces another addressing by which the system does not require to stop pipeline to flash the elements in its pipeline, for the case \(T > 2^N\). Basically \(T\) is fixed regardless of the state vector size \(2^N\) and usually \(T\approx 100\) and \(2^N > 10000\). So this condition is satisfied in the practical use.
 
 Not swapping bits, but rotate bits positions enables the system compute without stopping the pipeline at the time each qbit is completed.
-
+r
 It is assumed that the system is applying mixer operations of \(m, n, n>m\) in this order without flashing the pipeline before start \(n\)-th operation. If \(p, q\in S_n\) is the pair now the system will process. There are indexes \(a, b\), such that \((p, a), (q, b)\in S_{m}\). To process mixer operation of \(n\)-th qbit for \(\psi_p, \psi_q\), these \(\psi_p, \psi_q\) must be finished mixer operation of \(m\)-th qbit. To state that, not only \(\psi_a, \psi_q\), but also all 4 elements \(\psi_a, \psi_p, \psi_b, \psi_q\) must have been finished \(m\)-th mixer operation.
 
 Let \(i_t\) be a series of index pair to be supplied to the pipeline. If \((i_t, i_{t+1})\in S_m\) or \((i_{t-1}, i_t)\in S_m\), the pipeline is preparing to process \(m\)-th operation. For any time \(t\), if \((i_t, i_{t+1})\in S_n\), then with some \(s, r < Y-T\), \((i_{t}, j_s)\in S_m, (i_r, i_{t+1})\in S_m\) must be satisfied.
