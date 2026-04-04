@@ -271,16 +271,16 @@ This subsection introduces another addressing by which the system does not requi
 
 Not swapping bits, but rotate bits positions enables the system compute without stopping the pipeline at the time each qbit is completed.
 r
-It is assumed that the system is applying mixer operations of \(m, n, n>m\) in this order without flashing the pipeline before start \(n\)-th operation. If \(p, q\in S_n\) is the pair now the system will process. There are indexes \(a, b\), such that \((p, a), (q, b)\in S_{m}\). To process mixer operation of \(n\)-th qbit for \(\psi_p, \psi_q\), these \(\psi_p, \psi_q\) must be finished mixer operation of \(m\)-th qbit. To state that, not only \(\psi_a, \psi_q\), but also all 4 elements \(\psi_a, \psi_p, \psi_b, \psi_q\) must have been finished \(m\)-th mixer operation.
+It is assumed that the system is applying mixer operations of \(n, n+1\) in this order without flashing the pipeline before start \(n\)-th operation. If \(p, q\in S_n\) is the pair now the system will process. There are indexes \(a, b\), such that \((p, a), (q, b)\in S_{m}\). To process mixer operation of \(n\)-th qbit for \(\psi_p, \psi_q\), these \(\psi_p, \psi_q\) must be finished mixer operation of \(m\)-th qbit. To state that, not only \(\psi_a, \psi_q\), but also all 4 elements \(\psi_a, \psi_p, \psi_b, \psi_q\) must have been finished \(m\)-th mixer operation.
 
 Let \(i_t\) be a series of index pair to be supplied to the pipeline. If \((i_t, i_{t+1})\in S_m\) or \((i_{t-1}, i_t)\in S_m\), the pipeline is preparing to process \(m\)-th operation. For any time \(t\), if \((i_t, i_{t+1})\in S_n\), then with some \(s, r < Y-T\), \((i_{t}, j_s)\in S_m, (i_r, i_{t+1})\in S_m\) must be satisfied.
 
-The following definition satisfies the property above.
+The following definition satisfies the property above. Noth that \(D = 2^N\).
 \begin{align*}
 i_t &= \lambda^{n-1}(p_N\cdots p_2 p_1),\\
 p & = r_t,\\
 n & = q_t, \\
-t &= q_t2^N + r_t, 0\leq r_t < 2^N, q_t\in\sN
+t &= q_t D + r_t, 0\leq r_t < D, q_t\in\sN
 \end{align*}
 where, \(\lambda\) is rotation index operator defined as,
 \[
@@ -298,17 +298,19 @@ Exists, \(c, d\) uniquely such that \((a, c), (d, b)\in S_m\).
     &a_m\neq c_m, \forall i\in N_m \br{a_i = c_i}.\\
     &b_m\neq d_m, \forall i\in N_m \br{b_i = d_i}.
 \end{align*}
-We want to know, \(s, r\), \(a = i_s, b = i_r\). Let \(n - m = 1\). 
+We want to know, \(s, r\), \(a = i_s, b = i_r\). We want to apply \(n\)-th mixer operation at time \(t = q 2^N+ r\).  Then from the definition, 
 \[
-i_t = \lambda^{n-1}(p), i_{t-2^N} = \lambda^{n-2}(p)
-\]
+i_t = \lambda^{n-1}(r), i_{t-D} = \lambda^{n-2}(r)\because t-D = q D + r \Leftrightarrow t = (q+1) 2^N + r.
+\]Therefore,
 \[
-    \lambda\br{i_{t-2^N}} = i_t.
+    \lambda\br{i_{t-D}} = i_t.
 \]
+We consider \(t\) is odd.
 \begin{align*}
- a = p = i_t,\\ ??????????????????
- c = \lambda^{-1}(a) = a_1 a_{N}\cdots a_2,\\
- d = p_{m-1}\cdots \bar{p_2} \bar{p_1} p_N\cdots p_{N-m+2} = i_r,\\
+ a &= i_{t-D} = a_1 a_{N}\cdots a_2 = p_N \cdots 0,\\ 
+ b &= i_{t+1-D}= a_2 b_{N}\cdots b_2 =p_N \cdots 1,\\
+ c &= i_{t-D+1}  = ,\because t-D = 0\mod 2\\
+ d &= i_{t-D} = \lambda^{-1}(i_{t}) = \lambda^{-1}(a) = a_{N-1}\cdots a_1 a_N.\because t-D + 1=1\mod 2 \\
 \end{align*}
 
 
