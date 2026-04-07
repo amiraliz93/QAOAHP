@@ -70,7 +70,7 @@
 \newcommand{\jbar}{{\MidBar{j}}}
 \newcommand{\hatM}{{\hat{M}}}
 \title{Mathematical description and parallelization of QAOA system}
-\date{March, 2026, 31st}
+\date{April, 7th, 2026}
 \author{Hiroki Shibata, at Tokyo Metropolitan University}
 \begin{document}
 \maketitle
@@ -104,25 +104,44 @@ The document defines a set of binary values \(B\), as,
 For any finite set \(A\), its number of elements is noted as \(\# A\).
 
 We denote number of qbits as \(N\) throughout the documents, and the dimension of the state vector as \(D = 2^N\).
-\end{XA}.
-\section{Address for 1st qubit mixer operation}
-Indexes are critical to implement the QAOA system precisely on FPGAs, rather than matrix-vector expression because we must calculate equivalent index expressions when those matrixes operation is implemented on logical circuit. So, the indexing and its relation to operation is defined strictly, from actual easy example to general case.
 
-Let \(N\) be a number of qubits, \(D=2^{N}\) be a dimension of state vector. Let \(\psi\in\sC^D\) be a state vector, and let \(p\) be a index of element of \(\psi\). Then \(p\) take a form of,
+This documents regards \(p\in B^N\) and \(p\in [2^N-1]\) is equivalent definition. Formally, the following equivalence with respect to binary and integer expression is introduced.
 \begin{equation}
     \eqlabel{e1}
-p = p_N \cdots p_2p_1 = \sum_{i=1}^N p_i 2^{i-1},
+p = p_N \cdots p_2p_1 \Leftrightarrow p = \sum_{i=1}^N p_i 2^{i-1},
 \end{equation}
-where \(p_i\in \{0, 1\}\) is an each bit of \(p\). So we can see the number of all possible value of such \(p\) is \(2^N\), that equals to \(D\). 
+This documents uses the equivalent expression above without any special note.
 
-We express any integer between \(0, D-1\) in the format \eqref{e1} seamlessly. That is, if we write
+Here is an example. if we write
 \[
     p = 0000\cdots00101,
 \]
-then, we also write its identical express using decimal integer \eqref{e1}, 
+then, the following statement,
 \[
     p = 5.
 \]
+is equivalent to the first one.
+
+This documents frequently uses a permutation. Given \(p\in B^N\), we have an expression,
+\[
+p= p_Np_{N-1}\cdots p_1.
+\]
+Then \(h: B^N\to B^N\) is a permutation there is an index permutation (bijection) \(\hat{h}: [N]\to[N]\) providing the following relation, 
+\begin{equation}
+    \eqlabel{ePerm}
+    h(p)_i =  p_{\hat{h}(i)}
+\end{equation}
+Then we denote it as,
+\[
+    h(p)_i = p_{h i}.
+\]
+Any mapping of indexes in this documents have an expression as in \eqref{ePerm}. We make any index mappings in this document represent its equivalent permutation as in \eqref{ePerm} without ambiguity. \(h\) here is bijection of \(B^N\to B^N\), and \(\hat{h}\) is also a bijection of \([N]\to [N]\).
+
+\end{XA}.
+\section{Address for 1st qubit mixer operation}
+\label{s1stmixer}
+Indexes are critical to implement the QAOA system precisely on FPGAs, rather than matrix-vector expression because we must calculate equivalent index expressions when those matrixes operation is implemented on logical circuit. So, the indexing and its relation to operation is defined strictly, from actual easy example to general case.
+
 Considering the series of integer sequence \(j=0,1,...,D/2-1\), and a state vectors \(\psi\), we can determine 2 indexes for mixer operation in the case of 1st qubit as,
 \begin{equation}
     \eqlabel{ei}
@@ -184,7 +203,7 @@ We further formalize mixer operation here. The sets of indexes pairs that the mi
     \eqlabel{eSn}
     S_n = \cbr{\cbr{p, q}| p_n\neq q_n, \forall i\in [N]_n \br{p_i = q_i}},
 \end{equation}
-\begin{XA}where notation \([N]\) and \([N]_n\) is defined in \eqref{eNn}. Note that \(\sum_{i\in [N]}S_i = S\).\end{XA}
+\begin{XA}where notation \([N]\) and \([N]_n\) is defined in \eqref{eNn}. Note that \(\sum_{i\in [N]}S_i = S\).For example, indexes \(p, q\) defined in the \(n\)-th swapping case of \eqref{e4} satisfy \(\cbr{p, q}\in S_n\), and that of 1st qbit case of \eqref{s1stmixer} satisfy \(\cbr{p, q}\in S_1\).\end{XA}
 
 \textbf{Mixer Operatoin} is defined for all qbit here. The processing of mixer operation can be as following. Picking up each \(n\in [N]\) and then for all \(\cbr{p, q}\in S_n\) 
 \begin{align}
@@ -193,7 +212,7 @@ We further formalize mixer operation here. The sets of indexes pairs that the mi
     \eqlabel{emg2}
     \psi_{q}' &= -\ci\psi_{p} \sin \beta + \psi_{q} \cos \beta.
 \end{align}
-\textbf{Theorem} \begin{XA}We can take any order of picking up for \(n\), precisely, we can take any sequence \((n_1, n_2,..., n_N)\) satisfying \(\cbr{n_i|i\in [N]} = [N]\) to apply mixer operations in the order of \(n_1, n_2,..., n_N\)-th qbit. And for any fixed \(n = n_i\) we can take any order of picking up for \(p, q\).
+\textbf{Theorem} \begin{XA}We can take any order of picking up for \(n\), precisely, we can take any sequence \((n_1, n_2,..., n_N)\) satisfying \(\cbr{n_i|i\in [N]} = [N]\) to apply mixer operations in the order of \(n_1, n_2,..., n_N\)-th qbit. And for any fixed \(n = n_i\) we can take any order of picking up for \(\cbr{p, q}\) from \(S_n\).
 
 \textbf{Proof of the theorem} Because the problem on \(p, q\)\end{XA} is evident we see only problem on \(n\) here. The case we apply mixer operator for qbits \(n,m\in [N], n\neq m\) is considered. Application order \(m \to n\) and \(n\to m\) is considered respectively, then it is proved that both results are the same. 
 
@@ -219,7 +238,7 @@ Proof: we have,
     & b_n \neq q_n\land \forall i\neq n(b_i = q_i), \quad\because \cbr{q, b}\in S_n, \\\
     &q_m\neq p_m\land\forall i\neq m (q_i=p_i), \quad\because \cbr{p, q}\in S_m.
 \end{align*}
-The above logic provides, \(a_m = p_m, b_m = q_m, q_m\neq p_m\)  and \(n\neq m\), that is, from the transitive law \footnote{\(x = y, y=z\Rightarrow x=z\)} of equation, \(a_m \neq b_m\). In addition, for all \(i\neq m\), if \(i\neq n\) then \(a_i = b_i\). For \(i\neq m \land i=n\), if we assume \(a_n\neq b_n\), because these takes only 2 kind of values 0 or 1, it can be expressed as \(a_n = Q, b_n = Q*, Q** = Q\). Now \(a_n\neq p_n, b_n\neq q_n\), so \(p_n = Q*, q_n = Q\). But \(p_n= q_n\) should hold for the third logic of qubit. To solve this contradiction, we must say \(a_n = b_n\). Therefore, in summary, 
+The above logic provides, \(a_m = p_m, b_m = q_m, q_m\neq p_m\)  and \(n\neq m\), that is, from the transitive law \footnote{\(x = y, y=z\Rightarrow x=z\)} of equation, \(a_m \neq b_m\). In addition, for all \(i\neq m\), if \(i\neq n\) then \(a_i = b_i\). For \(i\neq m \land i=n\), if we assume \(a_n\neq b_n\), because these takes only 2 kind of values 0 or 1, it can be expressed as \(a_n = Q, b_n = Q*, Q** = Q\). Now \(a_n\neq p_n, b_n\neq q_n\), so \(p_n = Q*, q_n = Q\). But \(p_n= q_n\) should hold for the third logic of qbit. To solve this contradiction, we must say \(a_n = b_n\). Therefore, in summary, 
 \[
  a_m \neq b_m\land \forall i\neq m\br{a_i=b_i}.
 \]
@@ -264,7 +283,7 @@ Here, for example, to compute the mixer operation, the input is set as,
         A_1 = \hatj
     \end{matrix} 
 \end{equation}
-where \(\hatj\) is an index defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 00\), it must be satisfied that \(\cbr{\hatj, q}\) is set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). If the input is end of the pair, \(\chi_1'\) must be 01. The way above supplying \(\chi_1' = 0j_0\) will satisfy these restriction.
+where \(\hatj\) is an index \begin{XA}applied a permutation to \(j\), \end{XA}defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 00\), it must be satisfied that \(\cbr{\hatj, q}\) is set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). If the input is end of the pair, \(\chi_1'\) must be 01. The way above supplying \(\chi_1' = 0j_0\) will satisfy these restriction.
 
 The meaning of precedent \(0\) for \(\chi\) is explained in the reuse method of this unit for cost function operation later. First this document describes the use of this pipeline in mixer operation.
 Updating the pipeline values as,
@@ -308,36 +327,25 @@ Trivial sapping bits method introduced in the previous section \ref{sAddrGen} gi
 
 It is assumed that the system is applying mixer operations of \(n, m=n+1\) in this order without flashing the pipeline before start \(n\)-th operation. If \(\cbr{p, q}\in S_n\) is the pair now the system will process, then there are indexes \(a, b\), such that \(\cbr{p, a}, \cbr{q, b}\in S_{m}\) as shown in section \ref{mixerInvariance}. To process mixer operation of \(n\)-th qbit for \(\psi_p, \psi_q\), these \(\psi_p, \psi_q\) must be finished mixer operation on \(m\)-th qbit in advance, that is, before the \(n\)-th mixer operation on \(p, q\), the pipeline need to have stored the results of \(\psi_p, \psi_q\) to the place where the pipeline can read again to make the computation consistent. More in general, to state that, not only \(\psi_a, \psi_q\), but also all 4 elements \(\psi_a, \psi_p, \psi_b, \psi_q\) must have been finished \(m\)-th mixer operation.
 
-To see the timing formally, the document will formalize the schedule of indexes and value of qbit \(n\) supplied to the pipeline here. Let \(l^t, t\in[ND-1]\) be a series of indexes and \(q^t\) is a qbit that denotes \(q^t\)-th mixer operation is applied to \(\psi_{l^t}\) at the time \(t\). They are defined as,
+To see the timing formally, the document will formalize the schedule of indexes and value of qbit \(n\) supplied to the pipeline here. Let \(l^t, t\in[ND-1]\) be a series of indexes and \(q^t\) is a qbit that means \(q^t\)-th mixer operation is applied to \(\psi_{l^t}\) at the time \(t\). They are defined as,
 \begin{align}
     \eqlabel{elt}
 l^t &= \sigma(n)\br{r^t},\\
 \nonumber
-n & = q^t,
+t & = q^t D + r^t, 0\leq r^t < D, q^t \in \sN.
 \end{align}
-where \(D = 2^N\) and \(r^t, q^t\) is the reminder and the quotient of division for \(t\) by \(D\). \(\sigma(n): B^N\to B^N\) is a permutation for \(n\)-th mixer operation (it also represents the permutation of \([N]\to [N]\), explained immediately after in \eqref{ePerm}.), that must satisfy,
+where \(D = 2^N\) and \(r^t, q^t\) is the reminder and the quotient of division for \(t\) by \(D\). \(\sigma(n): B^N\to B^N\) is a permutation for \(n\)-th mixer operation (it also represents the permutation of \([N]\to [N]\), as explained in \eqref{ePerm}.), that must satisfy,
 \[
     \sigma(n) n = 1.
 \]
 
-In this section, if \(h: B^N\to B^N\) is a bijective mapping and there exists a permutation (bijection) \(\hat{h}: [N]\to[N]\) providing the following relation, 
-\begin{equation}
-    \eqlabel{ePerm}
-    h(p)_i =  p_{\hat{h}(i)}
-\end{equation}
-Then we denote it as,
-\[
-    h(p)_i = p_{h i}.
-\]
-Any mapping of indexes in this documents have an expression as in \eqref{ePerm}. We make any index mappings in this document represent its equivalent permutation as in \eqref{ePerm} without ambiguity.
-
-Assuming we are processing \(t\)-th index in of \eqref{elt}, for index \(l^t\), exists \(b\) such that \(\cbr{l^t, b}\in S_n, n=q^t\). To process this pair, for qbit \(m=n-1\), and some \(c, d\),  \(\cbr{l^t, c}, \cbr{b, d}\in S_m\) must have finished the pipeline at the time \(t\). We let \(l^t = a\). Now the time \(a, b, c, d\) are processed are examined. Letting \(t_a, t_b, t_c, t_d\) are the time \(a, b, c, d\) are processed respectively, then,
+We let \( n=q^t\) for clearness of the description. Assuming we are processing \(t\)-th index of \eqref{elt}, for index \(l^t\), exists \(b\) such that \(\cbr{l^t, b}\in S_n\). To process this pair, for qbit \(m=n-1\), and some \(c, d\),  \(\cbr{l^t, c}, \cbr{b, d}\in S_m\), all of \(l^t, b, c, d\) must have finished the pipeline before the time \(t\). We let \(l^t = a\). Now the time the pipeline processed \(a, b, c, d\) are examined. Letting \(t_a, t_b, t_c, t_d\) are the time \(a, b, c, d\) were processed respectively, then, from the definition \eqref{elt},
 \[
     l^{t_x} = x, x\in\cbr{a, b, c, d}
 \]
 The follwing quantities are defined.
 \[
-    Y_x = l^t - l^{t_x}, Y_* = \min\cbr{Y_x| x\in \cbr{a, b, c,d}} 
+    Y_x = t - {t_x}, Y_* = \min\cbr{Y_x| x\in \cbr{a, b, c,d}} 
 \]
 We want to see, whether
 \begin{equation}
@@ -350,7 +358,7 @@ holds or not.
 \begin{equation*}
     x = \sigma(n)(q^x) = \sigma^m(p^x), x\in\cbr{a, b, c, d}.
 \end{equation*}
-That is, we have the relation,
+We have the following equivalent relations,
 \begin{equation}
     \eqlabel{eqprel}
     q^x = (\sigma(n))^{-1}\sigma^m(p^x), x\in\cbr{a, b, c, d}.
@@ -358,33 +366,34 @@ That is, we have the relation,
 
 
 If the reminder of \(t_x\) divided by \(D\) is \( = p^x\), then, from \eqref{elt}, 
-\(
-    t_x = (n-1) D + p^x, 
-\) 
+\[
+    t_x = (n-1) D + p^x.
+\] 
 Because \(r^t = q^a\) in \eqref{elt} (can be seen the current notation of \(l^t = a\)), we also have, 
 \[
     t = n D + q^a.
 \]
-Therefore, the time difference become,
+Therefore, 
 \begin{equation}
     \eqlabel{etdiff}
-Y_x = t - t_x  = r^t + D - p^x = 2^N + \sum_{k=1}^N 2^{k-1}\br{q^a_k - p^x_k}.
+Y_x = t - t_x  = q^a + D - p^x = 2^N + \sum_{k=1}^N 2^{k-1}\br{q^a_k - p^x_k}.
 \end{equation}
 
 \subsection{Case in swapping 2 bits}
-We consider the case \(\sigma(n)\) is swapping \(n\)-th and \(1\)-st bits of its arguments. In this case \(\br{\sigma(n)}^{-1} = \sigma(n)\) and \(\sigma(n)\sigma(m)\) rotates \(1, m, n\)-th bits, that is, if \(h = \sigma(n)\sigma(m)\) then,
+We consider the case \(\sigma(n)\) is swapping \(n\)-th and \(1\)-st bits of its arguments as in section \ref{sAddrGen}. In this case \(\br{\sigma(n)}^{-1} = \sigma(n)\) and \(\sigma(n)\sigma(m)\) rotates \(1, m, n\)-th bits, that is, if \(h = \sigma(n)\sigma(m)\) then,
 \[
-    h(n) = 1, h(m) = n, h(1) = m, \forall i\in [N]_{1, m, n}
-\]. In this case from \eqref{eqprel}, we have, 
+    h(n) = 1, h(m) = n, h(1) = m, \forall i\in [N]_{1, m, n}.
+\]
+In this case from \eqref{eqprel}, we have, 
 \begin{align*}
     q^x_n = p^x_m, q^x_m = p^x_1, q^x_1 = p^x_n, \forall i\in[N]_{1, n, m}\br{q^x_i = p^x_i}.
 \end{align*} 
 
-Furthermore, \(\cbr{a, b}\in S_n, \cbr{a, c}\in S_m, \cbr{b, d}\in S_m\) gives the following,
+Furthermore, current conditions \(\cbr{a, b}\in S_n, \cbr{a, c}\in S_m, \cbr{b, d}\in S_m\) give the following,
 \begin{align*}
     q^b_1 &= \bar{q^a_1}, \forall i\in [N]_1\br{q^b_i = q^a_i},\\
     p^c_1 &= \bar{p^a_1}, \forall i\in [N]_1\br{p^a_i = p^c_i},\\
-    p^d_1 &= \bar{p^b_1}, \forall i\in [N]_1\br{p^b_i = p^d_i}.\\
+    p^d_1 &= \bar{p^b_1}, \forall i\in [N]_1\br{p^b_i = p^d_i}.
 \end{align*}
 
 
@@ -396,17 +405,15 @@ We want to express \(p^b, p^c, p^d\) using \(q^a\). To obtain these, combining r
     p^d_m = q^a_n, p^c_n = \bar{q^a}_1, p^d_1 = \bar{q^a_m}, \forall i\in[N]_{1, n, m}\br{p^d_i = q^a_i}.
 \end{align*} 
 
-Because, 
-\[
- t - t_x  = 2^N + \sum_{k=1}^N 2^{k-1}\br{q^a_k - p^x_k}, 
-\]
-So,
+Substituting those above into \eqref{etdiff}, we have,
 \begin{align*}
  Y_a = t - t_a  &= 2^N + 2^{n-1}\br{q^a_n - q^a_1} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 - q^a_m), \\
  Y_b = t - t_b  &= 2^N + 2^{n-1}\br{q^a_n - \bar{q^a_1}} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 - q^a_m), \\
  Y_c = t - t_c  &= 2^N + 2^{n-1}\br{q^a_n - q^a_1} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 -\bar{q^a_m}), \\
  Y_d = t - t_d  &= 2^N + 2^{n-1}\br{q^a_n - \bar{q^a_1}} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 -\bar{q^a_m}), \\
 \end{align*}
+Note that terms of \(k\in[N]_{1, n, m}\) vanished from the summation, because \(p^x_k = q^x_k\) for such \(k\).
+
 From the lemma A, \(q_1^a = 1, q_n^a =0. q_m^a = 0\) will minimize \(Y_a\). Considering for the others as well, we have minimum values \(\ubar{Y}_x\) as,
 \begin{align*}
 \ubar{Y}_a &= 2^{N}- 2^{N-1} + 1 = 2^{N-1} + 1, \\
@@ -414,12 +421,12 @@ From the lemma A, \(q_1^a = 1, q_n^a =0. q_m^a = 0\) will minimize \(Y_a\). Cons
 \ubar{Y}_c &= 2^{N} - 2^{N-1} = 2^{N-1},\\
 \ubar{Y}_d &= 2^N - 2^{N-1} - 1 = 2^{N-1} -1.
 \end{align*}
-Therefore, \(Y_*\) in \eqref{eTabcd} takes the value, \(Y_* = 2^{N-1} -1\). \(T < 2^{N-1} -1\) is the sufficient condition the system does not need to stop the pipeline to flash its internal data. For \(N=7\), the condition is for example \(T < 65\). Note that our pipeline at 500 MHz now have the latency \(T \approx 60\), which satisfies the condition. For more detail in general case of permutations, we have a condition 
+Therefore, \(Y_*\) in \eqref{eTabcd} takes the value, \(Y_* = 2^{N-1} -1\). \(T < 2^{N-1} -1\) is the sufficient condition the system does not need to stop the pipeline to flash its internal data before starting the next qbit processing. For \(N=7\), the condition is for example \(T < 65\). Note that our pipeline at 500 MHz now have the latency \(T \approx 60\), which satisfies the condition. For more detail in general case of permutations, we have a condition 
 \begin{equation}
     \eqlabel{eTinGen}
     T < 2^{N/2}.
 \end{equation}
-The proof is provided in section \ref{sMinGen}. In the case of rotation, I expect simlar order, \(Y_* \approx 2^{N-1}\) (Proof will take time.).
+The proof is provided in section \ref{sMinGen}. In the case of rotation, I expect similar order, \(Y_* \approx 2^{N-1}\) (Proof will take time but in the same manner.). General case gives much stricter condition. So we are recommended to utilize swapping or rotation permutation.
 
 \end{XA}
 
@@ -726,19 +733,18 @@ Intuitively, imagine, \(K\) parallel means each block have \(D/K\) elements. In 
 \textbf{Formal proof}. \textbf{Under construction 20260406, asking GPT}.
 
 For \eqref{eQall}, we have \(N-2M\) free qbits, 
-\[
- \hat{Q}_{\text{all}} = \# \cbr{p| p_{N:N-M+1} = k, p_{N-M:N-2M+1} = k', p\in B^N, k\neq k'} 
-\]
-\[
-= \# \sbr{\cbr{kk'| k\neq k', k, k'\in B^M}\times\cbr{q|q\in B^{N-2M}}}.
-\]
+\begin{align*}
+ \hat{Q}_{\text{all}} &= \# \cbr{p| p_{N:N-M+1} = k, p_{N-M:N-2M+1} = k', p\in B^N, k\neq k'} \\
+&= \# \cbr{kk'| k\neq k', k, k'\in B^M}\times\# \cbr{q|q\in B^{N-2M}}.
+\end{align*}
 The first factor is considered. All possible \(k, k'\) is \(K^2\). Subtract the case \(k=k'\), which exists \(2^M = K\), we have \(K^2 - K = K(K-1)\). The second factor is \(2^{N-2M} = D/(K^2)\).
 
 For \eqref{e1by1},
-\[
- \hat{Q}_{\text{1b1}} = \# \cbr{p| p_{N:N-M+1} = k, p_{N-M}p_{N-1:N-M+1} = k', p\in B^N}.
-\]
-So free index is \(p_{N-M-1:1}\). It is \(N-M-1\) bits. So \( Q(k\to k') = 2^{N-M-1} = D/(2K)\). The number of distinct pair of \(k, k', k\neq k'\) is \(2\times 2^{M-1} = K\). 
+\begin{align*}
+ \hat{Q}_{\text{1b1}} &= \# \cbr{p| p_{N:N-M+1} = k, p_{N-M}p_{N-1:N-M+1} = k', p\in B^N} \times K\\
+&= \# \cbr{kk| k = aq, k'=bq, k\neq k' q\in B^{M-1},a, b\in B}\times \#\cbr{q| q\in B^{N-M-1}}\times K.\\
+\end{align*}
+ The number of distinct pair of \(k, k', k\neq k'\) is \(2^{M+1} - 2^M = 2^M = K\).  The second factor is has the size \(2^{N-M-1}\). So \( Q(k\to k') = 2^{N-M-1} = D/(2K)\). It is repeated \(K\) times. So the above holds.
 
 \end{XA}
 
