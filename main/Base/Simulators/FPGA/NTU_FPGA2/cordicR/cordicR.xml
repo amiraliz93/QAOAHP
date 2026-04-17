@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deploy
+ date="2026.04.18.01:11:34"
+ outputDirectory="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/">
+ <perimeter>
+  <parameter
+     name="AUTO_GENERATION_ID"
+     type="Integer"
+     defaultValue="0"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_UNIQUE_ID"
+     type="String"
+     defaultValue=""
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE_FAMILY"
+     type="String"
+     defaultValue="Stratix V"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE"
+     type="String"
+     defaultValue="5SGXEABN3F45I3YY"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE_SPEEDGRADE"
+     type="String"
+     defaultValue="3_H3"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLK_CLOCK_RATE"
+     type="Long"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLK_CLOCK_DOMAIN"
+     type="Integer"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLK_RESET_DOMAIN"
+     type="Integer"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <interface name="a" kind="conduit" start="0">
+   <property name="associatedClock" value="clk" />
+   <property name="associatedReset" value="areset" />
+   <port name="a" direction="input" role="a" width="56" />
+  </interface>
+  <interface name="areset" kind="reset" start="0">
+   <property name="associatedClock" value="clk" />
+   <property name="synchronousEdges" value="DEASSERT" />
+   <port name="areset" direction="input" role="reset" width="1" />
+  </interface>
+  <interface name="c" kind="conduit" start="0">
+   <property name="associatedClock" value="clk" />
+   <property name="associatedReset" value="" />
+   <port name="c" direction="output" role="c" width="55" />
+  </interface>
+  <interface name="clk" kind="clock" start="0">
+   <property name="clockRate" value="0" />
+   <property name="externallyDriven" value="false" />
+   <property name="ptfSchematicName" value="" />
+   <port name="clk" direction="input" role="clk" width="1" />
+  </interface>
+  <interface name="s" kind="conduit" start="0">
+   <property name="associatedClock" value="clk" />
+   <property name="associatedReset" value="" />
+   <port name="s" direction="output" role="s" width="55" />
+  </interface>
+ </perimeter>
+ <entity
+   path=""
+   parameterizationKey="cordicR:1.0:AUTO_CLK_CLOCK_DOMAIN=-1,AUTO_CLK_CLOCK_RATE=-1,AUTO_CLK_RESET_DOMAIN=-1,AUTO_DEVICE=5SGXEABN3F45I3YY,AUTO_DEVICE_FAMILY=Stratix V,AUTO_DEVICE_SPEEDGRADE=3_H3,AUTO_GENERATION_ID=1776442277,AUTO_UNIQUE_ID=(altera_CORDIC:25.1:ALL_function=SINCOS,FUNCTION_FAMILY=ALL,LUTSize=6,RES_DSP_param=0,RES_LUT_param=0,RES_MBIT_param=0,RES_MBLOCK_param=0,SFCompensation=false,derivedfunction=SINCOS,force_elaborate=0,frequency_feedback=0,frequency_target=200,fxpt_in_2_fraction_derived=0,fxpt_in_2_sign_derived=1,fxpt_in_2_width_derived=32,fxpt_in_fraction=53,fxpt_in_fraction_derived=0,fxpt_in_sign=1,fxpt_in_sign_derived=1,fxpt_in_width=32,fxpt_in_width_derived=56,fxpt_out_2_fraction_derived=0,fxpt_out_2_sign_derived=1,fxpt_out_2_width_derived=32,fxpt_out_fraction=53,fxpt_out_fraction_derived=0,fxpt_out_sign=1,fxpt_out_sign_derived=1,fxpt_out_width=32,fxpt_out_width_derived=55,gen_enable=false,latency_feedback=0,latency_target=172,performance_goal=latency,report_resources_to_xml=false,selected_device_family=Stratix V,selected_device_speedgrade=3_H3,specifyLUTs=false,useLUTs=false,validation_failed=false)"
+   instancePathKey="cordicR"
+   kind="cordicR"
+   version="1.0"
+   name="cordicR">
+  <parameter name="AUTO_CLK_CLOCK_RATE" value="-1" />
+  <parameter name="AUTO_GENERATION_ID" value="1776442277" />
+  <parameter name="AUTO_DEVICE" value="5SGXEABN3F45I3YY" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Stratix V" />
+  <parameter name="AUTO_CLK_RESET_DOMAIN" value="-1" />
+  <parameter name="AUTO_CLK_CLOCK_DOMAIN" value="-1" />
+  <parameter name="AUTO_UNIQUE_ID" value="" />
+  <parameter name="AUTO_DEVICE_SPEEDGRADE" value="3_H3" />
+  <generatedFiles>
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/cordicR.v"
+       type="VERILOG" />
+  </generatedFiles>
+  <childGeneratedFiles>
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library_package.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/cordicR_CORDIC_0.vhd"
+       type="VHDL"
+       attributes="" />
+  </childGeneratedFiles>
+  <sourceFiles>
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR.qsys" />
+  </sourceFiles>
+  <childSourceFiles>
+   <file
+       path="C:/altera/25.1std/ip/altera/dsp/altera_CORDIC/source/altera_CORDIC_hw.tcl" />
+  </childSourceFiles>
+  <messages>
+   <message level="Debug" culprit="cordicR">queue size: 0 starting:cordicR "cordicR"</message>
+   <message level="Progress" culprit="min"></message>
+   <message level="Progress" culprit="max"></message>
+   <message level="Progress" culprit="current"></message>
+   <message level="Debug">Transform: CustomInstructionTransform</message>
+   <message level="Debug">No custom instruction connections, skipping transform </message>
+   <message level="Debug" culprit="merlin_custom_instruction_transform"><![CDATA[After transform: <b>1</b> modules, <b>0</b> connections]]></message>
+   <message level="Debug">Transform: MMTransform</message>
+   <message level="Debug">Transform: InterruptMapperTransform</message>
+   <message level="Debug">Transform: InterruptSyncTransform</message>
+   <message level="Debug">Transform: InterruptFanoutTransform</message>
+   <message level="Debug">Transform: AvalonStreamingTransform</message>
+   <message level="Debug">Transform: ResetAdaptation</message>
+   <message level="Debug" culprit="cordicR"><![CDATA["<b>cordicR</b>" reuses <b>altera_CORDIC</b> "<b>submodules/cordicR_CORDIC_0</b>"]]></message>
+   <message level="Debug" culprit="cordicR">queue size: 0 starting:altera_CORDIC "submodules/cordicR_CORDIC_0"</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 400 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 600 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 500 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 550 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 525 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 512 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 505 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 509 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 507 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 506 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 505 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 506 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">Could achieve 172 cycles latency maximum at Frequency 505 MHz, padding with registers to reach requested 172 cycles latency</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 505 -name cordicR_CORDIC_0 -noChanValid -faithfulRounding -printMachineReadable -lang VHDL -constrainLatency 172 -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">DSP Blocks Used: 0</message>
+   <message level="Info" culprit="CORDIC_0">LUTs Used: 31201</message>
+   <message level="Info" culprit="CORDIC_0">Memory Bits Used: 0</message>
+   <message level="Info" culprit="CORDIC_0">Memory Blocks Used: 0</message>
+   <message level="Info" culprit="CORDIC_0"><![CDATA["<b>cordicR</b>" instantiated <b>altera_CORDIC</b> "<b>CORDIC_0</b>"]]></message>
+  </messages>
+ </entity>
+ <entity
+   path="submodules/"
+   parameterizationKey="altera_CORDIC:25.1:ALL_function=SINCOS,FUNCTION_FAMILY=ALL,LUTSize=6,RES_DSP_param=0,RES_LUT_param=0,RES_MBIT_param=0,RES_MBLOCK_param=0,SFCompensation=false,derivedfunction=SINCOS,force_elaborate=0,frequency_feedback=0,frequency_target=200,fxpt_in_2_fraction_derived=0,fxpt_in_2_sign_derived=1,fxpt_in_2_width_derived=32,fxpt_in_fraction=53,fxpt_in_fraction_derived=0,fxpt_in_sign=1,fxpt_in_sign_derived=1,fxpt_in_width=32,fxpt_in_width_derived=56,fxpt_out_2_fraction_derived=0,fxpt_out_2_sign_derived=1,fxpt_out_2_width_derived=32,fxpt_out_fraction=53,fxpt_out_fraction_derived=0,fxpt_out_sign=1,fxpt_out_sign_derived=1,fxpt_out_width=32,fxpt_out_width_derived=55,gen_enable=false,latency_feedback=0,latency_target=172,performance_goal=latency,report_resources_to_xml=false,selected_device_family=Stratix V,selected_device_speedgrade=3_H3,specifyLUTs=false,useLUTs=false,validation_failed=false"
+   instancePathKey="cordicR:.:CORDIC_0"
+   kind="altera_CORDIC"
+   version="25.1"
+   name="cordicR_CORDIC_0">
+  <parameter name="gen_enable" value="false" />
+  <parameter name="fxpt_in_sign_derived" value="1" />
+  <parameter name="useLUTs" value="false" />
+  <parameter name="fxpt_out_2_sign_derived" value="1" />
+  <parameter name="fxpt_in_fraction" value="53" />
+  <parameter name="fxpt_out_width" value="32" />
+  <parameter name="selected_device_family" value="Stratix V" />
+  <parameter name="fxpt_out_fraction" value="53" />
+  <parameter name="fxpt_in_2_fraction_derived" value="0" />
+  <parameter name="fxpt_in_2_width_derived" value="32" />
+  <parameter name="fxpt_in_2_sign_derived" value="1" />
+  <parameter name="validation_failed" value="false" />
+  <parameter name="ALL_function" value="SINCOS" />
+  <parameter name="force_elaborate" value="0" />
+  <parameter name="latency_target" value="172" />
+  <parameter name="LUTSize" value="6" />
+  <parameter name="fxpt_out_width_derived" value="55" />
+  <parameter name="fxpt_out_fraction_derived" value="0" />
+  <parameter name="frequency_target" value="200" />
+  <parameter name="fxpt_out_sign" value="1" />
+  <parameter name="SFCompensation" value="false" />
+  <parameter name="fxpt_in_fraction_derived" value="0" />
+  <parameter name="fxpt_in_width" value="32" />
+  <parameter name="fxpt_in_sign" value="1" />
+  <parameter name="fxpt_out_2_fraction_derived" value="0" />
+  <parameter name="selected_device_speedgrade" value="3_H3" />
+  <parameter name="derivedfunction" value="SINCOS" />
+  <parameter name="fxpt_out_2_width_derived" value="32" />
+  <parameter name="specifyLUTs" value="false" />
+  <parameter name="report_resources_to_xml" value="false" />
+  <parameter name="latency_feedback" value="0" />
+  <parameter name="fxpt_out_sign_derived" value="1" />
+  <parameter name="FUNCTION_FAMILY" value="ALL" />
+  <parameter name="fxpt_in_width_derived" value="56" />
+  <parameter name="performance_goal" value="latency" />
+  <parameter name="frequency_feedback" value="0" />
+  <generatedFiles>
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library_package.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd"
+       type="VHDL"
+       attributes="" />
+   <file
+       path="C:/home/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/cordicR_CORDIC_0.vhd"
+       type="VHDL"
+       attributes="" />
+  </generatedFiles>
+  <childGeneratedFiles/>
+  <sourceFiles>
+   <file
+       path="C:/altera/25.1std/ip/altera/dsp/altera_CORDIC/source/altera_CORDIC_hw.tcl" />
+  </sourceFiles>
+  <childSourceFiles/>
+  <instantiator instantiator="cordicR" as="CORDIC_0" />
+  <messages>
+   <message level="Debug" culprit="cordicR">queue size: 0 starting:altera_CORDIC "submodules/cordicR_CORDIC_0"</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 400 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 600 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 500 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 550 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 525 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 512 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 505 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 509 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 507 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 506 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 505 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 506 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">Could achieve 172 cycles latency maximum at Frequency 505 MHz, padding with registers to reach requested 172 cycles latency</message>
+   <message level="Info" culprit="CORDIC_0">C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 505 -name cordicR_CORDIC_0 -noChanValid -faithfulRounding -printMachineReadable -lang VHDL -constrainLatency 172 -speedgrade 3_H3 FXPSinCosCordic 56 53 1 53</message>
+   <message level="Info" culprit="CORDIC_0">DSP Blocks Used: 0</message>
+   <message level="Info" culprit="CORDIC_0">LUTs Used: 31201</message>
+   <message level="Info" culprit="CORDIC_0">Memory Bits Used: 0</message>
+   <message level="Info" culprit="CORDIC_0">Memory Blocks Used: 0</message>
+   <message level="Info" culprit="CORDIC_0"><![CDATA["<b>cordicR</b>" instantiated <b>altera_CORDIC</b> "<b>CORDIC_0</b>"]]></message>
+  </messages>
+ </entity>
+</deploy>
