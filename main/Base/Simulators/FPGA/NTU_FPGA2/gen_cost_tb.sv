@@ -16,11 +16,11 @@ parameter WAITINTERVAL =  CLOCKWIDTH*100;
 parameter P=64;
 parameter Ni=32;
 
-localparam N0 = 21; // latency FP64 to Fix 56.53(sign)
+localparam N0 = 20; // latency FP64 to Fix 56.53(sign)
 localparam N1 = 11; // latency FP64 to Fix 56.53(sign)
-localparam N2 = 167; // latency of CORDIC. 56.53(sign) to 55.53(sign)
+localparam N2 = 172; // latency of CORDIC. 56.53(sign) to 55.53(sign)
 localparam N3 = 15; // latency Fix 55.53(sign) to FP64
-localparam NPip = 1 + N0 + 1 + N1 + 1 + N2 + 1 + N3; // number of pipeline. Depends on IP core like addFPF64 used in this module.
+localparam NPip = 1 + N0 + 1 + N1 + 1 + N2 + 1 + N3 + 1; // number of pipeline. Depends on IP core like addFPF64 used in this module.
 
 reg  [P-1:0]  gamma; // gamma
 reg  [P-1:0]  H;     // sin beta
