@@ -1,0 +1,9 @@
+	component FP2Fix53 is
+		port (
+			clk    : in  std_logic                     := 'X';             -- clk
+			areset : in  std_logic                     := 'X';             -- reset
+			a      : in  std_logic_vector(63 downto 0) := (others => 'X'); -- a
+			q      : out std_logic_vector(55 downto 0)                     -- q
+		);
+	end component FP2Fix53;
+
