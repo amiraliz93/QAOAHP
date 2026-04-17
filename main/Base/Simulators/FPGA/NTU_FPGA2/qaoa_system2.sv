@@ -127,8 +127,8 @@ localparam qa_INIT  = 8'h10;  // Initialization state
 localparam qa_MIXER_WAIT_PIPE = 8'h20;
 localparam qa_MIXER_PREPARE = 8'h40;
 
-localparam mixer_PIPLINE_NUM = 21 + 27 + 4 + 5 + 2 + 3; // mixer pipline + bram + bitswap + write + registers, latencies
-localparam costGen_PIPLINE_NUM = 218 + 2 + 5 + 2 + 3; // cost function generation + bram + bitswap + write + registers, latencies
+localparam mixer_PIPLINE_NUM = 52 + 4 + 5 + 2 + 3; // mixer pipline + bram + bitswap + write + registers, latencies
+localparam costGen_PIPLINE_NUM = 223 + 2 + 5 + 2 + 3; // cost function generation + bram + bitswap + write + registers, latencies
 localparam cost_PIPLINE_NUM = mixer_PIPLINE_NUM; 
 
 //============================================================================
@@ -188,10 +188,10 @@ logic [31:0] n_cPLayer;       // Next layer count
 //----------------------------------------------------------------------------
 // Pipeline Wait Counter
 //----------------------------------------------------------------------------
-reg [7:0] waitPipeline;       // Wait counter for mixer pipeline
-logic [7:0] n_waitPipeline;   // Next wait count
-reg [7:0] waitCGPipeline;       // Wait counter for mixer pipeline
-logic [7:0] n_waitCGPipeline;   // Next wait count
+reg [9:0] waitPipeline;       // Wait counter for mixer pipeline
+logic [9:0] n_waitPipeline;   // Next wait count
+reg [9:0] waitCGPipeline;       // Wait counter for mixer pipeline
+logic [9:0] n_waitCGPipeline;   // Next wait count
 
 //----------------------------------------------------------------------------
 // QAOA Parameters (cos(β), sin(β), γ)
@@ -779,7 +779,7 @@ always@(posedge CLK) begin
         // Debug
         Status[7:0] <= n_cmd[7:0];
         Status[32+:32] <= n_cPLayer[31:0];
-        Status[8+:12] <= n_bsp2[11:0];
+        Status[8+:N_BIT_SWAP_POINTER] <= n_bsp2[N_BIT_SWAP_POINTER-1:0];
         Status[31:20] <= 'd0;
         testReg <= n_testReg;
         r_costGen_PIPLINE_NUM <= nr_costGen_PIPLINE_NUM;
