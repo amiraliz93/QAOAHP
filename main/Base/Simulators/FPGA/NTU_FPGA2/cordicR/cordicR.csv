@@ -1,0 +1,20 @@
+# system info cordicR on 2026.04.18.01:11:16
+system_info:
+name,value
+DEVICE,5SGXEABN3F45I3YY
+DEVICE_FAMILY,Stratix V
+GENERATION_ID,1776442258
+#
+#
+# Files generated for cordicR on 2026.04.18.01:11:16
+files:
+filepath,kind,attributes,module,is_top
+simulation/cordicR.v,VERILOG,,cordicR,true
+simulation/submodules/dspba_library_package.vhd,VHDL,,cordicR_CORDIC_0,false
+simulation/submodules/dspba_library.vhd,VHDL,,cordicR_CORDIC_0,false
+simulation/submodules/cordicR_CORDIC_0.vhd,VHDL,,cordicR_CORDIC_0,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+cordicR.CORDIC_0,cordicR_CORDIC_0
