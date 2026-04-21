@@ -24,7 +24,7 @@ reg tx_OK;
 localparam CLOCKWIDTH      = 2;
 localparam CLOCKWIDTH_HALF = 1;
 localparam CLOCKWIDTH500   = CLOCKWIDTH*50;
-localparam CMD_WAIT        = CLOCKWIDTH*10;
+localparam CMD_WAIT        = CLOCKWIDTH*20;
 localparam TIME_WAIT_TB    = CLOCKWIDTH*50;
 localparam TIME_WAIT_QAOA  = CLOCKWIDTH*100;
 localparam N_MAX_WAIT      = 1000;
