@@ -1,0 +1,9 @@
+
+Set the environmental variables,
+
+SALT_LICENSE_SERVER=C:\altera\questa_lic.dat
+SALT_LICENSE_FILE=C:\altera\questa_lic.dat
+
+Where =C:\altera\questa_lic.dat is a path of the questa license.
+
+
