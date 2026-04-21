@@ -1,8 +1,8 @@
 import typing
 import numpy as np
-import serial
+import serial # UART communication to FPGA
 import time
-import struct
+import struct # convert Python numbers into bytes
 from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
 
 
@@ -46,27 +46,34 @@ class FpgaDriver:
     OP_FETCH8U = 61    # Fetch 8 bytes (64-bit) from rU --> PC
     OP_INC_A = 84      # Increment rA by 1 --> rA = rA +1
     OP_WRITE_T2RAM = 111  # Write rT to BRAM at address rA ---  rT to BRAM[rA]
-    OP_READ_RAM2U = 112   # Read BRAM at address rA to rU -- BRAM[rA] → rU
-    OP_SEND_CMD = 118     # Send command to qaoa_system
+    OP_READ_RAM2U = 112   # Read BRAM at address rA to rU -- BRAM[rA] → rU 
+    OP_SEND_CMD = 118     # see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
 
     # QAOA system commands (from qaoa_system.sv)
-    qa_INIT = 4   # Initialize QAOA system
+    qa_INIT = 16   # Initialize QAOA system
     qa_WAIT = 1   # Wait state
     qa_RUN = 2    # Run QAOA layer
     
-    # BRAM bank identifiers (bits 56-59 in address)
-    BRAM_STATE_REAL = 0x0000000000000000      # BRAM[0]: State vector real part
-    BRAM_STATE_IMAG = 0x2000000000000000      # BRAM[1]: State vector imaginary part
-    BRAM_COST_FUNC = 0x4000000000000000       # BRAM[2]: Cost function
-    BRAM_PARAMS = 0x6000000000000000          # BRAM[5]: Parameters (cos β, sin β, γ)
-
-    #new code
     # Aim: 1- Computing intermediate values on FPGA 2- Preprocessing data before BRAM writes 
-    # 3- Testing arithmetic units  4- Future optimizations ( computing cos/sin on FPGA instead of Python)
+    # These operations allow us to perform arithmetic on the FPGA,
+    #  which can be useful for things like incrementing addresses, 
+    # accumulating sums, or applying parameters without needing to 
+    # send pre-computed values from the PC. This can reduce the amount of data we need to transfer and leverage the FPGA's computational capabilities.
     OP_ADD_B2A = 80   # rA = rA +rB (64bit fixed, 2cycles)
     OP_MUL_B2A = 81   # rA = rA * rB (24bit fixed, 8 cycles)
     OP_ADDFP_B2A = 82 # rA = rA + rB (64bit float, 27 cycles)
-    OP_ADDFP_B2A = 83 # rA = rA * rB (64bit float, 24 cycles)
+    OP_MULFP_B2A = 83 # rA = rA * rB (64bit float, 24 cycles)
+    
+    # BRAM bank identifiers (from NEW_smachine.sv)
+    BRAM_CONFIG     = 0x4000000000000000  # Config registers (NQ, NS, Np)
+    BRAM_PARAMS = 0x0800000000000000      # Parameters (cos β, sin β, γ)= 
+
+    BRAM_STATE_REAL = 0x1000000000000000      # BRAM[0]: State vector real part
+    BRAM_STATE_IMAG = 0x2000000000000000      # BRAM[1]: State vector imaginary part
+    BRAM_COST_FUNC  = 0x0400000000000000       # BRAM[2]: Cost function
+    BRAM_CONFIG_STEP = 0x0100000000000000      # Address step for config registers
+
+
 
     # Arithmetic operation latencies (used in state machine timing)
     # Aim: 1)These define how many clock cycles each arithmetic operation takes. -2)Status polling - Knowing when operations complete
@@ -76,6 +83,7 @@ class FpgaDriver:
     FIX64_MUL_LATENCY = 8
 
 
+# helper function
     def __init__(self, port="COM3", baudrate=115200, timeout=1):
         """
         Initialize FPGA driver with serial port settings
@@ -138,7 +146,7 @@ class FpgaDriver:
             print(f"✗ Connection error: {e}")
             self.connected = False
             return False
-
+# Higher level data formation
     def _send_opcode(self, opcode):
         """Send single opcode byte"""
         if not self.connected or self.ser is None:
@@ -225,6 +233,28 @@ class FpgaDriver:
         
         return self._fetch_fp64()
 
+    def _sent_int64_raw(self, value):
+
+        if not self.connected or self.ser is None:
+            raise RuntimeError("Not connected to FPGA")
+        data = int(value).to_bytes(8, byteorder='little', signed = False)
+        self.ser.write(data)
+        time.sleep(1e-5)
+
+    def _wait_for_fpga(self, timeout=1000):
+        STATUS_ADDR = 0x0100000000000000
+        for _ in range(timeout):
+            time.sleep(0.001) # wait 1ms
+            self._send_opcode(self.OP_SEND8T) # send command OP_SEND8T
+            self._send_int64(STATUS_ADDR) #send memory address
+            self._send_opcode(self.OP_MOV_T2A) #  Move -> rA = T
+            self._send_opcode(self.OP_READ_RAM2U) # Read BRAM[rA] to rU
+            self._send_opcode(self.OP_FETCH8U) # Fetch rU to PC
+            dr = self.ser.read(8)
+            if len(dr) == 8 and dr[0] == self.qa_WAIT:
+                    return True
+        return False    
+
     def load_data(self, diag_hamiltonian, initial_state, gammas, betas):
         """
         Load QAOA problem data to FPGA
@@ -241,34 +271,85 @@ class FpgaDriver:
         print("Loading data to FPGA...")
         n_states = len(initial_state)
         n_layers = len(gammas)
+        n_qubits = int(np.log2(n_states))
+    
         
         try:
             # 1. Initialize QAOA system
-            print("  Initializing QAOA system...")
-            self._send_opcode(self.OP_SEND1T)
-            self._send_byte(self.qa_INIT)
+            # --- Phase 1: Reset cycle (from all_test.py lines 177-192) ---
+    
+            print("  Phase 1: Reset cycle...")
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
+            self._send_opcode(self.OP_SEND_CMD)
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_INIT)
+            self._send_opcode(self.OP_SEND_CMD)
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
+            self._send_opcode(self.OP_SEND_CMD)
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
             self._send_opcode(self.OP_SEND_CMD)
             time.sleep(0.01)
-            
-            # 2. Write cost function to BRAM[2]
+
+        # --- Phase 2: Write config registers (from all_test.py lines 193-215) ---
+        # Addresses: 0x4000... NQ, 0x4100... NQ-1, 0x4200... NS-1, 0x4300... NS-2, 0x4400... Np
             print(f"  Writing {n_states} cost values to BRAM[2]...")
-            for i in range(n_states):
-                self._write_bram_fp64(self.BRAM_COST_FUNC, i, float(diag_hamiltonian[i]))
+            print(f" phase2: wrting config registeraters...")
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_CONFIG)
+            self._send_opcode(self.OP_MOV_T2A)
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_CONFIG_STEP)
+            self._send_opcode(self.OP_MOV_T2B)
+
+            for val in [n_qubits, n_qubits - 1, n_states - 1, n_states - 2, n_layers]:
+                self._send_opcode(self.OP_SEND8T); self._sent_int64_raw(val)
+                self._send_opcode(self.OP_WRITE_T2RAM)
+                if val != n_layers: # No ADD after last
+                    self._send_opcode(self.OP_ADD_B2A)
             
-            # 3. Write initial state to BRAM[0] (real) and BRAM[1] (imaginary)
-            print(f"  Writing {n_states} state amplitudes to BRAM[0,1]...")
-            for i in range(n_states):
-                self._write_bram_fp64(self.BRAM_STATE_REAL, i, initial_state[i].real)
-                self._write_bram_fp64(self.BRAM_STATE_IMAG, i, initial_state[i].imag)
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_INIT)
+            self._send_opcode(self.OP_SEND_CMD)
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
+            self._send_opcode(self.OP_SEND_CMD)
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
+            self._send_opcode(self.OP_SEND_CMD)
+            time.sleep(0.01)
+
             
-            # 4. Write parameters to BRAM[5]
-            # Format: [cos(β₀), sin(β₀), γ₀, cos(β₁), sin(β₁), γ₁, ...]
-            print(f"  Writing {n_layers} layer parameters to BRAM[5]...")
+            # --- Phase 3: Write data ---
+        # Write parameters: cosb, sinb, gamma per layer (from all_test.py lines 218-230)
+
+            print(f"  Writing {n_layers} state amplitudes to BRAM[0,1]...")
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS)
+            self._send_opcode(self.OP_MOV_T2A)
             for layer in range(n_layers):
-                base_addr = layer * 3
-                self._write_bram_fp64(self.BRAM_PARAMS, base_addr + 0, np.cos(betas[layer]))
-                self._write_bram_fp64(self.BRAM_PARAMS, base_addr + 1, np.sin(betas[layer]))
-                self._write_bram_fp64(self.BRAM_PARAMS, base_addr + 2, gammas[layer])
+                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(np.cos(betas[layer])))
+                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(np.sin(betas[layer])))
+                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(gammas[layer]))
+                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+            
+                # Format: [cos(β₀), sin(β₀), γ₀, cos(β₁), sin(β₁), γ₁, ...]
+            print(f"  Writing {n_states} layer parameters ...")
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_STATE_REAL)   
+            self._send_opcode(self.OP_MOV_T2A)
+            
+            for i in range(n_states):
+                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(initial_state[i].real))
+                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+            
+            print(f" Writing {n_states} state imaginary parts")
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_STATE_IMAG)
+            self._send_opcode(self.OP_MOV_T2A)
+            for i in range(n_states):
+                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(initial_state[i].imag))
+                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+
+            # write cost Hamiltonian
+            print(f"  Writing {n_states} cost values")
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_COST_FUNC)
+            self._send_opcode(self.OP_MOV_T2A)
+            for i in range(n_states):
+                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(diag_hamiltonian[i]))
+                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             
             print("✓ Data loaded successfully")
             return True
@@ -280,9 +361,6 @@ class FpgaDriver:
     def execute(self, n_layers):
         """
         Execute QAOA simulation on FPGA
-        
-        Args:
-            n_layers: Number of QAOA layers to execute
         """
         if not self.connected:
             raise RuntimeError("Not connected to FPGA")
@@ -291,15 +369,20 @@ class FpgaDriver:
         
         try:
             # Send RUN command to start QAOA execution
-            self._send_opcode(self.OP_SEND1T)
-            self._send_byte(self.qa_RUN)
+            self._send_opcode(self.OP_SEND1T);self._send_byte(self.qa_INIT)
+            self._send_opcode(self.OP_SEND_CMD) 
+            self._send_opcode(self.OP_SEND1T) ;self._send_byte(self.qa_RUN)
             self._send_opcode(self.OP_SEND_CMD)
             
-            # Wait for execution (estimate: ~1ms per layer per state)
-            # You may need to adjust this based on your FPGA clock speed
-            # Or implement status polling
-            time.sleep(0.1 * n_layers)
+            # HOST_WAIT: poll until FPGA returns qa_WAIT
+            print("  Waiting for FPGA to complete...")
+            done = self._wait_for_fpga(timeout=1000) # Wait up to 100 seconds
+            if not done:
+                print(" warning: FPGA did not signal")
             
+                    # Send WAIT command to stop FPGA
+            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
+            self._send_opcode(self.OP_SEND_CMD)
             print("✓ QAOA execution complete")
             return True
             
@@ -322,22 +405,35 @@ class FpgaDriver:
             return np.ones(n_states, dtype=np.complex128) / np.sqrt(n_states)
         
         print(f"Reading {n_states} state amplitudes from FPGA...")
-        
         try:
             result = np.zeros(n_states, dtype=np.complex128)
             
-            # Read from BRAM[0] (real) and BRAM[1] (imaginary)
+            # Read real parts sequentially (set address once, then INC)
+            self._send_opcode(self.OP_SEND8T)
+            self._send_int64(self.BRAM_STATE_REAL)
+            self._send_opcode(self.OP_MOV_T2A)
             for i in range(n_states):
-                real_part = self._read_bram_fp64(self.BRAM_STATE_REAL, i)
-                imag_part = self._read_bram_fp64(self.BRAM_STATE_IMAG, i)
-                result[i] = complex(real_part, imag_part)
+                self._send_opcode(self.OP_READ_RAM2U)
+                self._send_opcode(self.OP_FETCH8U)
+                result[i] = self._fetch_fp64()  # real part only for now
+                self._send_opcode(self.OP_INC_A)
+            
+            # Read imaginary parts sequentially
+            self._send_opcode(self.OP_SEND8T)
+            self._send_int64(self.BRAM_STATE_IMAG)
+            self._send_opcode(self.OP_MOV_T2A)
+            for i in range(n_states):
+                self._send_opcode(self.OP_READ_RAM2U)
+                self._send_opcode(self.OP_FETCH8U)
+                imag_part = self._fetch_fp64()
+                result[i] = complex(result[i].real, imag_part)
+                self._send_opcode(self.OP_INC_A)
             
             print(f"✓ Read {n_states} amplitudes")
             return result
             
         except Exception as e:
             print(f"✗ Error reading result: {e}")
-            # Return default uniform state
             return np.ones(n_states, dtype=np.complex128) / np.sqrt(n_states)
 
     def disconnect(self):
