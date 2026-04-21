@@ -17,11 +17,11 @@ module gen_cost
    input  [Ni-1:0]    info_in, // information, like addresses, enabled signal, and so on.
    output  [Ni-1:0]    info_out // information, like addresses, enabled signal, and so on.
 );
-localparam N0 = 21; // latency FP64 to Fix 56.53(sign)
+localparam N0 = 20; // latency mulFPF64
 localparam N1 = 11; // latency FP64 to Fix 56.53(sign)
-localparam N2 = 167; // latency of CORDIC. 56.53(sign) to 55.53(sign)
+localparam N2 = 172; // latency of CORDIC. 56.53(sign) to 55.53(sign)
 localparam N3 = 15; // latency Fix 55.53(sign) to FP64
-localparam NPip = 1 + N0 + 1 + N1 + 1 + N2 + 1 + N3; // = 218, number of pipeline. Depends on IP core like addFPF64 used in this module.
+localparam NPip = 1 + N0 + 1 + N1 + 1 + N2 + 1 + N3 + 1; // = 218, number of pipeline. Depends on IP core like addFPF64 used in this module.
 
 wire [P-1:0] n0_out;
 reg [63:0] n1_in;
@@ -58,7 +58,7 @@ FP2Fix53 inst_FP2Fix53(
 		.q(n1_out)    // q.q output wire [55:0] 
 	);
 
-Cordic168 inst_cordic(
+cordicR inst_cordic(
 		.a(n2_in),  // a.a input  wire [55:0] 
 		.areset(RST),    // areset.reset input  wire        
 		.c(n2_cos_out),         // c.c output wire [54:0] , cosine
