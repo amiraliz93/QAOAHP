@@ -21,16 +21,22 @@ parameter NPip = N3;
 
 reg [P-1:0] b_0;
 reg [P-1:0] a_0;
-logic [P-1:0] n_r;
-reg [P-1:0] r;
+logic [P-1:0] n_r0;
+logic [P-1:0] n_r1;
+logic [P-1:0] n_r2;
+reg [P-1:0] r0;
+reg [P-1:0] r1;
+reg [P-1:0] r2;
 
-assign q = r;  // left value of assign must be wire - we must connect reg to wire
+assign q = r2;  // left value of assign must be wire - we must connect reg to wire
 
 always_comb begin: mainCombBlock
 
 // left value must be logic in this block
 
-	n_r = b_0 * a_0;
+	n_r0 = b_0 * a_0;
+	n_r1 =  r0;
+	n_r2 =  r1;
 
 end
 
@@ -43,14 +49,18 @@ always@(posedge CLK) begin
     if(RST)begin
 		b_0 <=  '0;
 		a_0 <= '0;
-		r <= '0;
+		r0 <= '0;
+		r1 <= '0;
+		r2 <= '0;
 		
     end
 	 
 	 else begin
 	 b_0 <= b;
 	 a_0 <= a;
-	 r <= n_r;
+	 r0 <= n_r0;
+	 r1 <= n_r1;
+	 r2 <= n_r2;
 	 end
 end
 
