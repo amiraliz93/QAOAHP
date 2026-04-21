@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file path="Fix53toFP64_sim/Fix53toFP64.vo" type="VERILOG" />
+ <topLevel name="Fix53toFP64" />
+ <deviceFamily name="stratixv" />
+</simPackage>
