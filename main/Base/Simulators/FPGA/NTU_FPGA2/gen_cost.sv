@@ -5,17 +5,15 @@
 // gamma should be in [-pi, pi]. 
 module gen_cost
   #(
-  parameter P=64, // number of word width
-  parameter Ni=32) // width of additional information
+  parameter P=64 // number of word width
+  )
   (
    input  CLK,
    input  RST,
    input  [P-1:0]  gamma, // cos gamma
    input  [P-1:0]   H,
    output  [P-1:0]   Hr_o,
-   output  [P-1:0]   Hi_o,
-   input  [Ni-1:0]    info_in, // information, like addresses, enabled signal, and so on.
-   output  [Ni-1:0]    info_out // information, like addresses, enabled signal, and so on.
+   output  [P-1:0]   Hi_o
 );
 localparam N0 = 20; // latency mulFPF64
 localparam N1 = 11; // latency FP64 to Fix 56.53(sign)
@@ -41,8 +39,6 @@ reg [P-1:0] H_0Pip;
 reg [P-1:0] gamma_0Pip;
 assign Hr_o = Hr_NPip;
 assign Hi_o = Hi_NPip;
-reg [Ni-1:0] p_info [NPip-1:0];
-assign info_out = p_info[NPip-1];
 
 mulFPF64 mulFPF_rc(
       .clk(CLK),    //    clk.clk
@@ -82,33 +78,22 @@ Fix53toFP64 inst2_Fix53toFP64(
 reg [31:0] CP; // program counter
 integer i;
 always @(posedge CLK) begin
-	if (RST) begin
-            for (i = 0; i < NPip; i = i + 1) begin
-                  p_info[i] <= 0;
-            end
-            Hi_NPip <= '0;
-            Hr_NPip <= '0;
-            H_0Pip <= '0;
-            gamma_0Pip <= '0;
-            n3_cos_in <= '0;
-            n3_sin_in <= '0;
-            n1_in <= '0;
-            n2_in <= '0;
-	end
-      else begin
-            n3_cos_in <= n2_cos_out;
-            n3_sin_in <= n2_sin_out;
-            n1_in <= n0_out;
-            n2_in <= n1_out;
-            gamma_0Pip <= gamma;
-            H_0Pip <= H;
-            Hi_NPip <= n3_sin_out;
-            Hr_NPip <= n3_cos_out;
-            p_info[0] <= info_in;
-            for (i = 0; i <= NPip-2; i = i + 1) begin
-                  p_info[i+1] <= p_info[i];
-            end
-      end
+      Hi_NPip <= '0;
+      Hr_NPip <= '0;
+      H_0Pip <= '0;
+      gamma_0Pip <= '0;
+      n3_cos_in <= '0;
+      n3_sin_in <= '0;
+      n1_in <= '0;
+      n2_in <= '0;
+      n3_cos_in <= n2_cos_out;
+      n3_sin_in <= n2_sin_out;
+      n1_in <= n0_out;
+      n2_in <= n1_out;
+      gamma_0Pip <= gamma;
+      H_0Pip <= H;
+      Hi_NPip <= n3_sin_out;
+      Hr_NPip <= n3_cos_out;
 end
 endmodule
 

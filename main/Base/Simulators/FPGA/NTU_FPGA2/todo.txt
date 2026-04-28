@@ -50,3 +50,31 @@ In all_test.py, you can know how to configure,
 - State vector inital values 
 - Costfunction values,
 - cosBeta, sinBeta, gamma, for each p=1,2,...,P layers.
+
+# from 20260422
+
+FGordic = 40 Mhz with latency 8. Cordic is the most bottle neck part.
+
+Condition, 
+N2^N > T_c (1)
+2^{N-1} > T (2)
+
+must be satisfied. 
+
+MinL(*FP64) = 2, 40 Mhz,
+MinL(+FP64) = 0, 30 MHz
+MinL(mixer2) = 7 @ 30 Mhz
+
+We need 5 qbits at least even for simulation.
+
+Addition with 3 latency = 610 MHz
+
+Generate all value for timings from HOST PC side.
+
+Because CPU and GPU also have pipeline implementation, and for GPU, it is really deep. Non stopping pipeline will improve the efficiency so much. For GPGPU, it is not clear such non stopping execution is possible.
+
+# working commit
+
+e0a43cb71c8d1e0a676937b9156ea70dfe9c27ad: synchronized qaoasystem2.
+
+
