@@ -32,6 +32,7 @@ module control_interface#(
     parameter FIX64_ADD_LATENCY = 2,        // Fixed add latency
     parameter FIX24_MUL_LATENCY = 8,        // Fixed mul latency
     parameter HOST_DATA_WIDTH = 8           // DATA width between Host
+    parameter BCVW           // DATA width between Host
    )
   (
     //------------------------------------------------------------------------
@@ -60,6 +61,12 @@ module control_interface#(
     input  wire        rbram_vd,                // Read data valid
     
     //------------------------------------------------------------------------
+    // ADDRESS FLOW CONTROLER INTERFACE
+    //------------------------------------------------------------------------
+    output reg [4:0] ag_addr_Param_out;
+    output reg [BCVW-1:0] ag_Param_out;
+    output reg ag_wen_out;
+    //------------------------------------------------------------------------
     // Interface for testing, not core 
     //------------------------------------------------------------------------
     input wire [63:0] rS, // status of qaoa system.
@@ -83,6 +90,7 @@ localparam s_WRITE_BRAM = 10'h20;
 localparam s_READ_BRAM  = 10'h40;
 localparam s_TXData     = 10'h80;
 localparam s_FetchWait  = 10'h100;
+localparam s_WRITE_AG   = 10'h200;
 
 
 //---------------------- Operation Code (Data Transfer) --------------------
@@ -115,6 +123,7 @@ localparam OP_MULFP_B2A  = 8'd83;  // rA = rA * rB (FP64, 24 cycles)
 localparam OP_WRITE_T2RAM = 8'd111;  // Write rT to BRAM[rA]
 localparam OP_READ_RAM2U  = 8'd112;  // Read BRAM[rA] → rU
 localparam OP_SEND_CMD    = 8'd118;  // send: 0, Res: 0. see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
+localparam OP_WRITE_T2_AG = 8'd119;  // rT -> ag_Param_out, rA -> ag_addr_Param
 
 //---------------------  SUB-STATE DEFINITIONS (Fetch, Store) --------------
 //---------------------------------------------------------------------------
@@ -263,6 +272,9 @@ logic n_w_req;                // next read request
 
 assign w_req = n_w_req;
 assign tx_en = tx_dv[1];
+logic [4:0] n_ag_addr_Param;
+logic [BCVW-1:0] n_ag_Param;
+logic n_ag_wen;
 
 //---------------------- Helper Wires
 wire [63:0] rAinc = rA + 1;
@@ -309,6 +321,9 @@ always_comb begin: main_StateBlock
       n_rPos = rPos;                      // Keep receive position
       n_rBRPos = rBRPos;                  // Keep BRAM receive position
       
+      n_ag_wen = 0;
+      n_ag_Param = 0;
+      n_ag_addr_Param = 0;
       // RX FIFO read request: read if (1) FIFO not empty AND (2) not in IDLE
       rf_req = (!rf_empty) & (fetchState != FETCH_IDLE);
       
@@ -467,11 +482,13 @@ always_comb begin: main_StateBlock
             
             //--------------------------------------------------------------------
             // MEMORY OPERATIONS
-            //--------------------------------------------------------------------
             
-            // OP_WRITE_T2RAM: Write rT to BRAM[rA]
             OP_WRITE_T2RAM: begin
                   n_w_req = 1;                // Assert write request
+                  n_state = s_WRITE_BRAM;     // Go to BRAM write state
+            end
+            OP_WRITE_T2_AG: begin   // rT -> ag_Param_out, rA -> ag_addr_Param
+                  n_ag_wen = 1; 
                   n_state = s_WRITE_BRAM;     // Go to BRAM write state
             end
             
@@ -509,6 +526,7 @@ always_comb begin: main_StateBlock
       //------------------------------------------------------------------------
       s_WRITE_BRAM: begin
             n_w_req = 0;                      // De-assert write request
+            n_ag_wen = 0;
             n_state = s_IDLE;                 // Write completes immediately
       end
       
@@ -671,6 +689,10 @@ always @(posedge CLK) begin
             storeState <= 0;
             opa_c_wait <= 0;
             CMD <= '0;
+            
+            ag_addr_Param <= 'hff;
+            ag_Param <= 'hfffff;
+            ag_wen <= 0;
 	end      
       //------------------------------------------------------------------------
       // NORMAL OPERATION: Update registers with next values
@@ -713,6 +735,11 @@ always @(posedge CLK) begin
             w_addr <= n_w_addr;      // Update BRAM write address
             r_addr <= n_r_addr;      // Update BRAM read address
             r_req <= n_r_req;        // Update BRAM read request
+
+            
+            ag_addr_Param <= n_ag_addr_Param;
+            ag_Param <= n_ag_Param;
+            ag_wen <= n_ag_wen;
       end
 end
 
