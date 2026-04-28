@@ -388,7 +388,9 @@ always_comb begin: memorySwitchingBlock
         n_bram_data_w[1] = mix_ai_res;
         n_bram_wen[0] = mix_info_res[NM];
         n_bram_wen[1] = mix_info_res[NM];
-
+        !! remove bswap chain from pipeline. No need to include addressing latency.
+        !! any number of pipeline for addressing is possible!.
+        !! include enCostF in bs information chain.
         if(enCostF_in) begin  
             n_bsB_cosbQ = Hr_res;　// provided to mixer, pipe line of n_bram_reqQcosb consists of  bit swap  and memory access latency.
             n_bsB_sinbQ = Hi_res; // provided to mixer
