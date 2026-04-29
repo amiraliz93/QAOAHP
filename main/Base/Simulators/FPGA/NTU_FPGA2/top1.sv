@@ -11,14 +11,9 @@ module top1 (
 parameter NM = 13; // address width for state vector's and cost function's BRAM. Thus, the number of maximum qubits the system can deal with.
 parameter P = 64; // data width for numerical number
 parameter Ni = 32;// data width of auxiary information on pipeline.
-parameter NBRAM = 6; // number of block RAMs connected to qaoa system.
+parameter NBRAM = 4; // number of block RAMs connected to qaoa system.
 localparam N_BIT_SWAP_POINTER = $clog2(NM);
 
-
-checklist,
-
-change BCVW to NM. Check all the bit width, and reconsider it is valid or not.
-Make a new branch of github
 
 // Declare signals to connect to the UART module
 wire  [63:0] r_data;
@@ -33,17 +28,21 @@ wire [23:0] CMD;
 wire [63:0] rS; // status of qaoa system.
 // we need transmitter and receiver to tset state machine (ntu_smachine)
 
-wire [4:0] ag_addr_Param;
-wire [BCVW-1:0] ag_Param;
+wire [7:0] ag_addr_Param;
+wire [NM-1:0] ag_Param;
 wire ag_wen;
 
-wire f_L1Computation;
-wire [NM-1:0] cqbits,
-wire f_L1Computation // last 1 clock before the computation ends.
+wire f_L1Computation; // last 1 clock before the computation ends.
 wire ag_enPipe;
+wire ag_enCostF;
 wire [15:0] ag_en_Inits;
-wire [1:0] mixSwitch;
+wire [1:0] ag_mixSwitch;
 wire f_run_Computation;
+
+wire [NM-1:0] cAddr;       // Next address counter
+wire [NM-1:0] cAddrCF;     // Next address counter
+wire [N_BIT_SWAP_POINTER-1:0] bsp1;
+wire [N_BIT_SWAP_POINTER-1:0] bsp2;
 
 wire [NM-1:0] bram_addr_r [NBRAM];
 wire [NM-1:0] bram_addr_w [NBRAM];
@@ -57,24 +56,19 @@ wire [P-1:0] p_ar;
 wire [P-1:0] p_ai;
 wire  [P-1:0]  p_ar_o;
 wire  [P-1:0]  p_ai_o;
-wire  [Ni-1:0]  info_in; // information, like addresses, enabled signal, and so on.
-wire  [Ni-1:0]  info_out; // information, like addresses, enabled signal, and so on.
+wire  [Ni-1:0]  ag_info; // information, like addresses, enabled signal, and so on.
+wire  [Ni-1:0]  bs_info; // information, like addresses, enabled signal, and so on.
 wire  [1:0]  mix_switch; // information, like addresses, enabled signal, and so on.
 
 wire  [P-1:0]  gamma; // cos gamma
 wire  [P-1:0]   HGC;
 wire  [P-1:0]   Hr_o;
 wire  [P-1:0]   Hi_o;
-wire  [Ni-1:0]    info_inGC; // information, like addresses, enabled signal, and so on.
-wire  [Ni-1:0]    info_outGC; // information, like addresses, enabled signal, and so on.
 
-wire [NM-1:0] bswap_in;  // bit swap in swap pointer 1
 wire [NM-1:0] bswap_out;
 
-wire [NM-1:0] cAddr;     // Next address counter
-wire [NM-1:0] cAddrCF;     // Next address counter
 
-control_interface #(.BCVW(NM))CI 
+control_interface #(.NM(NM))CI 
 (
    .CLK(CLK),        // Connect to your system clock wire
    .RST(RST),        // Connect to your system reset wire
@@ -91,13 +85,13 @@ control_interface #(.BCVW(NM))CI
    .w_data(w_data),
    .w_req(w_req),
    .CMD(CMD),
-   .rS(rS)
-   .addr_Param_out(ag_addr_Param),
+   .rS(rS),
+   .ag_addr_Param_out(ag_addr_Param),
    .ag_Param_out(ag_Param),
    .ag_wen_out(ag_wen)
 );
 
-addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM), .BCVW(BCVW)) addr_gen_inst(
+addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM)) addr_gen_inst(
    .CLK(CLK),
    .RST(RST), 
    // connected to control interface
@@ -105,18 +99,23 @@ addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM), .BCVW(BCVW)) addr_g
    .Param_in(ag_Param),
    .wen_in(ag_wen),
    // connected to qaoa_system
-   .enPipe(ag_enPipe),
-   .ag_enCostF(ag_enCostF),
+   .en_Pipe_out(ag_enPipe),
+   .en_CostF_out(ag_enCostF),
    .f_run_Computation_in(f_run_Computation),
    .f_L1Computation_out(f_L1Computation),
    .en_Inits_out(ag_en_Inits),
-   .mixSwitch_out(mixSwitch),
+   .mixSwitch_out(ag_mixSwitch),
    .cAddrCF_out(cAddrCF),
    // connected to bit_swap
+   .cAddr_out(cAddr),
    .bsp1_out(bsp1),
-   .bsp2_out(bsp2),
-   .cAddr_out(cAddr)
-)
+   .bsp2_out(bsp2)
+);
+assign ag_info[0] = ag_enPipe;
+assign ag_info[1] = ag_enCostF;
+assign ag_info[2] = f_L1Computation;
+assign ag_info[4:3] = ag_mixSwitch;
+assign ag_info[20:5] = ag_en_Inits;
 
 qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER)) qs2
 (
@@ -127,12 +126,12 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT
     // COMMAND INTERFACE (among Control Interface and addr_gen)
     //------------------------------------------------------------------------
    .r_CMD(CMD),
-   .enPipe_in(ag_enPipe),
-   .enCostF_in(ag_enCostF),
-   .f_L1Computation(f_L1Computation),
-   .en_Inits(ag_en_Inits),
-   .mixSwitch_in(mixSwitch),
-   .f_run_Computation(f_run_Computation),
+   .enPipe_in(bs_info[0]),
+   .enCostF_in(bs_info[1]),
+   .f_L1Computation_in(bs_info[2]),
+   .en_Inits_in(bs_info[20:5]),
+   .mixSwitch_in(bs_info[4:3]),
+   .f_run_Computation_out(f_run_Computation),
    
     //------------------------------------------------------------------------
     // MEMORY INTERFACE from Control Interface
@@ -192,9 +191,11 @@ bit_swap #(.M(N_BIT_SWAP_POINTER), .N(NM), .Np(5)) bit_swap_inst(
     .a_in(cAddr),
     .a_out(bswap_out),
     .q_in(bsp1),
-    .p_in(bsp2)
+    .p_in(bsp2),
+    .info_in(ag_info),
+    .info_out(bs_info)
 );
-gen_cost  #(.P(P),.Ni(Ni)) genCost
+gen_cost  #(.P(P)) genCost
   (
    .CLK(CLK), // input
    .RST(RST), // input
@@ -227,14 +228,14 @@ mixer2 #(.P(P),.Ni(Ni)) mix // width of additional information
 //    .data_out(bram_data_r[5])  // Data to be read
 // );
 
-ram ramGen (.address_a(bram_addr_r[5]), // NM bit address
-	.address_b(bram_addr_w[5]),
+ram ramGen (.address_a(bram_addr_r[3]), // NM bit address
+	.address_b(bram_addr_w[3]),
 	.clock(CLK),
 	.data_a(), // 64 bit
-	.data_b(bram_data_w[5]),
+	.data_b(bram_data_w[3]),
 	.wren_a(),
-	.wren_b(bram_wen[5]),
-	.q_a(bram_data_r[5]),
+	.wren_b(bram_wen[3]),
+	.q_a(bram_data_r[3]),
 	.q_b());
 ram ramStateR (.address_a(bram_addr_r[0]), // NM bit address
 	.address_b(bram_addr_w[0]),
