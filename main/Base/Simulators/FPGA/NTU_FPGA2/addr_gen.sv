@@ -16,7 +16,7 @@
 // begin with t_* for thier name
 // -------------------------------------
 
-!! NM, BCVW is different.
+!! NM, NM is different.
 !! In single mode, they are the same, but in parallel implementation, because we need a reminder of cAddr by NM to circurate the address for each blocks. If we have, i, then, i_0 = i , i_1 = (i+1)%NM,  i_2 = (i+2)%NM, ... so on. cAddr > maxAddr, is OK, but take reminder of it. 
 !! We do not need to stop, even in Block Al. Because, the memory address space is the same as that in single mode.
 !! with L lantency, we can read L data successively from the same BRAM, in parallel mode.
@@ -24,9 +24,8 @@ module addr_gen#(
     //------------------------------------------------------------------------
     // CONFIGURABLE PARAMETERS
     //------------------------------------------------------------------------
-    parameter NM = 13,   // BRAM address width (2^13 = 8192 elements)
-    parameter BCVW=32,     // must be greater than or equal to 32.
-    parameter N_BIT_SWAP_POINTER = $clog2(NM))    // Info/ control signal width
+    parameter NM = 32,   // Max address counter, can be greater than BRAM address width (2^13 = 8192 elements)
+    parameter N_BIT_SWAP_POINTER=5)    // Info/ control signal width
   (
     //------------------------------------------------------------------------
     // CLOCK AND RESET
@@ -35,7 +34,7 @@ module addr_gen#(
     input  RST,     // Active-high reset
     //-------------------------------------------
     input [4:0] addr_Param_in;
-    input [BCVW-1:0] Param_in;
+    input [NM-1:0] Param_in;
     input wen_in;
 
     input f_run_Computation_in,
@@ -58,7 +57,7 @@ localparam AG_SET_n_L1Qbit  = 6'b10_0000;
 
 reg wen;
 reg [4:0] addr_Param;
-reg [BCVW-1:0] Param;
+reg [NM-1:0] Param;
 reg [N_BIT_SWAP_POINTER-1:0] bsp1; // next bit swap pointer 1
 reg [N_BIT_SWAP_POINTER-1:0] bsp2; // next bit swap pointer 2
 assign bsp1_out = bsp1;
@@ -73,8 +72,10 @@ assign en_Inits_out = en_Inits;
 //----------------------------------------------------------------------------
 reg [NM-1:0] cAddr;         // Current address counter (mixer loop)
 reg [NM-1:0] cAddrCF;         // Current address counter (mixer loop)
+reg [NM-1:0] AddrMask;    // Mask to get reminder of valid address.
 logic [NM-1:0] n_cAddr;     // Next address counter
 logic [NM-1:0] n_cAddrCF;     // Next address counter
+logic [NM-1:0] n_AddrMask;    // Mask to get reminder of valid address.
 assign cAddrCF_out = cAddrCF;
 assign cAddr_out = cAddr;
 
@@ -88,13 +89,13 @@ assign mixSwitch_out = n_mixSwitch;
 // Control parameters of computation.
 // Need to be programed by host.
 // -------------------------------------
-reg [BCVW-1:0] c_Compute; logic [BCVW-1:0] n_c_Compute; // Counts after starting p layer.
-reg [BCVW-1:0] t_B2GenCost;  logic [BCVW-1:0] n_t_B2GenCost; 
-reg [BCVW-1:0] t_L2Addr;  logic [BCVW-1:0] n_t_L2Addr; // 2^{N}-2
-reg [BCVW-1:0] t_L2PipeCF;  logic [BCVW-1:0] n_t_L2PipeCF;  // Tc -2, where Tc is the length of gen_cost pipeline, not 2^{N-1} nor T. 
-reg [BCVW-1:0] tb_B2GenCost;  logic [BCVW-1:0] n_tb_B2GenCost; 
-reg [BCVW-1:0] t_L2Pipe; logic [BCVW-1: 0] n_t_L2Pipe;  // time the pipeline get valid, it is T -3 == 2^{N-1}-3. If T <= 2^{N-1}, then set T = 2^{N-1},
-reg [BCVW-1:0] nL1PLayer; logic [BCVW-1:0] n_nL1PLayer;
+reg [NM-1:0] c_Compute; logic [NM-1:0] n_c_Compute; // Counts after starting p layer.
+reg [NM-1:0] t_B2GenCost;  logic [NM-1:0] n_t_B2GenCost; 
+reg [NM-1:0] t_L2Addr;  logic [NM-1:0] n_t_L2Addr; // 2^{N}-2
+reg [NM-1:0] t_L2PipeCF;  logic [NM-1:0] n_t_L2PipeCF;  // Tc -2, where Tc is the length of gen_cost pipeline, not 2^{N-1} nor T. 
+reg [NM-1:0] tb_B2GenCost;  logic [NM-1:0] n_tb_B2GenCost; 
+reg [NM-1:0] t_L2Pipe; logic [NM-1: 0] n_t_L2Pipe;  // time the pipeline get valid, it is T -3 == 2^{N-1}-3. If T <= 2^{N-1}, then set T = 2^{N-1},
+reg [NM-1:0] nL1PLayer; logic [NM-1:0] n_nL1PLayer;
 reg [NM-1:0] L1Qbit; logic [NM-1:0] n_L1Qbit;
 
 reg en_CostF; logic n_en_CostF;
@@ -235,7 +236,8 @@ always_comb begin: computingBlock
     n_t_L2Pipe  = t_L2Pipe;
     n_nL1PLayer = nL1PLayer;
     n_L1Qbit    = L1Qbit;
-    
+    n_AddrMask  = AddrMask;
+
     if(ag_wen) begin
         case(addr_Param_in) 
             AG_SET_n_t_L2Addr: begin
@@ -253,8 +255,11 @@ always_comb begin: computingBlock
             AG_SET_nL1PLayer: begin
                 n_nL1PLayer = Param_in;
             end
-            AG_SET_n_L1Qbit: begin
+            AG_SET_L1Qbit: begin
                 n_L1Qbit    = Param_in;
+            end
+            AG_SET_AddrMask: begin
+                n_AddrMask  = Param_in;
             end
         endcase
     end
@@ -270,6 +275,7 @@ always_ff @(posedge CLK) begin
         nL1PLayer <= 'heffffff;
         L1Qbit <= 'heffffff;
         f_L1Compute <= 0;
+        n_AddrMask <= 'hffffffff;
         wen <= 0;
     end
     else begin 
@@ -282,6 +288,7 @@ always_ff @(posedge CLK) begin
         L1Qbit <= n_L1Qbit;
         f_L1Compute <= lf_L2Compute;
         wen <= wen_in;
+        n_AddrMask <= AddrMask;
     end
 
     cAddr     <= n_cAddr;
