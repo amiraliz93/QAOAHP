@@ -16,6 +16,10 @@
 // begin with t_* for thier name
 // -------------------------------------
 
+!! NM, BCVW is different.
+!! In single mode, they are the same, but in parallel implementation, because we need a reminder of cAddr by NM to circurate the address for each blocks. If we have, i, then, i_0 = i , i_1 = (i+1)%NM,  i_2 = (i+2)%NM, ... so on. cAddr > maxAddr, is OK, but take reminder of it. 
+!! We do not need to stop, even in Block Al. Because, the memory address space is the same as that in single mode.
+!! with L lantency, we can read L data successively from the same BRAM, in parallel mode.
 module addr_gen#(
     //------------------------------------------------------------------------
     // CONFIGURABLE PARAMETERS
