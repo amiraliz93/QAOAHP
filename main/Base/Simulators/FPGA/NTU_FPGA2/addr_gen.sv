@@ -8,18 +8,21 @@
 // Address controling unit. This unit generate all signals and addresses
 //  required for computation.
 // Controling parallel implementation is now under the consideration.
+// F_max = 539 MHz, on 20260429.
+// 
+// Futher pipeline for logics can be possible, by introducing t_L3Addr, t_L3Pipe.
+// If we have t_L3Addr, t_L3Pipe, we can have a switch to hide the case t_L2Addr = t_L2Pipe. The case t_L2Addr = t_L2Pipe is problematic because generally we off the flag at t_L1Pipe, and at t_L1Pipe. If we use t_L2Pipe, no enough time to prepare this problematic case. But having t_L3Pipe, there is possible way. 
+// This introduction require D > 4, but it does not contradict the non stopping pipeline. Consider if F_max is constrained by this module.
 //===========================================================================
-
 // ------------------------------------
 // Control parameters of computation.
 // Need to be set timing parameters by host. Usually, thoes parameters 
 // begin with t_* for thier name
 // -------------------------------------
 
-!! NM, NM is different.
-!! In single mode, they are the same, but in parallel implementation, because we need a reminder of cAddr by NM to circurate the address for each blocks. If we have, i, then, i_0 = i , i_1 = (i+1)%NM,  i_2 = (i+2)%NM, ... so on. cAddr > maxAddr, is OK, but take reminder of it. 
-!! We do not need to stop, even in Block Al. Because, the memory address space is the same as that in single mode.
-!! with L lantency, we can read L data successively from the same BRAM, in parallel mode.
+// Parallel implementations is in a way having indexes,  i_0 = i , i_1 = (i+1)%NM,  i_2 = (i+2)%NM, ... so on. cAddr > maxAddr, is OK, but take reminder of it. 
+// !! with L lantency, we can read L data successively from the same BRAM, in parallel mode.
+// In QA implementation, I think we do not need busrt transfer mode, because the source block does not need memory address of required data. it can be calculated at source side as well because it is determined primialriry.
 module addr_gen#(
     //------------------------------------------------------------------------
     // CONFIGURABLE PARAMETERS
@@ -33,30 +36,34 @@ module addr_gen#(
     input  CLK,     // system clock
     input  RST,     // Active-high reset
     //-------------------------------------------
-    input [4:0] addr_Param_in;
-    input [NM-1:0] Param_in;
-    input wen_in;
+    input [7:0] addr_Param_in,
+    input [NM-1:0] Param_in,
+    input wen_in,
 
     input f_run_Computation_in,
-    output [NM-1:0] cAddrCF_out;
-    output [NM-1:0] cAddr_out;
+    output [NM-1:0] cAddrCF_out,
+    output [NM-1:0] cAddr_out,
     output [N_BIT_SWAP_POINTER-1:0] bsp1_out, // bit swap pointer 1, always 0.
     output [N_BIT_SWAP_POINTER-1:0] bsp2_out, // bit swap pointer 2
     output en_Pipe_out,
     output en_CostF_out,
+
+    output reg [31:0] version,
     output [1:0] mixSwitch_out,
     output [15:0] en_Inits_out, // notify the system to prepare variables.
     output f_L1Computation_out // last 1 clock before the computation ends.
 );
-localparam AG_SET_n_t_L2Addr = 6'b00_0001;
-localparam AG_SET_t_L2PipeCF = 6'b00_0010;
-localparam AG_SET_tb_B2GenCost= 6'b00_0100;
-localparam AG_SET_t_L2Pipe  = 6'b00_1000;
-localparam AG_SET_nL1PLayer = 6'b01_0000;
-localparam AG_SET_n_L1Qbit  = 6'b10_0000;
+localparam AG_SET_t_L2Addr   = 8'b0000_0001;
+localparam AG_SET_t_L2PipeCF = 8'b0000_0010;
+localparam AG_SET_tb_B2GenCost= 8'b0000_0100;
+localparam AG_SET_t_L2Pipe  = 8'b0000_1000;
+localparam AG_SET_nL1PLayer = 8'b0001_0000;
+localparam AG_SET_L1Qbit    = 8'b0010_0000;
+localparam AG_SET_AddrMask  = 8'b0100_0000;
+localparam AG_SET_t_B2GenCost  = 8'b1000_0000;
 
 reg wen;
-reg [4:0] addr_Param;
+reg [7:0] addr_Param;
 reg [NM-1:0] Param;
 reg [N_BIT_SWAP_POINTER-1:0] bsp1; // next bit swap pointer 1
 reg [N_BIT_SWAP_POINTER-1:0] bsp2; // next bit swap pointer 2
@@ -79,16 +86,20 @@ logic [NM-1:0] n_AddrMask;    // Mask to get reminder of valid address.
 assign cAddrCF_out = cAddrCF;
 assign cAddr_out = cAddr;
 
+reg [NM-1:0] cPLayer; logic [NM-1:0] n_cPLayer;
 //-----------------------------------------------------------
 
 logic n_en_Pipe;
-logic n_mixSwitch;
+logic [1:0] n_mixSwitch;
 assign en_Pipe_out = n_en_Pipe;
 assign mixSwitch_out = n_mixSwitch;
 // ------------------------------------
 // Control parameters of computation.
 // Need to be programed by host.
 // -------------------------------------
+reg f_run_Computation2;
+reg f_run_Computation1;
+reg f_run_Computation;
 reg [NM-1:0] c_Compute; logic [NM-1:0] n_c_Compute; // Counts after starting p layer.
 reg [NM-1:0] t_B2GenCost;  logic [NM-1:0] n_t_B2GenCost; 
 reg [NM-1:0] t_L2Addr;  logic [NM-1:0] n_t_L2Addr; // 2^{N}-2
@@ -108,29 +119,58 @@ reg f_L1Pipe; logic lf_L2Pipe;
 reg f_L1Addr; logic lf_L2Addr;
 reg f_L1CostF; logic lf_L2CostF;
 reg f_L1Compute; logic lf_L2Compute; assign f_L1Computation_out = f_L1Compute;
+reg f_B1GenCost; logic lf_B2GenCost;
 reg v_mixOK; logic n_v_mixOK;
+reg AeP;
 
+integer i;
 always_comb begin: computingBlock
     // -----------------------------
     // Block to load cost function simulteneously at any time.
     // initialize variables is defined. f_run_Computation control initilization and execution.
     // -----------------------------
     n_cPLayer = 0;
-    n_P5pointer = 0;
     n_bsp2 = 0;
     n_bsp1 = 0;
-    n_tb_B1GenCost = tb_B1GenCost;
-    n_t_L2Addr = t_L2Addr;
-    n_t_endCostF = t_endCostF;
-    n_t_endCostFM1 = t_StartCostF;
-    n_t_endMixPipe = t_endMixPipe;
-    n_L1Qbit = 3;
 
+    n_t_L2Addr     = t_L2Addr;
+    n_t_L2PipeCF   = t_L2PipeCF;
+    n_t_B2GenCost = t_B2GenCost; // the inital value. After second P, tb_B2GenCost is used and tb_B2GenCost can be programmable.
+    n_tb_B2GenCost = tb_B2GenCost;
+    n_t_L2Pipe  = t_L2Pipe;
+    n_nL1PLayer = nL1PLayer;
+    n_L1Qbit    = L1Qbit;
+    n_AddrMask  = AddrMask;
+    if(wen) begin
+        case(addr_Param) 
+            AG_SET_t_L2Addr: begin
+                n_t_L2Addr   = Param;
+            end
+            AG_SET_t_L2PipeCF: begin
+                n_t_L2PipeCF = Param;
+            end
+            AG_SET_tb_B2GenCost: begin
+                n_tb_B2GenCost = Param;
+            end
+            AG_SET_t_L2Pipe: begin
+                n_t_L2Pipe  = Param;
+            end
+            AG_SET_nL1PLayer: begin
+                n_nL1PLayer = Param;
+            end
+            AG_SET_L1Qbit: begin
+                n_L1Qbit    = Param;
+            end
+            AG_SET_AddrMask: begin
+                n_AddrMask  = Param;
+            end
+            AG_SET_t_B2GenCost: begin 
+                n_t_B2GenCost = Param;
+            end
+        endcase
+    end
     // ---------
     // f_mixOK and t_B2GenCost, tb_B2GenCost, is used for a trick to skip the first mixer and start from the cost function.
-    n_v_mixOK = 0; // set to zero for initial time, so that the system can skip the first mixer.
-    n_t_B2GenCost = 16; // the inital value. After second P, tb_B2GenCost is used and tb_B2GenCost can be programmable.
-    
     n_en_CostF = 0;
     n_cAddrCF = 0;
     n_cAddr = 0;
@@ -138,51 +178,20 @@ always_comb begin: computingBlock
     n_mixSwitch = 'b00; 
     n_en_Pipe = '0; // with en_Pipe = 0, result of the compute will not be written back to the memory.
     n_en_mixer = 0;
+    n_v_mixOK = 0;
     // -------------------------------------------------------
     // Block to generate flags.
     // -------------------------------------------------------
 
     lf_L2Addr = (cAddr == t_L2Addr);
     lf_L2Pipe = (cAddr == t_L2Pipe);
-    lf_L2Compute = (cPLayer == nL1PLayer) && lf_L2Pipe && en_CostF;
+    lf_L2Compute = (cPLayer == nL1PLayer) && lf_L2Pipe && (bsp2 == L1Qbit);
     lf_B2GenCost = (t_B2GenCost == c_Compute);
-    lf_L2Mixer = f_L2Addr && (bsp2 == L1Qbit);
-    lf_L2CostF = f_L2Addr && en_CostF;
-    lf_L2CostGen = (cAddrCF == t_L2Addr);
+    lf_L2Mixer = lf_L2Addr && (bsp2 == L1Qbit);
+    lf_L2CostF = lf_L2Addr && en_CostF;
     lf_B2CostF = (cAddrCF == t_L2PipeCF);
    
-    // -------------------------------------------------------
-    // Computational controling block. 
-    // f_run_Computation is used to define initial state
-    // initial state consits of default values in this block, computingBlock.
-    // EX1: A Block is an exclusive switching block. Because cost operator shares some of control registers with mixer operator, it needs exclusive conrol block as following
-    // -------------------------------------------------------
-    case({f_L1CostF,f_L1Addr, f_L1Mixer}) // Block EX1
-        2'b001: begin
-            n_bps2 = 0;
-            n_v_mixOK = 0;
-            n_t_B2GenCost = t_B2GenCost; 
-            n_cPLayer = cPLayer;                // Keep layer counter
-        end
-        2'b010: begin 
-            n_bps2 = bps2 + 1;
-            n_v_mixOK = v_mixOK;
-            n_t_B2GenCost = t_B2GenCost; 
-            n_cPLayer = cPLayer;                // Keep layer counter
-        end
-        2'b100: begin
-            n_bps2 = 0;
-            n_v_mixOK = 1;
-            n_t_B2GenCost = tb_B2GenCost; // trick to skip the first mixer.
-            n_cPLayer = cPLayer + 1;
-        end 
-        default: begin 
-            n_bsp2 = bsp2;
-            n_v_mixOK = v_mixOK;
-            n_t_B2GenCost = t_B2GenCost;
-            n_cPLayer = cPLayer;                // Keep layer counter
-        end
-    endcase
+    
     // --------- Checking list -----------
     // - set overwritten function for L1QBit,s like that, . ok 20260428
     // - make sure the block of qa_RUNC, with regard to bs_info, . ok 20260428
@@ -195,31 +204,53 @@ always_comb begin: computingBlock
 
     if(f_run_Computation) begin 
         n_c_Compute = c_Compute + 1;
-        n_v_Addr = v_Addr;
         n_en_CostF = en_CostF;
         n_en_mixer = en_mixer;
         n_cAddr = cAddr + 1; 
         n_cAddrCF = cAddrCF + 1;
-        n_P5pointer = P5pointer;  // Keep parameter pointer
-        n_v_CompPipe = v_CompPipe;
-        n_bsp2 = bsp2;
         n_bsp1 = bsp1;
         n_en_Pipe       = en_mixer || en_CostF; // enable write back the result
-        n_mixSwitch[0] = ~c_addr[0] && ~en_CostF; // 0 for cost
-        n_mixSwitch[1] = c_addr[0]  && ~en_CostF; // 0 for cost
-
-        if(f_B1CostF) begin 
-            n_en_CostF = 1;
+        n_mixSwitch[0] = ~cAddr[0] && ~en_CostF; // 0 for cost
+        n_mixSwitch[1] = cAddr[0]  && ~en_CostF; // 0 for cost
+        n_v_mixOK = v_mixOK;
+        
+        n_bsp2 = bsp2;
+        n_t_B2GenCost = t_B2GenCost;
+        n_cPLayer = cPLayer;                // Keep layer counter
+        // -------------------------------------------------------
+        // Computational controling block. 
+        // f_run_Computation is used to define initial state
+        // initial state consits of default values in this block, computingBlock.
+        // EX1: A Block is an exclusive switching block. Because cost operator shares some of control registers with mixer operator, it needs exclusive conrol block as following
+        // -------------------------------------------------------
+        if(f_L1Addr && (~f_L1CostF) && (~f_B1CostF)) begin 
+            n_bsp2 = bsp2 + 1;
         end
-        //---- exclusive block.
-        case({f_L1Pipe, f_L1Addr})
-            2'b01:  begin 
-                n_en_mixer = 0;
+        if(f_B1CostF || f_L1CostF) begin 
+            n_bsp2 = 0;
+        end
+        if(f_B1CostF) begin
+            n_c_Compute = 0;
+            n_t_B2GenCost = tb_B2GenCost; // trick to skip the first mixer.
+            n_cPLayer = cPLayer + 1;
+        end
+        case({f_L1CostF, f_B1CostF})
+            2'b01:begin 
+                n_en_CostF = (~f_L1Compute);
+                n_v_mixOK = 0;
             end
-            2'b10: begin
-                n_en_mixer = v_mixOK;
+            2'b10: begin 
+                n_en_CostF = 0;
+                n_v_mixOK = (~f_L1Compute);
             end
         endcase
+        //---- exclusive block.
+        if(f_L1Addr) begin
+            n_en_mixer = 0;
+        end
+        if(f_L1Pipe) begin // over write.
+            n_en_mixer = n_v_mixOK && (~f_L1Compute);
+        end
         
         if(f_L1Pipe) begin
             n_cAddr = 0; // start main pipeline.
@@ -230,39 +261,6 @@ always_comb begin: computingBlock
 
     end 
 
-    n_t_L2Addr     = t_L2Addr;
-    n_t_L2PipeCF   = t_L2PipeCF;
-    n_tb_B2GenCost = tb_B2GenCost;
-    n_t_L2Pipe  = t_L2Pipe;
-    n_nL1PLayer = nL1PLayer;
-    n_L1Qbit    = L1Qbit;
-    n_AddrMask  = AddrMask;
-
-    if(ag_wen) begin
-        case(addr_Param_in) 
-            AG_SET_n_t_L2Addr: begin
-                n_t_L2Addr   = Param_in;
-            end
-            AG_SET_t_L2PipeCF: begin
-                n_t_L2PipeCF = Param_in;
-            end
-            AG_SET_tb_B2GenCost: begin
-                n_tb_B2GenCost = Param_in;
-            end
-            AG_SET_t_L2Pipe: begin
-                n_t_L2Pipe  = Param_in;
-            end
-            AG_SET_nL1PLayer: begin
-                n_nL1PLayer = Param_in;
-            end
-            AG_SET_L1Qbit: begin
-                n_L1Qbit    = Param_in;
-            end
-            AG_SET_AddrMask: begin
-                n_AddrMask  = Param_in;
-            end
-        endcase
-    end
 end
 
 always_ff @(posedge CLK) begin 
@@ -275,12 +273,17 @@ always_ff @(posedge CLK) begin
         nL1PLayer <= 'heffffff;
         L1Qbit <= 'heffffff;
         f_L1Compute <= 0;
-        n_AddrMask <= 'hffffffff;
+        AddrMask <= 'hffffffff;
         wen <= 0;
+        f_run_Computation2 <= 0;
+        f_run_Computation1 <= 0;
+        f_run_Computation <= 0;
+        en_mixer <= 0;
+        en_CostF <= 0;
     end
     else begin 
         t_B2GenCost <= n_t_B2GenCost; 
-        t_L2Addr   <= t_L2Addr;
+        t_L2Addr   <= n_t_L2Addr;
         t_L2PipeCF <= n_t_L2PipeCF;
         tb_B2GenCost <= n_tb_B2GenCost;
         t_L2Pipe  <= n_t_L2Pipe;
@@ -288,28 +291,34 @@ always_ff @(posedge CLK) begin
         L1Qbit <= n_L1Qbit;
         f_L1Compute <= lf_L2Compute;
         wen <= wen_in;
-        n_AddrMask <= AddrMask;
+        AddrMask <= n_AddrMask;
+        f_run_Computation2 <= f_run_Computation_in;
+        f_run_Computation1 <= f_run_Computation2;
+        f_run_Computation <= f_run_Computation1;    
+        en_mixer <= n_en_mixer;
+        en_CostF <= n_en_CostF;
     end
-
+    AeP <= t_L2Addr == t_L2Pipe;
+    v_mixOK <= n_v_mixOK;
+    version <= 'hfa920a2d;
     cAddr     <= n_cAddr;
     cAddrCF   <= n_cAddrCF;
-
     c_Compute  <= n_c_Compute;
     bsp1   <= n_bsp1;
     bsp2   <= n_bsp2;
-    f_L1CostF <= lf_L2CostF
+    f_L1CostF <= lf_L2CostF;
     f_L1Addr  <= lf_L2Addr;
     f_L1Pipe  <= lf_L2Pipe;
     f_B1CostF <= lf_B2CostF;
     f_L1Mixer <= lf_L2Mixer;  
+    f_B1GenCost <= lf_B2GenCost;
+    cPLayer <= n_cPLayer;
+
     addr_Param <= addr_Param_in;
     Param <= Param_in;
-
-    en_mixer <= n_en_mixer;
-    en_CostF <= n_en_CostF;
 
     for(i = 0;i<16;i=i+1) begin
         en_Inits[i] <= (c_Compute == i) && f_run_Computation;
     end
-
 end
+endmodule
