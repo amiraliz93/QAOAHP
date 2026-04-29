@@ -49,12 +49,12 @@ module qaoa_system2#(
     // COMMAND INTERFACE (among Control Interface and addr_gen)
     //------------------------------------------------------------------------
     input [23:0]  r_CMD, // 
-    output f_run_Computation, 
-    input f_L1Computation, 
+    output f_run_Computation_out, 
+    input f_L1Computation_in, 
     input [1:0] mixSwitch_in, 
     input enPipe_in,
     input enCostF_in,
-    input [15:0] en_Inits_in;
+    input [15:0] en_Inits_in,
     //------------------------------------------------------------------------
     // MEMORY INTERFACE from Control Interface
     //------------------------------------------------------------------------
@@ -90,7 +90,7 @@ module qaoa_system2#(
     // COST HAMILTONIAN INTERFACE
     //------------------------------------------------------------------------
     output reg [P-1:0] gamma, // cos gamma - γ parameter
-    output reg [P-1:0] HGC    // Cost Hamiltonian coefficient
+    output reg [P-1:0] HGC,    // Cost Hamiltonian coefficient
 
     input [P-1:0] Hr_res,
     input [P-1:0] Hi_res,
@@ -135,6 +135,9 @@ localparam BCVW = 34; // Bit width of compute variables.
 reg [7:0] cmd;                // Current command state
 logic [7:0] n_cmd;            // Next command state
 
+reg f_run_Computation;
+logic n_f_run_Computation;
+assign f_run_Computation_out = f_run_Computation;
 //----------------------------------------------------------------------------
 // BRAM Access Registers (from ntu_smachine)
 //----------------------------------------------------------------------------
@@ -146,7 +149,7 @@ reg w_req;                    // Buffered write request
 
 logic [P-1:0] n_r_data;       // Next read data
 logic n_r_vd;                 // Next read valid, for control interface
------------------
+//-----------------
 // Parameter Storage Pointer
 //----------------------------------------------------------------------------
 reg [31:0] P5pointer;         // Pointer into BRAM[3] for parameter reads
@@ -178,20 +181,19 @@ logic [P-1:0] n_HGC;            // next Cost Hamiltonian coefficient
 //----------------------------------------------------------------------------
 // BRAM Request Pipeline (3-stage delay)
 //----------------------------------------------------------------------------
-reg [Ni+8:0] bram_reqP[2];     // 2-stage pipeline
-reg [P*2+3:0] bsB_infoP[N_BRAMBS_LATENCY];  // Pipeline compensates BRAM and bit swapping latency
-reg [Ni+8:0] bram_reqR;       // Final delayed request
-logic [Ni+8:0] n_bram_reqQ;   // Next request (input to pipeline)
+reg [40+2*P+4:0] bram_reqP[2];     // 2-stage pipeline
+reg [40+2*P+4:0] bram_reqR;       // Final delayed request
+logic [40+2*P+4:0] n_bram_reqQ;   // Next request (input to pipeline)
 
-logic [P*2+3:0] n_bsB_infoQ;   // Next request (input to pipeline)
-wire [P-1:0] n_bsB_cosbQ;
-wire [P-1:0] n_bsB_sinbQ ;
-wire [2:0] n_bsB_infoAQ;
-assign n_bsB_infoQ = {n_bsB_infoAQ, n_bsB_sinbQ, n_bsB_cosbQ};
+wire [P-1:0] n_bram_cosbQ;
+wire [P-1:0] n_bram_sinbQ ;
+wire [3:0] n_bram_infoAQ;
+assign n_bram_reqQ[40+:2*P+4] = {n_bram_infoAQ, n_bram_sinbQ, n_bram_cosbQ};
 
-wire [P-1:0] bsB_cosbO = bsB_infoP[N_BRAMBS_LATENCY-1][0+:P];
-wire [P-1:0] bsB_sinbO = bsB_infoP[N_BRAMBS_LATENCY-1][P+:P]
-wire [2:0] bsB_infoAO = bsB_infoP[N_BRAMBS_LATENCY-1][P*2+:3];
+wire [P-1:0] bram_cosbO;
+wire [P-1:0] bram_sinbO;
+wire [2:0] bram_infoAO;
+assign {bram_infoAO, bram_sinbO, bram_cosbO} = bram_reqR[40+:2*P+4];
 //----------------------------------------------------------------------------
 // BRAM Control Signals (Next Values)
 //----------------------------------------------------------------------------
@@ -222,13 +224,12 @@ always_comb begin: memorySwitchingBlock
     n_bram_addr_w = bram_addr_w;        // Keep write addresses
     n_bram_addr_r = bram_addr_r;        // Keep read addresses
     n_bram_data_w = bram_data_w;        // Keep write data
-    n_bram_reqQ = 'd0;                  // No new BRAM request
+    n_bram_reqQ[39:0] = 'd0;                  // No new BRAM request
     n_cmd = cmd;                        // Keep current command
 
     n_mix_info = 'd0;                       // Clear mixer info
     n_mix_ar = 'd0;                         // Clear mixer real input
     n_mix_ai = 'd0;                         // Clear mixer imag input
-    n_bswap_in = bswap_in;
     n_mix_switch = '0;
     n_HGC = 'd0;
 
@@ -236,9 +237,9 @@ always_comb begin: memorySwitchingBlock
     n_sinb = 64'h3fefbf675480d903; // 0.9921147013144779; default value
     n_cosb = 64'h3fc00aeb5da15be0; // 0.12533323356430426; default value  
 
-    n_bsB_cosbQ =  64'h3eafbf675480d903;
-    n_bsB_sinbQ = '0;
-    n_bsB_infoAQ = '0;
+    n_bram_cosbQ =  64'h3eafbf675480d903;
+    n_bram_sinbQ = '0;
+    n_bram_infoAQ = '0;
 
     nb_cosb = b_cosb; // keep
     nb_sinb = b_sinb; // keep
@@ -338,9 +339,6 @@ always_comb begin: memorySwitchingBlock
                 n_bram_data_w[1] = w_data;
                 n_bram_wen[1] = 1;
             end 
-            'h44: begin 
-                n_nPLayer = w_data;   // set number of P layers
-            end
             endcase
         end
     end
@@ -370,13 +368,13 @@ always_comb begin: memorySwitchingBlock
         // BRAM data to each arithmetric block
         // --------------------------------------------
         n_HGC = bram_data_r[2]; // supply hamiltonian to generator.
-        n_mix_switch = bsB_infoAO[2:1];
+        n_mix_switch = bram_infoAO[2:1];
         n_mix_ar = bram_data_r[0]; 
         n_mix_ai = bram_data_r[1];
-        n_sinb = bsB_sinbO;
-        n_cosb = bsB_cosbO;
+        n_sinb = bram_sinbO;
+        n_cosb = bram_cosbO;
         n_mix_info[NM-1:0] = bram_reqR[NM-1:0];
-        n_mix_info[NM] = bsB_infoAO[0]; // contains write enable.
+        n_mix_info[NM] = bram_infoAO[0]; // contains write enable.
 
         // --------------------------------------------
         // Write back output of arithmetric block to BRAM
@@ -388,22 +386,22 @@ always_comb begin: memorySwitchingBlock
         n_bram_data_w[1] = mix_ai_res;
         n_bram_wen[0] = mix_info_res[NM];
         n_bram_wen[1] = mix_info_res[NM];
-        !! remove bswap chain from pipeline. No need to include addressing latency.
-        !! any number of pipeline for addressing is possible!.
-        !! include enCostF in bs information chain.
+        // !! remove bswap chain from pipeline. No need to include addressing latency. ok 20260429
+        // !! any number of pipeline for addressing is possible!.
+        // !! include enCostF in bs information chain.
         if(enCostF_in) begin  
-            n_bsB_cosbQ = Hr_res;　// provided to mixer, pipe line of n_bram_reqQcosb consists of  bit swap  and memory access latency.
-            n_bsB_sinbQ = Hi_res; // provided to mixer
+            n_bram_cosbQ = Hr_res; // provided to mixer, pipe line of n_bram_reqQcosb consists of  bit swap  and memory access latency.
+            n_bram_sinbQ = Hi_res; // provided to mixer
         end
         else begin 
-            n_bsB_cosbQ = b_cosb; // provided to mixer
-            n_bsB_sinbQ = b_sinb; // provided to mixer
+            n_bram_cosbQ = b_cosb; // provided to mixer
+            n_bram_sinbQ = b_sinb; // provided to mixer
         end
-        n_bsB_infoAQ[0] = enPipe_in; // enable write back the result
-        n_bsB_infoAQ[1] = mixSwitch_in[0]; // 0 for cost
-        n_bsB_infoAQ[2] = mixSwitch_in[1]; // 0 for cost
+        n_bram_infoAQ[0] = enPipe_in; // enable write back the result
+        n_bram_infoAQ[1] = mixSwitch_in[0]; // 0 for cost
+        n_bram_infoAQ[2] = mixSwitch_in[1]; // 0 for cost
 
-        if(f_L1Computation) begin 
+        if(f_L1Computation_in) begin 
             n_cmd = qa_WAIT;
             n_f_run_Computation = 0;
         end
@@ -442,25 +440,17 @@ always@(posedge CLK) begin
         // State machine
         cmd <= qa_WAIT;
         // Counters
-        waitPipeline <= '0;
-        cPLayer <= '0;
         P5pointer <= '0;
 
         // QAOA parameters (default values for testing)
         cosb <= 64'h3fb999999999999a;  // cos(0.1) in FP64
         sinb <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
         gamma <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
-        bsp1 <= 'd0;
-        bsp2 <= 'd0;
-        info_inGC <= 'h0;
-        costGen_flag <= '0;
-        waitCGPipeline <= 'd0;
-        bswap_in <= 'h0;
+		  
         // Mixer interface
         mix_ar <= 'd0;
         mix_ai <= 'd0;
         mix_info <= 'd0;
-        mixer_flag <= 'b001;
 
         HGC <= 'd0;
 
@@ -473,17 +463,9 @@ always@(posedge CLK) begin
         testReg <= 'd0;
 
         // Configuration
-        nPLayer <= 'd1;
-        NQbits <= 'd1;
-        NQbitsM1 <= 'd0;
         mix_switch <= 'd0;
         bram_wen <= 'd0;
         Status <= '0;
-
-
-        for(i = 0;i<16;i=i+1) begin
-            f_cC[i] <= 0;
-        end
 
         f_run_Computation <= 'd0;
         // initialize with invalid values.
@@ -531,10 +513,6 @@ always@(posedge CLK) begin
         bram_reqP[1] <= bram_reqP[0]; 
         bram_reqR <= bram_reqP[1]; // Final delayed request
         
-        bsB_infoP[0] <= n_bsB_infoQ;
-        for(i = 0;i<N_BRAMBS_LATENCY-1;i=i+1) begin 
-            bsB_infoP[i+1] <= bsB_infoP[i]; 
-        end
         cosb <= n_cosb;
         sinb <= n_sinb;
 
@@ -544,17 +522,12 @@ always@(posedge CLK) begin
         mix_ai <= n_mix_ai;
         mix_info <= n_mix_info;
         mix_switch <= n_mix_switch;
-        mixer_flag <= n_mixer_flag;
-        bs_info_in <= n_bs_info_in;
-        bswap_in <= n_bswap_in;
         HGC <= n_HGC;
         // Debug
         Status[7:0] <= n_cmd[7:0];
-        Status[32+:32] <= n_cPLayer[31:0];
-        Status[8+:N_BIT_SWAP_POINTER] <= n_bsp2[N_BIT_SWAP_POINTER-1:0];
-        Status[31:20] <= 'd0;
+        Status[32] <= f_run_Computation;
+        Status[8+:NM] <= swapped_cAddr_in;
         testReg <= n_testReg;
-
         // en_CostF = 1, after finish cost generation. Do not use global timing, because
         // need to be disscussed more in detail.
         f_run_Computation <= n_f_run_Computation;
