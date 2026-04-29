@@ -31,8 +31,8 @@ module control_interface#(
     parameter FP64_MUL_LATENCY = 24,        // FP64 mul latency
     parameter FIX64_ADD_LATENCY = 2,        // Fixed add latency
     parameter FIX24_MUL_LATENCY = 8,        // Fixed mul latency
-    parameter HOST_DATA_WIDTH = 8           // DATA width between Host
-    parameter BCVW           // DATA width between Host
+    parameter HOST_DATA_WIDTH = 8,           // DATA width between Host
+	 parameter NM = 32
    )
   (
     //------------------------------------------------------------------------
@@ -63,9 +63,9 @@ module control_interface#(
     //------------------------------------------------------------------------
     // ADDRESS FLOW CONTROLER INTERFACE
     //------------------------------------------------------------------------
-    output reg [4:0] ag_addr_Param_out;
-    output reg [BCVW-1:0] ag_Param_out;
-    output reg ag_wen_out;
+    output reg [7:0] ag_addr_Param_out,
+    output reg [NM-1:0] ag_Param_out,
+    output reg ag_wen_out,
     //------------------------------------------------------------------------
     // Interface for testing, not core 
     //------------------------------------------------------------------------
@@ -113,7 +113,7 @@ localparam OP_FETCH8U    = 8'd61;  // Send 8 bytes from rU to PC
 //---------------  Arithmetic Operations (Fixed-Point) (80-85)
 localparam OP_ADD_B2A    = 8'd80;  // rA = rA + rB (64-bit fixed, 2 cycles)
 localparam OP_MUL_B2A    = 8'd81;  // rA = rA * rB (24-bit fixed, 8 cycles)
-localparam OP_INC_A     = 8'd84;    // rA = rA +1
+localparam OP_INC_A     = 8'd84;    // rA = rA + 1 (64-bit fixed, 1 cycles)
 
 // ---------------  Arithmetic Operations (Floating-Point)
 localparam OP_ADDFP_B2A  = 8'd82;  // rA = rA + rB (FP64, 27 cycles)
@@ -213,12 +213,8 @@ reg [63:0] rA;                // Register A (general purpose)
 reg [63:0] rB;                // Register B
 reg [63:0] rT;                // Temporary Register (RX data)
 reg [63:0] rU;                // Address register (TX data)
-reg [63:0] rC;
-reg [63:0] rD;
-reg [63:0] rV;
 
-
-logic [63:0] n_rA, n_rB, n_rT, n_rU, n_rC, n_rD, n_rV;      //Next values
+logic [63:0] n_rA, n_rB, n_rT, n_rU;      //Next values
 
 logic [23:0] n_CMD;
 
@@ -272,9 +268,9 @@ logic n_w_req;                // next read request
 
 assign w_req = n_w_req;
 assign tx_en = tx_dv[1];
-logic [4:0] n_ag_addr_Param;
-logic [BCVW-1:0] n_ag_Param;
-logic n_ag_wen;
+reg [7:0] ag_addr_Param; logic [4:0] n_ag_addr_Param;
+reg [NM-1:0] ag_Param; logic [NM-1:0] n_ag_Param;
+reg ag_wen; logic n_ag_wen;
 
 //---------------------- Helper Wires
 wire [63:0] rAinc = rA + 1;
@@ -305,7 +301,7 @@ always_comb begin: main_StateBlock
       n_writeReg = writeReg;              // Keep write operation
       n_bwriteReg = bwriteReg;            // Keep buffered write op
       n_txMaxPos = txMaxPos;              // Keep TX byte limit
-      n_w_req = 0;                        // Default: no BRAM write request
+      n_w_req = '0;                        // Default: no BRAM write request
       n_w_addr = rA;                      // BRAM write address = rA
       n_r_addr = rA;                      // BRAM read address = rA
       n_w_data = rT;                      // BRAM write data = rT
@@ -314,16 +310,16 @@ always_comb begin: main_StateBlock
       n_rB = rB;                          // Keep register B value
       n_rT = rT;                          // Keep temporary register
       n_rU = rU;                          // Keep address register
-      n_txPos = 0;                        // Reset TX position
-      n_txBRPos = 0;                      // Reset BRAM TX position
-      tf_data = 0;                        // No TX FIFO write by default
-      tf_write = 0;                       // TX FIFO write disabled
+      n_txPos = '0;                        // Reset TX position
+      n_txBRPos = '0;                      // Reset BRAM TX position
+      tf_data = '0;                        // No TX FIFO write by default
+      tf_write = '0;                       // TX FIFO write disabled
       n_rPos = rPos;                      // Keep receive position
       n_rBRPos = rBRPos;                  // Keep BRAM receive position
       
-      n_ag_wen = 0;
-      n_ag_Param = 0;
-      n_ag_addr_Param = 0;
+      n_ag_wen = '0;
+      n_ag_Param = '0;
+      n_ag_addr_Param = '0;
       // RX FIFO read request: read if (1) FIFO not empty AND (2) not in IDLE
       rf_req = (!rf_empty) & (fetchState != FETCH_IDLE);
       
@@ -361,12 +357,12 @@ always_comb begin: main_StateBlock
             FETCH_GETOP:begin
                   n_ope_state = rf_data;  // Store opcode
                   n_state = s_Operation;  // Move to operation state
-                  n_rPos = 0;             // Reset byte position
+                  n_rPos = '0;             // Reset byte position
             end
             // Default case
             default: begin
-                  n_rPos = 0;             // Reset positions
-                  n_rBRPos = 0;
+                  n_rPos = '0;             // Reset positions
+                  n_rBRPos = '0;
             end
             endcase
       end
@@ -432,32 +428,32 @@ always_comb begin: main_StateBlock
             //--------------------------------------------------------------------
             // OP_INC_A: Increment register A
             OP_INC_A: begin
-                  n_opa_c_wait = 1;           // Wait 1 cycle
+                  n_opa_c_wait = 'd1;           // Wait 1 cycle
                   n_state = s_WAIT_COMP;      // Go to wait state
                   n_bwriteReg = WRITE_rA1;    // Buffer write operation
             end
             // OP_ADD_B2A: Fixed-point addition (rA = rA + rB)
             OP_ADD_B2A: begin
-                  n_opa_c_wait = 2;           // Wait 2 cycles (addfix8 latency)
+                  n_opa_c_wait = 'd2;           // Wait 2 cycles (addfix8 latency)
                   n_state = s_WAIT_COMP;
                   n_bwriteReg = WRITE_add_rA;
             end
             // OP_MUL_B2A: Fixed-point multiplication (rA = rA * rB)
             OP_MUL_B2A: begin
-                  n_opa_c_wait = 8;           // Wait 8 cycles (mulfix8 latency)
+                  n_opa_c_wait = 'd8;           // Wait 8 cycles (mulfix8 latency)
                   n_state = s_WAIT_COMP;
                   n_bwriteReg = WRITE_mul_rA;
             end
             // OP_ADDFP_B2A: Floating-point addition (rA = rA + rB)
             OP_ADDFP_B2A: begin
-                  n_opa_c_wait = 27;          // Wait 27 cycles (addFPF64 latency)
+                  n_opa_c_wait = 'd27;          // Wait 27 cycles (addFPF64 latency)
                   n_state = s_WAIT_COMP;
                   n_bwriteReg = WRITE_addFP64_rA;
             end
             
             // OP_MULFP_B2A: Floating-point multiplication (rA = rA * rB)
             OP_MULFP_B2A: begin
-                  n_opa_c_wait = 24;          // Wait 24 cycles (mulFPF64 latency)
+                  n_opa_c_wait = 'd24;          // Wait 24 cycles (mulFPF64 latency)
                   n_state = s_WAIT_COMP;
                   n_bwriteReg = WRITE_mulFP64_rA;
             end
@@ -469,14 +465,14 @@ always_comb begin: main_StateBlock
             // OP_FETCH1U: Send 1 byte from rU to PC
             OP_FETCH1U: begin
                   n_storeState = STORE_LEN;     // Set to transmit mode
-                  n_txMaxPos = 0;             // Send 1 byte
+                  n_txMaxPos = 'd0;             // Send 1 byte
                   n_state = s_TXData;         // Go to transmit state
             end
 
             // OP_FETCH8U: Send 8 bytes from rU to PC
             OP_FETCH8U: begin
                   n_storeState = STORE_LEN;
-                  n_txMaxPos = 7;             // Send 8 bytes (positions 0-7)
+                  n_txMaxPos = 'd7;             // Send 8 bytes (positions 0-7)
                   n_state = s_TXData;
             end
             
@@ -671,28 +667,28 @@ always @(posedge CLK) begin
             // CP <= 4123;              // Program counter (unused in current design)
             state <= s_IDLE;         // Start in idle state
             fetchState <= FETCH_IDLE;  // Fetch state = idle
-            ope_state <= 0;          // No operation
-            rPos <= 0;               // Reset byte positions
+            ope_state <= '0;          // No operation
+            rPos <= '0;               // Reset byte positions
 
             // Clear all data registers
-            rA <= 0;
-            rB <= 0;
-            rT <= 0;
+            rA <= '0;
+            rB <= '0;
+            rT <= '0;
             rU <= 'h55; // Checking this value as an version by OP_FETCH1U at the beginning of the testbench simulation for debugging.
             // Clear control registers
-            c_wait <= 0;
-            txPos <= 0;
-            txMaxPos <= 0;
-            fetchMaxPos <= 0;
-            rPos <= 0;
-            fetchState <= 0;
-            storeState <= 0;
-            opa_c_wait <= 0;
+            c_wait <= '0;
+            txPos <= '0;
+            txMaxPos <= '0;
+            fetchMaxPos <= '0;
+            rPos <= '0;
+            fetchState <= '0;
+            storeState <= '0;
+            opa_c_wait <= '0;
             CMD <= '0;
             
             ag_addr_Param <= 'hff;
             ag_Param <= 'hfffff;
-            ag_wen <= 0;
+            ag_wen <= '0;
 	end      
       //------------------------------------------------------------------------
       // NORMAL OPERATION: Update registers with next values
