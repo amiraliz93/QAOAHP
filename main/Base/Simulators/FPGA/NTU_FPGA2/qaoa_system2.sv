@@ -34,11 +34,11 @@ module qaoa_system2#(
     //------------------------------------------------------------------------
     // CONFIGURABLE PARAMETERS
     //------------------------------------------------------------------------
-    parameter NM = 13,   // BRAM address width (2^13 = 8192 elements)
+    parameter NM = 32,   // BRAM address width (2^13 = 8192 elements)
     parameter P = 64,    // Data width (64bit FP)
     parameter NBRAM=4,   // number of Bram banks
     parameter Ni=32,     // must be greater than or equal to 32.
-    parameter N_BIT_SWAP_POINTER = $clog2(NM))    // Info/ control signal width
+    parameter N_BIT_SWAP_POINTER = 5)    // Info/ control signal width
   (
     //------------------------------------------------------------------------
     // CLOCK AND RESET
