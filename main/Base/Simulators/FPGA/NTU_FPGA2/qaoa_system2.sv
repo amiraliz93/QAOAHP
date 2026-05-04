@@ -124,7 +124,6 @@ localparam mixer_PIPLINE_NUM = 52 + 4 + 5 + 2 + 3; // mixer pipline + bram + bit
 localparam costGen_PIPLINE_NUM = 223 + 2 + 5 + 2 + 3; // cost function generation + bram + bitswap + write + registers, latencies
 localparam cost_PIPLINE_NUM = mixer_PIPLINE_NUM; 
 localparam N_BRAMBS_LATENCY = 5;
-localparam BCVW = 34; // Bit width of compute variables.
 //============================================================================
 // INTERNAL REGISTERS & SIGNALS
 //============================================================================
@@ -181,13 +180,13 @@ logic [P-1:0] n_HGC;            // next Cost Hamiltonian coefficient
 //----------------------------------------------------------------------------
 // BRAM Request Pipeline (3-stage delay)
 //----------------------------------------------------------------------------
-reg [40+2*P+4:0] bram_reqP[2];     // 2-stage pipeline
-reg [40+2*P+4:0] bram_reqR;       // Final delayed request
-logic [40+2*P+4:0] n_bram_reqQ;   // Next request (input to pipeline)
+reg [40+2*P+4-1:0] bram_reqP[2];     // 2-stage pipeline
+reg [40+2*P+4-1:0] bram_reqR;       // Final delayed request
+logic [40+2*P+4-1:0] n_bram_reqQ;   // Next request (input to pipeline)
 
-wire [P-1:0] n_bram_cosbQ;
-wire [P-1:0] n_bram_sinbQ ;
-wire [3:0] n_bram_infoAQ;
+logic [P-1:0] n_bram_cosbQ;
+logic [P-1:0] n_bram_sinbQ;
+logic [3:0] n_bram_infoAQ;
 assign n_bram_reqQ[40+:2*P+4] = {n_bram_infoAQ, n_bram_sinbQ, n_bram_cosbQ};
 
 wire [P-1:0] bram_cosbO;
@@ -233,7 +232,7 @@ always_comb begin: memorySwitchingBlock
     n_mix_switch = '0;
     n_HGC = 'd0;
 
-    n_f_run_Computation = 0;
+    n_f_run_Computation = f_run_Computation;
     n_sinb = 64'h3fefbf675480d903; // 0.9921147013144779; default value
     n_cosb = 64'h3fc00aeb5da15be0; // 0.12533323356430426; default value  
 
@@ -284,26 +283,26 @@ always_comb begin: memorySwitchingBlock
         end
         4: begin 
             n_bram_addr_r[2] = r_addr[NM-1:0];
-            n_bram_reqQ[Ni] = r_req;
-            n_r_vd = bram_reqR[Ni];
+            n_bram_reqQ[32] = r_req;
+            n_r_vd = bram_reqR[32];
             n_r_data = bram_data_r[2];
         end
         8: begin  // read sin(b), cos(b), gamma, I think we will use this function just for debugging.
             n_bram_addr_r[3] =  r_addr[NM-1:0];
-            n_bram_reqQ[Ni+1] = r_req;
-            n_r_vd = bram_reqR[Ni+1];
+            n_bram_reqQ[33] = r_req;
+            n_r_vd = bram_reqR[33];
             n_r_data = bram_data_r[3];
         end
         16: begin // read real part of the state vector
             n_bram_addr_r[0] =  r_addr[NM-1:0]; 
-            n_bram_reqQ[Ni+2] = r_req;
-            n_r_vd = bram_reqR[Ni+2];
+            n_bram_reqQ[34] = r_req;
+            n_r_vd = bram_reqR[34];
             n_r_data = bram_data_r[0];
         end 
         32: begin // read imag part of the state vector
             n_bram_addr_r[1] =  r_addr[NM-1:0];
-            n_bram_reqQ[Ni+3] = r_req;
-            n_r_vd = bram_reqR[Ni+3];
+            n_bram_reqQ[35] = r_req;
+            n_r_vd = bram_reqR[35];
             n_r_data = bram_data_r[1];
         end 
         endcase
@@ -414,7 +413,6 @@ end
 // SEQUENTIAL LOGIC - Register Updates
 //============================================================================
 
-integer i;
 always@(posedge CLK) begin
 
     //------------------------------------------------------------------------
@@ -447,6 +445,9 @@ always@(posedge CLK) begin
         sinb <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
         gamma <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
 		  
+        b_cosb <= 64'h3fb999999999999a;  // cos(0.1) in FP64
+        b_sinb <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
+
         // Mixer interface
         mix_ar <= 'd0;
         mix_ai <= 'd0;
@@ -515,6 +516,9 @@ always@(posedge CLK) begin
         
         cosb <= n_cosb;
         sinb <= n_sinb;
+        b_cosb <= nb_cosb;
+        b_sinb <= nb_sinb;
+        gamma <= n_gamma;  // -sin(0.1) in FP64
 
         // QAOA parameters
         // Mixer interface

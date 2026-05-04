@@ -27,7 +27,6 @@ wire [55:0] n1_out;
 reg [55:0] n2_in;
 wire [54:0] n2_sin_out;
 wire [54:0] n2_cos_out;
-wire [55:0] cordic_in;
 reg [54:0] n3_sin_in;
 reg [54:0] n3_cos_in;
 wire [63:0] n3_sin_out;
@@ -78,14 +77,6 @@ Fix53toFP64 inst2_Fix53toFP64(
 reg [31:0] CP; // program counter
 integer i;
 always @(posedge CLK) begin
-      Hi_NPip <= '0;
-      Hr_NPip <= '0;
-      H_0Pip <= '0;
-      gamma_0Pip <= '0;
-      n3_cos_in <= '0;
-      n3_sin_in <= '0;
-      n1_in <= '0;
-      n2_in <= '0;
       n3_cos_in <= n2_cos_out;
       n3_sin_in <= n2_sin_out;
       n1_in <= n0_out;
