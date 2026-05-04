@@ -67,14 +67,14 @@ addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM)) addr_gen_inst(
 )
 ;
 
-localparam AG_SET_t_L2Addr   = 8'b0000_0001;
-localparam AG_SET_t_L2PipeCF = 8'b0000_0010;
-localparam AG_SET_tb_B2GenCost= 8'b0000_0100;
-localparam AG_SET_t_L2Pipe  = 8'b0000_1000;
-localparam AG_SET_nL1PLayer = 8'b0001_0000;
-localparam AG_SET_L1Qbit    = 8'b0010_0000;
-localparam AG_SET_AddrMask  = 8'b0100_0000;
-localparam AG_SET_t_B2GenCost  = 8'b1000_0000;
+localparam AG_SET_t_L2Addr   = 0;
+localparam AG_SET_t_L2PipeCF = 1;
+localparam AG_SET_tb_B2GenCost= 2;
+localparam AG_SET_t_L2Pipe  = 3;
+localparam AG_SET_nL1PLayer = 4;
+localparam AG_SET_L1Qbit    = 5;
+localparam AG_SET_AddrMask  = 6;
+localparam AG_SET_t_B2GenCost  = 7;
 localparam NP = 4;
 localparam D = 64;
 localparam N = 6;

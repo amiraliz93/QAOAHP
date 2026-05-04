@@ -96,15 +96,15 @@ localparam s_WRITE_AG   = 10'h200;
 //---------------------- Operation Code (Data Transfer) --------------------
 //---------------------------------------------------------------------------
 // 255 value - max width 8
-localparam OP_NONE       = 8'd0;   // No operation
-localparam OP_SEND1T     = 8'd1;   // Request 1 byte from PC → rT
-localparam OP_SEND8T     = 8'd2;   // Request 8 bytes from PC → rT
-localparam OP_MOV_T2A    = 8'd3;   // Move rT → rA
-localparam OP_MOV_T2B    = 8'd4;   // Move rT → rB
-localparam OP_MOV_A2U    = 8'd5;   // Move rA → rU (address register)
-localparam OP_MOV_A2B    = 8'd6;   // Move rA → rB
-localparam OP_MOV_Info2U = 8'd7;   // send firmware version info
-localparam OP_MOV_S2U    = 8'd8;   // status value to rU.
+localparam OP_NONE       = 8'h0;   // No operation
+localparam OP_SEND1T     = 8'h1;   // Request 1 byte from PC → rT
+localparam OP_SEND8T     = 8'h2;   // Request 8 bytes from PC → rT
+localparam OP_MOV_T2A    = 8'h3;   // Move rT → rA
+localparam OP_MOV_T2B    = 8'h4;   // Move rT → rB
+localparam OP_MOV_A2U    = 8'h5;   // Move rA → rU (address register)
+localparam OP_MOV_A2B    = 8'h6;   // Move rA → rB
+localparam OP_MOV_Info2U = 8'h7;   // send firmware version info
+localparam OP_MOV_S2U    = 8'h8;   // status value to rU.
 //------------------- Data Retrieval Operations (60-70)
 localparam OP_FETCH1U    = 8'd60;  // Send 1 byte from rU to PC
 localparam OP_FETCH8U    = 8'd61;  // Send 8 bytes from rU to PC
@@ -272,6 +272,10 @@ reg [7:0] ag_addr_Param; logic [4:0] n_ag_addr_Param;
 reg [NM-1:0] ag_Param; logic [NM-1:0] n_ag_Param;
 reg ag_wen; logic n_ag_wen;
 
+assign ag_addr_Param_out = ag_addr_Param;
+assign ag_Param_out = ag_Param;
+assign ag_wen_out = ag_wen;
+
 //---------------------- Helper Wires
 wire [63:0] rAinc = rA + 1;
 wire [63:0] rBinc = rB + 1;
@@ -301,7 +305,7 @@ always_comb begin: main_StateBlock
       n_writeReg = writeReg;              // Keep write operation
       n_bwriteReg = bwriteReg;            // Keep buffered write op
       n_txMaxPos = txMaxPos;              // Keep TX byte limit
-      n_w_req = '0;                        // Default: no BRAM write request
+      n_w_req = '0;                       // Default: no BRAM write request
       n_w_addr = rA;                      // BRAM write address = rA
       n_r_addr = rA;                      // BRAM read address = rA
       n_w_data = rT;                      // BRAM write data = rT
@@ -317,9 +321,10 @@ always_comb begin: main_StateBlock
       n_rPos = rPos;                      // Keep receive position
       n_rBRPos = rBRPos;                  // Keep BRAM receive position
       
+      n_ag_Param = rT;                    // BRAM write data = rT
+      n_ag_addr_Param = rA;               // BRAM write data = rT
       n_ag_wen = '0;
-      n_ag_Param = '0;
-      n_ag_addr_Param = '0;
+      
       // RX FIFO read request: read if (1) FIFO not empty AND (2) not in IDLE
       rf_req = (!rf_empty) & (fetchState != FETCH_IDLE);
       
