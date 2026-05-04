@@ -53,14 +53,14 @@ module addr_gen#(
     output [15:0] en_Inits_out, // notify the system to prepare variables.
     output f_L1Computation_out // last 1 clock before the computation ends.
 );
-localparam AG_SET_t_L2Addr   = 8'b0000_0001;
-localparam AG_SET_t_L2PipeCF = 8'b0000_0010;
-localparam AG_SET_tb_B2GenCost= 8'b0000_0100;
-localparam AG_SET_t_L2Pipe  = 8'b0000_1000;
-localparam AG_SET_nL1PLayer = 8'b0001_0000;
-localparam AG_SET_L1Qbit    = 8'b0010_0000;
-localparam AG_SET_AddrMask  = 8'b0100_0000;
-localparam AG_SET_t_B2GenCost  = 8'b1000_0000;
+localparam AG_SET_t_L2Addr   = 0;
+localparam AG_SET_t_L2PipeCF = 1;
+localparam AG_SET_tb_B2GenCost= 2;
+localparam AG_SET_t_L2Pipe  = 3;
+localparam AG_SET_nPLayer   = 4;
+localparam AG_SET_L1Qbit    = 5;
+localparam AG_SET_AddrMask  = 6;
+localparam AG_SET_t_B2GenCost  = 7;
 
 reg wen;
 reg [7:0] addr_Param;
@@ -106,7 +106,7 @@ reg [NM-1:0] t_L2Addr;  logic [NM-1:0] n_t_L2Addr; // 2^{N}-2
 reg [NM-1:0] t_L2PipeCF;  logic [NM-1:0] n_t_L2PipeCF;  // Tc -2, where Tc is the length of gen_cost pipeline, not 2^{N-1} nor T. 
 reg [NM-1:0] tb_B2GenCost;  logic [NM-1:0] n_tb_B2GenCost; 
 reg [NM-1:0] t_L2Pipe; logic [NM-1: 0] n_t_L2Pipe;  // time the pipeline get valid, it is T -3 == 2^{N-1}-3. If T <= 2^{N-1}, then set T = 2^{N-1},
-reg [NM-1:0] nL1PLayer; logic [NM-1:0] n_nL1PLayer;
+reg [NM-1:0] nPLayer; logic [NM-1:0] n_nPLayer;
 reg [NM-1:0] L1Qbit; logic [NM-1:0] n_L1Qbit;
 
 reg en_CostF; logic n_en_CostF;
@@ -138,7 +138,7 @@ always_comb begin: computingBlock
     n_t_B2GenCost = t_B2GenCost; // the inital value. After second P, tb_B2GenCost is used and tb_B2GenCost can be programmable.
     n_tb_B2GenCost = tb_B2GenCost;
     n_t_L2Pipe  = t_L2Pipe;
-    n_nL1PLayer = nL1PLayer;
+    n_nPLayer = nPLayer;
     n_L1Qbit    = L1Qbit;
     n_AddrMask  = AddrMask;
     if(wen) begin
@@ -155,8 +155,8 @@ always_comb begin: computingBlock
             AG_SET_t_L2Pipe: begin
                 n_t_L2Pipe  = Param;
             end
-            AG_SET_nL1PLayer: begin
-                n_nL1PLayer = Param;
+            AG_SET_nPLayer: begin
+                n_nPLayer = Param;
             end
             AG_SET_L1Qbit: begin
                 n_L1Qbit    = Param;
@@ -185,7 +185,7 @@ always_comb begin: computingBlock
 
     lf_L2Addr = (cAddr == t_L2Addr);
     lf_L2Pipe = (cAddr == t_L2Pipe);
-    lf_L2Compute = (cPLayer == nL1PLayer) && lf_L2Pipe && (bsp2 == L1Qbit);
+    lf_L2Compute = (cPLayer == nPLayer) && lf_L2Pipe && (bsp2 == L1Qbit);
     lf_B2GenCost = (t_B2GenCost == c_Compute);
     lf_L2Mixer = lf_L2Addr && (bsp2 == L1Qbit);
     lf_L2CostF = lf_L2Addr && en_CostF;
@@ -270,7 +270,7 @@ always_ff @(posedge CLK) begin
         t_L2PipeCF <= 'heffffff;
         tb_B2GenCost <= 'heffffff;
         t_L2Pipe  <= 'heffffff;
-        nL1PLayer <= 'heffffff;
+        nPLayer <= 'heffffff;
         L1Qbit <= 'heffffff;
         f_L1Compute <= 0;
         AddrMask <= 'hffffffff;
@@ -287,7 +287,7 @@ always_ff @(posedge CLK) begin
         t_L2PipeCF <= n_t_L2PipeCF;
         tb_B2GenCost <= n_tb_B2GenCost;
         t_L2Pipe  <= n_t_L2Pipe;
-        nL1PLayer <= n_nL1PLayer;
+        nPLayer <= n_nPLayer;
         L1Qbit <= n_L1Qbit;
         f_L1Compute <= lf_L2Compute;
         wen <= wen_in;

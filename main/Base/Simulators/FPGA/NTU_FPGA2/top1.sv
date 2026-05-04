@@ -8,9 +8,9 @@ module top1 (
    input rx_dv,
    output [31:0]  o_Status
 );
-parameter NM = 13; // address width for state vector's and cost function's BRAM. Thus, the number of maximum qubits the system can deal with.
+parameter NM = 16; // address width for state vector's and cost function's BRAM. Thus, the number of maximum qubits the system can deal with.
 parameter P = 64; // data width for numerical number
-parameter Ni = 32;// data width of auxiary information on pipeline.
+parameter Ni = 21 + NM;// data width of auxiary information on pipeline.
 parameter NBRAM = 4; // number of block RAMs connected to qaoa system.
 localparam N_BIT_SWAP_POINTER = $clog2(NM);
 
@@ -27,6 +27,7 @@ wire w_req;
 wire [23:0] CMD;
 wire [63:0] rS; // status of qaoa system.
 // we need transmitter and receiver to tset state machine (ntu_smachine)
+assign o_Status = rS[31:0];
 
 wire [7:0] ag_addr_Param;
 wire [NM-1:0] ag_Param;
@@ -39,8 +40,8 @@ wire [15:0] ag_en_Inits;
 wire [1:0] ag_mixSwitch;
 wire f_run_Computation;
 
-wire [NM-1:0] cAddr;       // Next address counter
-wire [NM-1:0] cAddrCF;     // Next address counter
+wire [NM-1:0] ag_cAddr;       // Next address counter
+wire [NM-1:0] ag_cAddrCF;     // Next address counter
 wire [N_BIT_SWAP_POINTER-1:0] bsp1;
 wire [N_BIT_SWAP_POINTER-1:0] bsp2;
 
@@ -59,6 +60,8 @@ wire  [P-1:0]  p_ai_o;
 wire  [Ni-1:0]  ag_info; // information, like addresses, enabled signal, and so on.
 wire  [Ni-1:0]  bs_info; // information, like addresses, enabled signal, and so on.
 wire  [1:0]  mix_switch; // information, like addresses, enabled signal, and so on.
+wire [Ni-1:0] mix_info;
+wire [Ni-1:0] mix_infoR;
 
 wire  [P-1:0]  gamma; // cos gamma
 wire  [P-1:0]   HGC;
@@ -105,9 +108,9 @@ addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM)) addr_gen_inst(
    .f_L1Computation_out(f_L1Computation),
    .en_Inits_out(ag_en_Inits),
    .mixSwitch_out(ag_mixSwitch),
-   .cAddrCF_out(cAddrCF),
+   .cAddrCF_out(ag_cAddrCF),
    // connected to bit_swap
-   .cAddr_out(cAddr),
+   .cAddr_out(ag_cAddr),
    .bsp1_out(bsp1),
    .bsp2_out(bsp2)
 );
@@ -116,6 +119,7 @@ assign ag_info[1] = ag_enCostF;
 assign ag_info[2] = f_L1Computation;
 assign ag_info[4:3] = ag_mixSwitch;
 assign ag_info[20:5] = ag_en_Inits;
+assign ag_info[21+:NM] = ag_cAddrCF;
 
 qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER)) qs2
 (
@@ -133,6 +137,11 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT
    .mixSwitch_in(bs_info[4:3]),
    .f_run_Computation_out(f_run_Computation),
    
+    //------------------------------------------------------------------------
+    // Address INTERFACE (FOR MIXER, and COST FUNCTION GEN)
+    //------------------------------------------------------------------------
+   .swapped_cAddr_in(bswap_out),
+   .cAddrCF_in(bs_info[21+:NM]),
     //------------------------------------------------------------------------
     // MEMORY INTERFACE from Control Interface
     //------------------------------------------------------------------------
@@ -162,12 +171,12 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT
    .sinb(sinb),
    .mix_ar(p_ar),
    .mix_ai(p_ai),
-   .mix_info(info_in),
+   .mix_info(mix_info),
    .mix_switch(mix_switch),
    
    .mix_ar_res(p_ar_o),
    .mix_ai_res(p_ai_o),
-   .mix_info_res(info_out),
+   .mix_info_res(mix_infoR),
    .Status(rS),
 
     //------------------------------------------------------------------------
@@ -176,19 +185,14 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT
    .gamma(gamma), 
    .HGC(HGC),
    .Hr_res(Hr_o),
-   .Hi_res(Hi_o),
+   .Hi_res(Hi_o)
 
-    //------------------------------------------------------------------------
-    // Address INTERFACE (FOR MIXER, and COST FUNCTION GEN)
-    //------------------------------------------------------------------------
-   .swapped_cAddr_in(bswap_out),
-   .cAddrCF_in(cAddrCF),
 
 );
 
-bit_swap #(.M(N_BIT_SWAP_POINTER), .N(NM), .Np(5)) bit_swap_inst(
+bit_swap #(.M(N_BIT_SWAP_POINTER), .N(NM), .Np(5), .Ni(Ni)) bit_swap_inst(
     .CLK(CLK),
-    .a_in(cAddr),
+    .a_in(ag_cAddr),
     .a_out(bswap_out),
     .q_in(bsp1),
     .p_in(bsp2),
@@ -215,8 +219,8 @@ mixer2 #(.P(P),.Ni(Ni)) mix // width of additional information
    .p_ar_o(p_ar_o),
    .p_ai_o(p_ai_o),
    .switch_in(mix_switch),
-   .info_in(info_in), // information, like addresses, enabled signal, and so on.
-   .info_out(info_out) // information, like addresses, enabled signal, and so on.
+   .info_in(mix_info), // information, like addresses, enabled signal, and so on.
+   .info_out(mix_infoR) // information, like addresses, enabled signal, and so on.
 );
 // my_bram #(.ADDRESS_WIDTH(NM), .DEPTH(256), .DATA_WIDTH(P)) myRam1, does not work well, 2025 10 14.
 // (

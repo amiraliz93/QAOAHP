@@ -8,6 +8,7 @@ import struct
 import math
 import numpy as np 
 import random
+import sys
 
 random.seed(7)
 uart_port = 'COM4'
@@ -15,14 +16,49 @@ uart_port = 'COM4'
 # uart_port = None
 baud_rate = 115200
 
-beta = 0.1
-gamma = 0.2
-sinb = np.sin(beta)
-cosb = np.cos(beta)
-NQ = 3
+l_cosb = []
+l_sinb = []
+l_gamma = []
+NQ = 5
 NS = 2**NQ # number of layers
 Np = 8 # number of p layers.
 lineend = ""
+if len(sys.argv) != 1:
+    lineend = sys.argv[1]
+    if lineend == "\\n":
+        lineend = "\n"
+
+Lc = 223 + 4 # cost gen latency, memory and register latency.
+Lm = 52 + 3 + 2  + 12 # mixer latency 52 + 2 memory read + 2 write + 12 marginal latency.
+LInit = 16
+NM = 32
+output_command_sv = "all_test_cmd.sv"
+
+LPipe = NS
+if Lm >= NS//2:
+    LPipe = NS//2 + Lm
+    print(f"Lm = {Lm} > NS//2 = {NS//2}. LPipe become {LPipe} =  NS//2 + Lm")
+else:
+    print(f"LPipe = NS = {NS}")
+    
+
+DVTc = Lc // LPipe + 1; # make sure, pipe*DVTc-Tc-2 > 16.
+print("DVTc:", DVTc)
+print("NQ", NQ)
+print("NS:", NS)
+print("LPipe:", LPipe)
+print("Np:", Np)
+print("Lc:", Lc)
+print("Lm:", Lm)
+print("LInit:", LInit)
+print("NM:", NM)
+tGenCost = DVTc*LPipe - Lc
+if tGenCost < LInit:
+    tGenCost += LPipe
+    print(f"tGenCost = {tGenCost} greater than LInit = {LInit}.")
+tbGenCost = LPipe*(NQ+1)-Lc
+print("tbGenCost:", tbGenCost)
+print("tGenCost:", tGenCost)
 
 
 def fp64b(f):
@@ -57,7 +93,17 @@ OP_INC_A       = ib1(84) # Send: 0, Res: 0.
 OP_WRITE_T2RAM = ib1(111) # Send: 0, Res: 0.
 OP_READ_RAM2U  = ib1(112) # Send: 0, Res: 0.
 OP_SEND_CMD    = ib1(118) # Send: 0, Res: 0. see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
+OP_WRITE_T2_AG = ib1(119) 
 HOST_WAIT      = ib1(254) # wait until the qaoa system become the state of qa_wait. Not sent to FPGA. Protocol how to wait must be defined by software productor.
+
+AG_SET_t_L2Addr   = ib1(0)
+AG_SET_t_L2PipeCF = ib1(1)
+AG_SET_tb_B2GenCost= ib1(2)
+AG_SET_t_L2Pipe  = ib1(3)
+AG_SET_nPLayer   = ib1(4)
+AG_SET_L1Qbit    = ib1(5)
+AG_SET_AddrMask  = ib1(6)
+AG_SET_t_B2GenCost  = ib1(7)
 
 dop["OP_NONE"]        =  OP_NONE          
 dop["OP_NONE8"]       =  OP_NONE8     
@@ -80,11 +126,23 @@ dop["OP_INC_A"]       =  OP_INC_A
 dop["OP_WRITE_T2RAM"] =  OP_WRITE_T2RAM
 dop["OP_READ_RAM2U"]  =  OP_READ_RAM2U
 dop["OP_SEND_CMD"]    =  OP_SEND_CMD
+dop["OP_WRITE_T2_AG"] =  OP_WRITE_T2_AG 
 dop["HOST_WAIT"]      =  HOST_WAIT 
+
+dop["AG_SET_t_L2Addr"]      =  AG_SET_t_L2Addr 
+dop["AG_SET_t_L2PipeCF"]    =  AG_SET_t_L2PipeCF 
+dop["AG_SET_tb_B2GenCost"]  =  AG_SET_tb_B2GenCost 
+dop["AG_SET_t_L2Pipe"]    =  AG_SET_t_L2Pipe 
+dop["AG_SET_nPLayer"]     =  AG_SET_nPLayer 
+dop["AG_SET_L1Qbit"]      =  AG_SET_L1Qbit 
+dop["AG_SET_AddrMask"]    =  AG_SET_AddrMask 
+dop["AG_SET_t_B2GenCost"] =  AG_SET_t_B2GenCost 
 
 idop = {}
 for k in dop:
-    idop[dop[k].hex()] = k
+    if dop[k].hex() not in idop:
+        idop[dop[k].hex()] = []
+    idop[dop[k].hex()].append(k)
 
 qa_WAIT =  ib1(1)
 qa_RUN =  ib1(2)
@@ -126,14 +184,9 @@ def swap_bits(i, a, b):
 # init cost function.
 for i in range(NS):
     Ht = random.uniform(-1, 1)
-    costFt = math.cos(gamma*Ht) + 1j*math.sin(gamma*Ht)
     H.append(Ht)
-    costFOP.append(costFt)
-    print(costFt)
 
 lcq = list(range(NQ))
-random.shuffle(lcq)
-print(lcq)
 
 f = open(f"sim_{0}-th_0.txt", "w")
 for i in range(NS):
@@ -141,6 +194,27 @@ for i in range(NS):
 f.close()
 for p in range(Np):
     # output the current state vector
+    gamma = random.uniform(-np.pi, np.pi)
+    beta = random.uniform(-np.pi, np.pi)
+    sinb = np.sin(beta)
+    cosb = np.cos(beta)
+    l_sinb.append(sinb)
+    l_cosb.append(cosb)
+    l_gamma.append(gamma)
+    
+    f = open(f"cost_{p}-th.txt", "w")
+    for i in range(NS):
+        gHt = gamma*H[i]
+        costFt = math.cos(gHt) + 1j*math.sin(gHt)
+        f.write(f"{costFt}\n")
+        sv[i] = costFt*sv[i]
+    f.close()
+        
+    f = open(f"sim_{p}-th_cost.txt", "w")
+    for i in range(NS):
+        f.write(f"{sv[i]}\n")
+    f.close()
+
     # apply mixer operator
     for cq in lcq: #counter of qbit.
         for id2 in range(NS//2):
@@ -161,66 +235,73 @@ for p in range(Np):
 
             # p'_a = cos p_a + i sin p_b
             # p'_b = i sin p_a + cos p_b
-    # cost function operator
-    
-    f = open(f"sim_{p}-th_mix.txt", "w")
-    for i in range(NS):
-        f.write(f"{sv[i]}\n")
-    f.close()
 
-    for i in range(NS):
-        sv[i] = costFOP[i]*sv[i]
-        
-    f = open(f"sim_{p}-th_cost.txt", "w")
-    for i in range(NS):
-        f.write(f"{sv[i]}\n")
-    f.close()
-    
-    
+        path = f"sim_{p}-th_{cq}mix.txt"
+        f = open(path, "w")
+        print("outputting...", path, "gamma:", gamma, ", cosb:", cosb, ", sinb:", sinb)
+        for i in range(NS):
+            f.write(f"{sv[i]}\n")
+        f.close()
+
+
+
+
+def mask64(a: int) -> int:
+    if a <= 0:
+        return 0
+    if a >= 64:
+        return (1 << 64) - 1
+    return (1 << a) - 1
+
+# configuration of addr_gen.sv
 data_array = [
       OP_SEND1T,
       ib1(12), OP_MOV_T2A, OP_MOV_A2U, OP_FETCH1U,
       OP_SEND1T, qa_WAIT,
       OP_SEND_CMD,
-      OP_SEND1T, qa_INIT,
-      OP_SEND_CMD,
-      OP_SEND1T, qa_RUN,
-      OP_SEND_CMD,
-      OP_SEND1T, qa_WAIT,
-      OP_SEND_CMD,
-      
-      OP_SEND8T, ib8(0x4000_0000_0000_0000),  # address of number of qbit's register
+      OP_SEND1T, AG_SET_t_L2Addr, # set address to rA
       OP_MOV_T2A,
-      OP_SEND8T, ib8(0x0100_0000_0000_0000),  # address of number of qbit's register
-      OP_MOV_T2B,
-      OP_SEND8T, ib8(NQ),
-      OP_WRITE_T2RAM,
-      OP_ADD_B2A, # set address to next, 0x4100_0000_0000_0000
-      OP_SEND8T, ib8(NQ-1),
-      OP_WRITE_T2RAM,
-      OP_ADD_B2A,  # set address to next, 0x4200_0000_0000_0000
-      OP_SEND8T, ib8(NS-1),
-      OP_WRITE_T2RAM,
-      OP_ADD_B2A,  # set address to next, 0x4300_0000_0000_0000
-      OP_SEND8T, ib8(NS-2),
-      OP_WRITE_T2RAM,
-      OP_ADD_B2A,  # set address to next, 0x4300_0000_0000_0000
-      OP_SEND8T, ib8(Np),
-      OP_WRITE_T2RAM]
-
-data_array += [
-      OP_SEND1T, qa_INIT,
-      OP_SEND_CMD,
-      OP_SEND1T, qa_RUN,
-      OP_SEND_CMD,
-      OP_SEND1T, qa_WAIT,
-      OP_SEND_CMD
-      ]
+      OP_SEND8T, ib8(NS-2), # set the data
+      OP_WRITE_T2_AG,
+      OP_SEND1T, AG_SET_t_L2Pipe, # set address to rA
+      OP_MOV_T2A,
+      OP_SEND8T, ib8(LPipe-2), # set the data
+      OP_WRITE_T2_AG,
+      OP_SEND1T, AG_SET_t_L2PipeCF, # set address to rA
+      OP_MOV_T2A,
+      OP_SEND8T, ib8(Lc-2), # set the data
+      OP_WRITE_T2_AG,
+      OP_SEND1T, AG_SET_tb_B2GenCost, # set address to rA
+      OP_MOV_T2A,
+      OP_SEND8T, ib8(tbGenCost-2), # set the data
+      OP_WRITE_T2_AG,
+      OP_SEND1T, AG_SET_t_B2GenCost, # set address to rA
+      OP_MOV_T2A,
+      OP_SEND8T, ib8(tGenCost-2), # set the data
+      OP_WRITE_T2_AG,
+      OP_SEND1T, AG_SET_nPLayer, # set address to rA
+      OP_MOV_T2A,
+      OP_SEND8T, ib8(Np), # set the data
+      OP_WRITE_T2_AG,
+      OP_SEND1T, AG_SET_L1Qbit, # set address to rA
+      OP_MOV_T2A,
+      OP_SEND8T, ib8(NQ-1), # set the data
+      OP_WRITE_T2_AG,
+      OP_SEND1T, AG_SET_AddrMask, # set address to rA
+      OP_MOV_T2A,
+      OP_SEND8T, ib8(mask64(NQ-1)), # set the data
+      OP_WRITE_T2_AG]
 
 data_array += [OP_SEND8T, ib8(0x0800_0000_0000_0000),  # write BRAM for cosb, sinb, gamma
       OP_MOV_T2A]
 
-for p in range(Np):
+l_cosb = [l_cosb[0]] + l_cosb
+l_sinb = [l_sinb[0]] + l_sinb
+l_gamma.append(-1)
+for p in range(Np+1):
+    cosb = l_cosb[p]
+    sinb = l_sinb[p]
+    gamma = l_gamma[p]
     data_array += [
         OP_SEND8T, fp64b(cosb),
         OP_WRITE_T2RAM,
@@ -258,9 +339,8 @@ for i in range(NS):
     value = H[i]
     data_array += [OP_SEND8T, fp64b(value), OP_WRITE_T2RAM, OP_INC_A]
 
+# run the simulation.
 data_array += [
-      OP_SEND1T, qa_INIT,
-      OP_SEND_CMD,
       OP_SEND1T, qa_RUN,
       OP_SEND_CMD
       ]
@@ -271,6 +351,7 @@ data_array += [OP_SEND1T, qa_WAIT,
 
 data_array += [OP_SEND8T, ib8(0x1000000000000000), # read address of BRAM, real part of state vector
       OP_MOV_T2A]
+
 for i in range(NS):
     data_array += [
     OP_READ_RAM2U,
@@ -287,7 +368,7 @@ for i in range(NS):
     OP_INC_A # move to the next address.
     ]  
 
-data_array += [OP_SEND8T, ib8(0x2100000000000000), # read address of BRAM, imaginary part of state vector
+data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # read address of BRAM, imaginary part of state vector
       OP_MOV_T2A]
 for i in range(NS):
     data_array += [
@@ -296,18 +377,22 @@ for i in range(NS):
     OP_INC_A # move to the next address.
     ]  
 
-data_array += [OP_SEND8T, ib8(0x2200000000000000), # read address of BRAM, imaginary part of state vector
+data_array += [OP_SEND8T, ib8(0x0800_0000_0000_0000), # read address of BRAM, imaginary part of state vector
       OP_MOV_T2A]
-for i in range(NS):
+for i in range(Np*3):
     data_array += [
     OP_READ_RAM2U,
     OP_FETCH8U,
     OP_INC_A # move to the next address.
     ]  
-
-f = open("all_test_cmd.sv", "w") # generate the same byte sequence above in verilog format so that we can run the testbench simulation with the same input to be supplied here by this python code.
+ND = 0
+for i, b in enumerate(data_array):
+    ND += len(b)
+print("outputting to", output_command_sv, "...")
+f = open(output_command_sv, "w") # generate the same byte sequence above in verilog format so that we can run the testbench simulation with the same input to be supplied here by this python code.
 AC = [b"".join(data_array)]
-f.write("data_array={" + lineend)
+f.write(f"// version {random.random()}\n")
+f.write(f"localparam ND={ND}; logic [7: 0] data_array [{ND}] = {{{ lineend}")
 for i, b in enumerate(data_array):
     # print(type(b), b, len(b))
     for j in range(len(b)):
