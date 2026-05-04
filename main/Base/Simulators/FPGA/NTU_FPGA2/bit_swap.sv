@@ -32,7 +32,7 @@ module bit_swap#(
 reg [N-1:0] p_a [Np-1];
 reg [M-1:0] p_p [Np-1];
 reg [M-1:0] p_q [Np-1];
-reg [M-1:0] p_info [Np-1];
+reg [Ni-1:0] p_info [Np-1];
 
 logic [N-1:0] n_a_out;
 wire [M-1:0] pl = p_p[Np-2];  // p at the last of pipeline
@@ -71,16 +71,19 @@ module bit_swapper_tb;
       localparam int M = 5;
 
       wire [N-1:0] d_out;
+      wire [N-1:0] info_out;
       reg [N-1:0] d_in;
       reg [M-1:0] p;
       reg [M-1:0] q;
       reg CLK;
 
-      bit_swap #(.M(M), .N(N), .Np(6)) b0(.CLK(CLK),
+      bit_swap #(.M(M), .N(N), .Np(6), .Ni(N)) b0(.CLK(CLK),
             .a_in(d_in),
             .a_out(d_out),
             .q_in(q),
-            .p_in(p));
+            .p_in(p),
+            .info_in(d_in),
+            .info_out(info_out));
       
       initial begin
             d_in = 0;
