@@ -15,16 +15,12 @@ module addr_gen_tb ();
 // Declare signals to connect to the UART module
 reg RST;
 reg CLK;
-parameter CLOCKWIDTH = 2;
-parameter CLOCKWIDTH_HALF = 1;
-parameter CLOCKWIDTH500 = CLOCKWIDTH*50;
+parameter CLOCKWIDTH = 10;
+parameter CLOCKWIDTH_HALF = 5;
 parameter CMD_WAIT = CLOCKWIDTH*20;
-parameter TIME_WAIT_TB = CLOCKWIDTH*50;
 
-parameter NM = 13; // address width for state vector's and cost function's BRAM. Thus, the number of maximum qubits the system can deal with.
+parameter NM = 16; // address width for state vector's and cost function's BRAM. Thus, the number of maximum qubits the system can deal with.
 parameter P = 64; // data width for numerical number
-parameter Ni = 32;// data width of auxiary information on pipeline.
-parameter NBRAM = 6; // number of block RAMs connected to qaoa system.
 localparam N_BIT_SWAP_POINTER = $clog2(NM);
 
 reg [7:0] ag_addr_Param;
@@ -66,21 +62,26 @@ addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM)) addr_gen_inst(
    .version(version)
 )
 ;
-
 localparam AG_SET_t_L2Addr   = 0;
-localparam AG_SET_t_L2PipeCF = 1;
+localparam AG_SET_t_L2PipeGC = 1;
 localparam AG_SET_tb_B2GenCost= 2;
 localparam AG_SET_t_L2Pipe  = 3;
-localparam AG_SET_nL1PLayer = 4;
+localparam AG_SET_nPLayer   = 4;
 localparam AG_SET_L1Qbit    = 5;
 localparam AG_SET_AddrMask  = 6;
 localparam AG_SET_t_B2GenCost  = 7;
-localparam NP = 4;
-localparam D = 64;
-localparam N = 6;
-localparam Tc = 131;
-localparam Lpipe = 64; //D/2 + T; // if LPipe < D, then LPipe = D;
-localparam DVTc = 2; // make sure, pipe*DVTc-Tc-2 > 16.
+localparam AG_SET_t_B2Mixer  = 8;
+localparam AG_SET_t_L2Compute  = 9;
+
+integer t_L2Addr   = 62;
+integer t_L2PipeGC = 225;
+integer tb_B2GenCost= 394;
+integer t_L2Pipe  = 87;
+integer nPLayer   = 8;
+integer L1Qbit    = 5;
+integer AddrMask  = 31;
+integer t_B2GenCost  = 38;
+integer tb_B2Mixer  = 87;
 
 integer i;
 
@@ -90,46 +91,57 @@ initial begin
     CLK <= 0;
     f_run_Computation <= 0;
     ag_wen <= 0;
+ 
     // Apply reset
     #CMD_WAIT;
     RST <= 1; // Reset active-high
     #CMD_WAIT;
     RST <= 0; 
     ag_addr_Param <= AG_SET_t_L2Addr;
-    ag_Param <= D-2; // assuming 6 qbits
+    ag_Param <= t_L2Addr; // assuming 6 qbits
     ag_wen <= 1;
     #CLOCKWIDTH
-    ag_addr_Param <= AG_SET_t_L2PipeCF;
-    ag_Param <= Tc-2;
+    ag_addr_Param <= AG_SET_t_L2PipeGC;
+    ag_Param <= t_L2PipeGC;
     ag_wen <= 1;
     #CLOCKWIDTH
     ag_addr_Param <= AG_SET_tb_B2GenCost;
-    ag_Param <= Lpipe*(N+1)-Tc-2;
+    ag_Param <= tb_B2GenCost;
     ag_wen <= 1;
     #CLOCKWIDTH
     ag_addr_Param <= AG_SET_t_L2Pipe;
-    ag_Param <= Lpipe-2; 
+    ag_Param <= t_L2Pipe; 
     ag_wen <= 1;
     #CLOCKWIDTH
-    ag_addr_Param <= AG_SET_nL1PLayer;
-    ag_Param <= NP;
+    ag_addr_Param <= AG_SET_nPLayer;
+    ag_Param <= nPLayer;
     ag_wen <= 1;
     #CLOCKWIDTH
     ag_addr_Param <= AG_SET_L1Qbit;
-    ag_Param <= N-1;
+    ag_Param <= L1Qbit;
     ag_wen <= 1;
     #CLOCKWIDTH
     ag_addr_Param <= AG_SET_AddrMask;
-    ag_Param <= 64'b0000_0011_1111;
+    ag_Param <= AddrMask;
     ag_wen <= 1;
     #CLOCKWIDTH
     ag_addr_Param <= AG_SET_t_B2GenCost;
-    ag_Param <= Lpipe*DVTc-Tc-2; // need to wait first 16 cyclea, so that qaoa_system2.sv can load cos, sin, gamma.
+    ag_Param <= t_B2GenCost; // need to wait first 16 cyclea, so that qaoa_system2.sv can load cos, sin, gamma.
+    ag_wen <= 1;
+    #CLOCKWIDTH
+    ag_addr_Param <= AG_SET_t_B2Mixer;
+    ag_Param <= tb_B2Mixer; // need to wait first 16 cyclea, so that qaoa_system2.sv can load cos, sin, gamma.
+    ag_wen <= 1;
+    #CLOCKWIDTH
+    ag_addr_Param <= AG_SET_t_L2Compute;
+    ag_Param <= tb_B2Mixer; // need to wait first 16 cyclea, so that qaoa_system2.sv can load cos, sin, gamma.
     ag_wen <= 1;
     #CLOCKWIDTH
     f_run_Computation <= 1;
+    ag_wen <= 0;
+    #CLOCKWIDTH
 
-    for(i=0;i<Lpipe*(N+1)*(NP+1);i = i+1)  begin 
+    for(i=0;i<((t_L2Pipe + 2)*(L1Qbit + 2) + tb_B2Mixer)*(nPLayer+2);i = i+1)  begin 
       #CLOCKWIDTH;
     end
     #CMD_WAIT;

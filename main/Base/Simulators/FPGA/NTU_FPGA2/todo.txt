@@ -78,3 +78,55 @@ Because CPU and GPU also have pipeline implementation, and for GPU, it is really
 e0a43cb71c8d1e0a676937b9156ea70dfe9c27ad: synchronized qaoasystem2.
 
 
+# Overall Control test
+
+addr_gen.sv is added from previous commit.
+qaoasystem2.sv had lots of flow controling fuctions, but this version made it focus on memory switching. Control functions then was migrated into addr_gen.sv.
+
+all_test.py will produce data sequence for top1cmd_tb.sv into all_test_cmd.sv. You can supply it to data_array.
+
+compareResults.py: compare the expected result calculated by python and that from Questa. Because top1cmd_tb.sv will output the file Sample.txt into the current directory of the Quest, which should be simulation/questa/, the script compare simulation/questa/Sample.txt with result.txt. MEA will be computed.
+ 
+The minimum number of qbits is 2. Latency must above 2 as well. These limitations are due to the implementation in addr_gen.sv. addr_gen.sv implements logics in pipeline manner to keep the maximum operational frequency. For this pipeline, we need 2 preparation of clocks. There should be no problem with this implementation because 1 qbits case is trivial. 
+
+
+
+## case 1, 2 qbits, success
+
+DVTc: 4
+NQ 2
+NS: 4
+LPipe: 59
+Np: 8
+Lc: 227
+Lm: 57
+LInit: 18
+NM: 32
+tbGenCost: 18
+tGenCost: 68
+t_Mixer: 127
+t_Compute: 302
+
+MAE = 5.734995811579324e-15
+
+error is enough small.
+
+## case 2, 7 qbits, success
+
+## case 2, 4 qbits, success
+
+DVTc: 4
+NQ 4
+NS: 16
+LPipe: 65
+Np: 8
+Lc: 227
+Lm: 57
+LInit: 18
+NM: 32
+tbGenCost: 98
+tGenCost: 33
+t_Mixer: 65
+t_Compute: 382
+
+MAE = 2.4837174417841057e-15,

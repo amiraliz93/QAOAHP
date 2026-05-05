@@ -120,10 +120,7 @@ localparam qa_RUN   = 8'h2;   // Running QAOA layer initialization
 localparam qa_RUNB1 = 8'h4;   // Executing mixer operation
 localparam qa_RUNC  = 8'h8;   // Executing mixer operation
 
-localparam mixer_PIPLINE_NUM = 52 + 4 + 5 + 2 + 3; // mixer pipline + bram + bitswap + write + registers, latencies
-localparam costGen_PIPLINE_NUM = 223 + 2 + 5 + 2 + 3; // cost function generation + bram + bitswap + write + registers, latencies
-localparam cost_PIPLINE_NUM = mixer_PIPLINE_NUM; 
-localparam N_BRAMBS_LATENCY = 5;
+localparam W_REQ_BASE = NM + 8;
 //============================================================================
 // INTERNAL REGISTERS & SIGNALS
 //============================================================================
@@ -180,19 +177,19 @@ logic [P-1:0] n_HGC;            // next Cost Hamiltonian coefficient
 //----------------------------------------------------------------------------
 // BRAM Request Pipeline (3-stage delay)
 //----------------------------------------------------------------------------
-reg [40+2*P+4-1:0] bram_reqP[2];     // 2-stage pipeline
-reg [40+2*P+4-1:0] bram_reqR;       // Final delayed request
-logic [40+2*P+4-1:0] n_bram_reqQ;   // Next request (input to pipeline)
+reg [W_REQ_BASE + 2*P+4-1:0] bram_reqP[2];     // 2-stage pipeline
+reg [W_REQ_BASE + 2*P+4-1:0] bram_reqR;       // Final delayed request
+logic [W_REQ_BASE + 2*P+4-1:0] n_bram_reqQ;   // Next request (input to pipeline)
 
 logic [P-1:0] n_bram_cosbQ;
 logic [P-1:0] n_bram_sinbQ;
 logic [3:0] n_bram_infoAQ;
-assign n_bram_reqQ[40+:2*P+4] = {n_bram_infoAQ, n_bram_sinbQ, n_bram_cosbQ};
+assign n_bram_reqQ[W_REQ_BASE+:2*P+4] = {n_bram_infoAQ, n_bram_sinbQ, n_bram_cosbQ};
 
 wire [P-1:0] bram_cosbO;
 wire [P-1:0] bram_sinbO;
 wire [2:0] bram_infoAO;
-assign {bram_infoAO, bram_sinbO, bram_cosbO} = bram_reqR[40+:2*P+4];
+assign {bram_infoAO, bram_sinbO, bram_cosbO} = bram_reqR[W_REQ_BASE+:2*P+4];
 //----------------------------------------------------------------------------
 // BRAM Control Signals (Next Values)
 //----------------------------------------------------------------------------
@@ -223,7 +220,7 @@ always_comb begin: memorySwitchingBlock
     n_bram_addr_w = bram_addr_w;        // Keep write addresses
     n_bram_addr_r = bram_addr_r;        // Keep read addresses
     n_bram_data_w = bram_data_w;        // Keep write data
-    n_bram_reqQ[39:0] = 'd0;                  // No new BRAM request
+    n_bram_reqQ[W_REQ_BASE-1:0] = 'd0;                  // No new BRAM request
     n_cmd = cmd;                        // Keep current command
 
     n_mix_info = 'd0;                       // Clear mixer info
@@ -283,28 +280,32 @@ always_comb begin: memorySwitchingBlock
         end
         4: begin 
             n_bram_addr_r[2] = r_addr[NM-1:0];
-            n_bram_reqQ[32] = r_req;
-            n_r_vd = bram_reqR[32];
+            n_bram_reqQ[NM] = r_req;
+            n_r_vd = bram_reqR[NM];
             n_r_data = bram_data_r[2];
         end
         8: begin  // read sin(b), cos(b), gamma, I think we will use this function just for debugging.
             n_bram_addr_r[3] =  r_addr[NM-1:0];
-            n_bram_reqQ[33] = r_req;
-            n_r_vd = bram_reqR[33];
+            n_bram_reqQ[NM+1] = r_req;
+            n_r_vd = bram_reqR[NM+1];
             n_r_data = bram_data_r[3];
         end
         16: begin // read real part of the state vector
             n_bram_addr_r[0] =  r_addr[NM-1:0]; 
-            n_bram_reqQ[34] = r_req;
-            n_r_vd = bram_reqR[34];
+            n_bram_reqQ[NM+2] = r_req;
+            n_r_vd = bram_reqR[NM+2];
             n_r_data = bram_data_r[0];
         end 
         32: begin // read imag part of the state vector
             n_bram_addr_r[1] =  r_addr[NM-1:0];
-            n_bram_reqQ[35] = r_req;
-            n_r_vd = bram_reqR[35];
+            n_bram_reqQ[NM+3] = r_req;
+            n_r_vd = bram_reqR[NM+3];
             n_r_data = bram_data_r[1];
         end 
+        default: begin 
+            n_r_vd = r_req;
+            n_r_data = testReg;
+        end
         endcase
 
         // WRITE OPERATIONS (based on w_addr[63:56])
@@ -338,6 +339,9 @@ always_comb begin: memorySwitchingBlock
                 n_bram_data_w[1] = w_data;
                 n_bram_wen[1] = 1;
             end 
+            default: begin 
+                n_testReg = w_data;
+            end
             endcase
         end
     end
