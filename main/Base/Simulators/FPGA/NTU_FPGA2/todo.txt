@@ -89,7 +89,7 @@ compareResults.py: compare the expected result calculated by python and that fro
  
 The minimum number of qbits is 2. Latency must above 2 as well. These limitations are due to the implementation in addr_gen.sv. addr_gen.sv implements logics in pipeline manner to keep the maximum operational frequency. For this pipeline, we need 2 preparation of clocks. There should be no problem with this implementation because 1 qbits case is trivial. 
 
-
+Removed many bugs included in qaoasystem2.sv. Control interface was fine.
 
 ## case 1, 2 qbits, success
 
