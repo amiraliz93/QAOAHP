@@ -135,21 +135,21 @@ always @(posedge CLK) begin
       case(p_switch[N1])
             2'b01: begin
                   // it is assumed in this case, N1Pip[1] has p_a, and N1Pip[0] has p_b. Generate p'_a.
-                  // adder 1 will performe, pp_ar = cosb * p_ar - sinb * p_bi
-                  // adder 2 will performe, pp_ai = cosb * p_ai + sinb * p_br
+                  // adder 1 will performe, pp_ar = cosb * p_ar + sinb * p_bi
+                  // adder 2 will performe, pp_ai = cosb * p_ai - sinb * p_br
                   add1_a <= prc_N1Pip[1];
-                  add1_b <= pis_N1Pip[0] ^ SIGN_MASK;
+                  add1_b <= pis_N1Pip[0];
                   add2_a <= pic_N1Pip[1];
-                  add2_b <= prs_N1Pip[0];
+                  add2_b <= prs_N1Pip[0] ^ SIGN_MASK;
             end
             2'b10: begin
                   // it is assumed in this case, N1Pip[2] has p_a, and N1Pip[1] has p_b. Generate p'_b.
-                  // adder 1 will performe, pp_br = - sinb * p_ai + cosb * p_br
-                  // adder 2 will performe, pp_bi = sinb * p_ar + cosb * p_bi
+                  // adder 1 will performe, pp_br = sinb * p_ai + cosb * p_br
+                  // adder 2 will performe, pp_bi = -sinb * p_ar + cosb * p_bi
                   add1_a <= prc_N1Pip[1];
-                  add1_b <= pis_N1Pip[2] ^ SIGN_MASK;
+                  add1_b <= pis_N1Pip[2];
                   add2_a <= pic_N1Pip[1];
-                  add2_b <= prs_N1Pip[2];
+                  add2_b <= prs_N1Pip[2] ^ SIGN_MASK;
             end
             default: begin
                   // this is for cost function operator
