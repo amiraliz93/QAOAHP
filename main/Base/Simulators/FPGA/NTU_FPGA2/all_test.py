@@ -13,21 +13,22 @@ import datetime
 """
 Main configurable parameter blocks. 
 """
-random.seed(7)
-uart_port = 'COM4'
+seed = random.getrandbits(31)
+random.seed(seed)
+uart_port = 'COM3'
 # uart_port = "/dev/ttyUSB0"
 # uart_port = None
 baud_rate = 115200
 l_cosb = []
 l_sinb = []
 l_gamma = []
-NQ = 4
+NQ = 8
 NS = 2**NQ # number of layers
-Np = 8 # number of p layers.
+Np = 4 # number of p layers.
 Lc = 223 + 4 # cost gen latency, memory and register latency.
 Lm = 52 + 3 + 2  # mixer latency 52 + 2 memory read + 2 write + 12 marginal latency.
 LInit = 18
-NM = 32
+NM = 1024
 output_command_sv = "all_test_cmd.sv"
 """
 Parameter modification blocks. The following block will modify the parameter if it does not meet the constraint. 
@@ -189,10 +190,18 @@ H = []
 costFOP = []
 
 # initialize state vector 
+Lm = 0
 for i in range(NS):
-    sv.append(complex(0, 0))
+    sr = random.uniform(1, -1)
+    si = random.uniform(1, -1)
+    com = complex(sr, si)
+    Lm = Lm + sr*sr + si*si
+    sv.append(com)
 
-sv[0] = complex(1, 0)
+#sv[0] = complex(1, 0)
+for i in range(NS):
+    sv[i] = sv[i]/Lm
+
 sv0 = sv.copy() # back up the initizal state.
 def swap_bits(i, a, b):
     # 1. Extract the values of the bits at position a and b
@@ -439,23 +448,23 @@ for i in range(NS):
     OP_INC_A # move to the next address.
     ]  
 
-data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # read address of BRAM, imaginary part of state vector
-      OP_MOV_T2A]
-for i in range(NS):
-    data_array += [
-    OP_READ_RAM2U,
-    OP_FETCH8U,
-    OP_INC_A # move to the next address.
-    ]  
+# data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # read address of BRAM, imaginary part of state vector
+#       OP_MOV_T2A]
+# for i in range(NS):
+#     data_array += [
+#     OP_READ_RAM2U,
+#     OP_FETCH8U,
+#     OP_INC_A # move to the next address.
+#     ]  
 
-data_array += [OP_SEND8T, ib8(0x0800_0000_0000_0000), # read address of BRAM, imaginary part of state vector
-      OP_MOV_T2A]
-for i in range(Np*3):
-    data_array += [
-    OP_READ_RAM2U,
-    OP_FETCH8U,
-    OP_INC_A # move to the next address.
-    ]  
+# data_array += [OP_SEND8T, ib8(0x0800_0000_0000_0000), # read address of BRAM, imaginary part of state vector
+#       OP_MOV_T2A]
+# for i in range(Np*3):
+#     data_array += [
+#     OP_READ_RAM2U,
+#     OP_FETCH8U,
+#     OP_INC_A # move to the next address.
+#     ]  
 ND = 0
 for i, b in enumerate(data_array):
     ND += len(b)
@@ -471,9 +480,11 @@ f.write(f"integer AddrMask  = {AddrMask};\n")
 f.write(f"integer t_B2GenCost  = {t_B2GenCost};\n")
 f.write(f"integer tb_B2Mixer  = {tb_B2Mixer};\n")
 f.write(f"integer t_L2Compute  = {t_L2Compute};\n")
+f.write(f"integer seed = {seed};")
 AC = [b"".join(data_array)]
 f.write(f"// Version {random.random()}, {datetime.datetime.now()}\n")
-f.write(f"localparam ND={ND}; logic [7: 0] data_array [{ND}] = {{{ lineend}")
+f.write(f"localparam ND={ND};\n")
+f.write(f"logic [7: 0] data_array [{ND}] = {{{ lineend}")
 for i, b in enumerate(data_array):
     # print(type(b), b, len(b))
     for j in range(len(b)):
@@ -492,33 +503,46 @@ for i, b in enumerate(data_array):
             f.write(f" // {bfp64(b)}{lineend}")
 f.write("};" + lineend)
 f.close()
-quit()
 
+f = open("resultpy.txt", "w")
 # send to serial interface, for physical test of the implementation.
 ser = serial.Serial(port = uart_port, baudrate = baud_rate, timeout=None)
 for b in data_array:
     if b == HOST_WAIT:
         # must wait here.
-        for i in range(1e3):
-            time.sleep(1)
-            ser.write(OP_SEND8T)
-            ser.write(ib8(0x0100_0000_0000_0000))
-            ser.write(OP_READ_RAM2U)
-            ser.write(OP_FETCH8U)
-            dr = ser.read(8)
+        for i in range(1024):
+            print("waiting...:")
+            time.sleep(0.2)
+            ser.write(OP_MOV_S2U)
+            ser.write(OP_FETCH1U)
+            dr = ser.read(1)
             ir = int.from_bytes(dr, "little")
-            if dr[0] == qa_WAIT: # check the state is qa_WAIT
+            opecode = ""
+            if dr.hex() in idop:
+                opecode = idop[dr.hex()]
+            print("Status:", opecode, ir)
+            if dr == qa_WAIT: # check the state is qa_WAIT
                 break 
 
         continue
-    ser.write(b); time.sleep(1e-4)  # recommend to wait tiny period of time, to prevent UART buffer overflow.
+    
+    fr = float("inf")
+    opecode = ""
+    if len(b) == 8:
+        fr = bfp64(b)
+    if b.hex() in idop:
+        opecode = idop[b.hex()]
+
+    print("writing:", b.hex(), fr, opecode)
+    ser.write(b); time.sleep(2e-4)  # recommend to wait tiny period of time, to prevent UART buffer overflow.
     if b == OP_FETCH8U:
         dr = ser.read(8)
         fr = bfp64(dr)
-        print(fr, dr.hex())
+        print(f"Received {8} bytes: hex={dr.hex()} fp64={fr}, int64={int.from_bytes(dr, "little")}\n")
+        f.write(f"{fr}\n")
     elif b == OP_FETCH1U:
         dr = ser.read(1)
-        print(dr.hex(), int.from_bytes(dr, "little"))
+        print(f"Received {1} bytes: hex={dr.hex()} int={int.from_bytes(dr, "little")}\n")
     
-
+f.close()
 ser.close()
