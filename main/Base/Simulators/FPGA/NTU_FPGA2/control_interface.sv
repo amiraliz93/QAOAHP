@@ -63,9 +63,9 @@ module control_interface#(
     //------------------------------------------------------------------------
     // ADDRESS FLOW CONTROLER INTERFACE
     //------------------------------------------------------------------------
-    output reg [7:0] ag_addr_Param_out,
-    output reg [NM-1:0] ag_Param_out,
-    output reg ag_wen_out,
+    output [7:0] ag_addr_Param_out,
+    output [NM-1:0] ag_Param_out,
+    output ag_wen_out,
     //------------------------------------------------------------------------
     // Interface for testing, not core 
     //------------------------------------------------------------------------
@@ -268,7 +268,7 @@ logic n_w_req;                // next read request
 
 assign w_req = n_w_req;
 assign tx_en = tx_dv[1];
-reg [7:0] ag_addr_Param; logic [4:0] n_ag_addr_Param;
+reg [7:0] ag_addr_Param; logic [7:0] n_ag_addr_Param;
 reg [NM-1:0] ag_Param; logic [NM-1:0] n_ag_Param;
 reg ag_wen; logic n_ag_wen;
 
