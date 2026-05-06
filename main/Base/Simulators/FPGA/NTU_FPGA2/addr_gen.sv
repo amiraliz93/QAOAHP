@@ -41,7 +41,7 @@ module addr_gen#(
     input wen_in,
 
     input f_run_Computation_in,
-    output [NM-1:0] cAddrCF_out,
+    output [NM-1:0] cAddrGC_out,
     output [NM-1:0] cAddr_out,
     output [N_BIT_SWAP_POINTER-1:0] bsp1_out, // bit swap pointer 1, always 0.
     output [N_BIT_SWAP_POINTER-1:0] bsp2_out, // bit swap pointer 2
@@ -80,15 +80,15 @@ assign en_Inits_out = en_Inits;
 // Address Counters
 //----------------------------------------------------------------------------
 reg [NM-1:0] cAddr;         // Current address counter (mixer loop)
-reg [NM-1:0] cAddrCF;         // Current address counter (mixer loop)
+reg [NM-1:0] cAddrGC;         // Current address counter (mixer loop)
 reg [NM-1:0] AddrMask;    // Mask to get reminder of valid address.
 logic [NM-1:0] n_cAddr;     // Next address counter
-logic [NM-1:0] n_cAddrCF;     // Next address counter
+logic [NM-1:0] n_cAddrGC;     // Next address counter
 logic [NM-1:0] n_AddrMask;    // Mask to get reminder of valid address.
-assign cAddrCF_out = cAddrCF;
+assign cAddrGC_out = cAddrGC;
 assign cAddr_out = cAddr;
 
-reg [NM-1:0] cPLayer; logic [NM-1:0] n_cPLayer;
+reg [31:0] cPLayer; logic [31:0] n_cPLayer;
 //-----------------------------------------------------------
 
 logic n_en_Pipe;
@@ -104,6 +104,7 @@ reg f_run_Computation1;
 reg f_run_Computation;
 reg [NM-1:0] c_Compute; logic [NM-1:0] n_c_Compute; // Counts after starting p layer.
 reg [NM-1:0] t_B2GenCost;  logic [NM-1:0] n_t_B2GenCost; 
+reg [NM-1:0] to_B2GenCost;  logic [NM-1:0] n_to_B2GenCost; 
 reg [NM-1:0] t_L2Compute;  logic [NM-1:0] n_t_L2Compute; 
 reg [NM-1:0] t_L2Addr;  logic [NM-1:0] n_t_L2Addr; // 2^{N}-2
 reg [NM-1:0] t_L2PipeGC;  logic [NM-1:0] n_t_L2PipeGC;  // Tc -2, where Tc is the length of gen_cost pipeline, not 2^{N-1} nor T. 
@@ -130,7 +131,6 @@ assign f_L1Computation_out = f_L1Compute;
 reg f_B1GenCost; logic lf_B2GenCost;
 reg v_mixer; logic n_v_mixer;
 reg v_Flushing; logic n_v_Flushing;
-reg AeP;
 
 integer i;
 always_comb begin: computingBlock
@@ -138,14 +138,11 @@ always_comb begin: computingBlock
     // Block to load cost function simulteneously at any time.
     // initialize variables is defined. f_run_Computation control initilization and execution.
     // -----------------------------
-    n_cPLayer = 0;
-    n_bsp2 = 0;
-    n_bsp1 = 0;
-    n_v_Flushing = 0;
-
+   
     n_t_L2Addr     = t_L2Addr;
     n_t_L2PipeGC   = t_L2PipeGC;
     n_t_B2GenCost = t_B2GenCost; // the inital value. After second P, tb_B2GenCost is used and tb_B2GenCost can be programmable.
+    n_to_B2GenCost = to_B2GenCost; // the inital value. After second P, tb_B2GenCost is used and tb_B2GenCost can be programmable.
     n_tb_B2GenCost = tb_B2GenCost;
     n_t_L2Pipe  = t_L2Pipe;
     n_nPLayer = nPLayer;
@@ -179,9 +176,7 @@ always_comb begin: computingBlock
             end
             AG_SET_t_B2GenCost: begin 
                 n_t_B2GenCost = Param;
-            end
-            AG_SET_tb_B2Mixer: begin 
-                n_tb_B2Mixer = Param;
+                n_to_B2GenCost = Param;
             end
             AG_SET_tb_B2Mixer: begin 
                 n_tb_B2Mixer = Param;
@@ -189,12 +184,18 @@ always_comb begin: computingBlock
             AG_SET_t_L2Compute: begin 
                 n_t_L2Compute = Param;
             end
+				default: begin end
         endcase
     end
     // ---------
     // f_mixOK and t_B2GenCost, tb_B2GenCost, is used for a trick to skip the first mixer and start from the cost function.
+    n_cPLayer = 0;
+    n_bsp2 = 0;
+    n_bsp1 = 0;
+    n_v_Flushing = 0;
+
     n_en_CostF = 0;
-    n_cAddrCF = 0;
+    n_cAddrGC = 0;
     n_cAddr = 0;
     n_c_Compute = 0;
     n_mixSwitch = 'b00; 
@@ -212,7 +213,7 @@ always_comb begin: computingBlock
     lf_L2Mixer = lf_L2Pipe && (bsp2 == L1Qbit);
     lf_B2Mixer = (t_B2Mixer == c_Compute);
     lf_L2CostF = lf_L2Addr && en_CostF;
-    lf_B2CostF = (cAddrCF == t_L2PipeGC);
+    lf_B2CostF = (cAddrGC == t_L2PipeGC);
     lf_L2Compute = (cPLayer == nPLayer) && (t_L2Compute == c_Compute);
     
     // --------- Checking list -----------
@@ -226,11 +227,11 @@ always_comb begin: computingBlock
     // - consider to move this block to independent module file. We can test only addressing function of this block. . ok 20260428
 
     if(f_run_Computation) begin 
-        n_c_Compute = c_Compute + 1;
+        n_c_Compute = c_Compute + 1'b1;
         n_en_CostF = en_CostF;
         n_en_mixer = en_mixer;
-        n_cAddr = cAddr + 1; 
-        n_cAddrCF = cAddrCF + 1;
+        n_cAddr = cAddr + 1'b1; 
+        n_cAddrGC = cAddrGC + 1'b1;
         n_bsp1 = bsp1;
         n_en_Pipe       = (en_mixer || en_CostF) && (~v_Flushing); // enable write back the result
         n_mixSwitch[0] = ~cAddr[0] && ~en_CostF; // 0 for cost
@@ -248,24 +249,25 @@ always_comb begin: computingBlock
         // EX1: A Block is an exclusive switching block. Because cost operator shares some of control registers with mixer operator, it needs exclusive conrol block as following
         // -------------------------------------------------------
         if(f_L1Pipe && v_mixer) begin 
-            n_bsp2 = bsp2 + 1;
+            n_bsp2 = bsp2 + 1'b1;
         end
         else if(f_B1Mixer || f_B1CostF) begin
-            n_bsp2 = 0;
+            n_bsp2 = '0;
         end
 
         case({f_L1CostF, f_B1CostF && (~f_L1All)})
             2'b01:begin 
-                n_bsp2 = 0;
-                n_c_Compute = 0;
+                n_bsp2 = '0;
+                n_c_Compute = '0;
                 n_t_B2GenCost = tb_B2GenCost; // trick to skip the first mixer.
                 n_cPLayer = cPLayer + 1;
                 n_en_CostF = 1;
                 n_t_B2Mixer = tb_B2Mixer;
             end
             2'b10: begin 
-                n_en_CostF = 0;
+                n_en_CostF = '0;
             end
+				default: begin end
         endcase
         if(f_B1Mixer) begin 
             n_v_mixer = 1;
@@ -284,10 +286,16 @@ always_comb begin: computingBlock
         end
         
         if(f_L1Pipe || f_B1Mixer) begin
-            n_cAddr = 0; // start main pipeline.
+            n_cAddr = '0; // start main pipeline.
         end
         if(f_B1GenCost) begin
-            n_cAddrCF = 0; // Start cost function generation.
+            n_cAddrGC = '0; // Start cost function generation.
+        end
+
+        if(f_L1Compute) begin 
+            // restore the all controle values.
+            n_t_B2Mixer = '1;
+            n_t_B2GenCost = to_B2GenCost;
         end
 
     end 
@@ -296,27 +304,29 @@ end
 
 always_ff @(posedge CLK) begin 
     if(RST) begin
-        t_B2GenCost <= 'heffffff; 
-        t_L2Addr   <= 'heffffff;
-        t_B2Mixer <= 'heffffff;
-        tb_B2Mixer <= 'heffffff;
-        t_L2PipeGC <= 'heffffff;
-        tb_B2GenCost <= 'heffffff;
-        t_L2Pipe  <= 'heffffff;
-        nPLayer <= 'heffffff;
-        L1Qbit <= 'heffffff;
+        t_B2GenCost <= '1;
+        to_B2GenCost <= '1; 
+        t_L2Addr   <= '1;
+        t_B2Mixer <= '1;
+        tb_B2Mixer <= '1;
+        t_L2PipeGC <= '1;
+        tb_B2GenCost <= '1;
+        t_L2Pipe  <= '1;
+        nPLayer <= '1;
+        L1Qbit <= '1;
         f_L1Compute <= 0;
-        AddrMask <= 'hffffffff;
+        AddrMask <= '1;
+        t_L2Compute <= '1;
         wen <= 0;
         f_run_Computation2 <= 0;
         f_run_Computation1 <= 0;
         f_run_Computation <= 0;
-        t_L2Compute <= 'heffffff;
         en_mixer <= 0;
         en_CostF <= 0;
     end
     else begin 
         t_B2GenCost <= n_t_B2GenCost; 
+        to_B2GenCost <= n_to_B2GenCost; 
         t_B2Mixer <= n_t_B2Mixer;
         tb_B2Mixer <= n_tb_B2Mixer;
         t_L2Compute   <= n_t_L2Compute;
@@ -335,14 +345,13 @@ always_ff @(posedge CLK) begin
         en_mixer <= n_en_mixer;
         en_CostF <= n_en_CostF;
     end
-    AeP <= t_L2Addr == t_L2Pipe;
     v_Flushing <= n_v_Flushing;
     f_L1All <= lf_L2All;
     v_mixer <= n_v_mixer;
     f_B1Mixer <= lf_B2Mixer;
     version <= 'hfa920a2d;
     cAddr     <= n_cAddr;
-    cAddrCF   <= n_cAddrCF;
+    cAddrGC   <= n_cAddrGC;
     c_Compute  <= n_c_Compute;
     bsp1   <= n_bsp1;
     bsp2   <= n_bsp2;

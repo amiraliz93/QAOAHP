@@ -21,12 +21,12 @@ module mixer2
    input  [Ni-1:0]    info_in,  // information, like addresses, enabled signal, and so on.
    output  [Ni-1:0]    info_out // information, like addresses, enabled signal, and so on.
 );
-parameter N1 = 1 + 20 + 1;
-parameter N3 = 1 + 20 + 1 + 2 + 27 + 1;
-parameter NPip = N3; // number of pipeline. Depends on IP core like addFPF64 used in this module.
+localparam N1 = 1 + 20 + 1;
+localparam N3 = 1 + 20 + 1 + 2 + 27 + 1;
+localparam NPip = N3; // number of pipeline. Depends on IP core like addFPF64 used in this module.
 
 reg [Ni-1:0] p_info [NPip-1:0];
-reg [Ni-1:0] p_switch [NPip-1:0];
+reg [1:0] p_switch [NPip-1:0];
 wire [P-1:0] n_prc_N1Pip;
 wire [P-1:0] n_prs_N1Pip;
 wire [P-1:0] n_pic_N1Pip;
