@@ -37,8 +37,8 @@ module qaoa_system2#(
     parameter NM = 32,   // BRAM address width (2^13 = 8192 elements)
     parameter P = 64,    // Data width (64bit FP)
     parameter NBRAM=4,   // number of Bram banks
-    parameter Ni=32,     // must be greater than or equal to 32.
-    parameter N_BIT_SWAP_POINTER = 5)    // Info/ control signal width
+    parameter Ni=32     // must be greater than or equal to 32.
+	 )  
   (
     //------------------------------------------------------------------------
     // CLOCK AND RESET
@@ -188,7 +188,7 @@ assign n_bram_reqQ[W_REQ_BASE+:2*P+4] = {n_bram_infoAQ, n_bram_sinbQ, n_bram_cos
 
 wire [P-1:0] bram_cosbO;
 wire [P-1:0] bram_sinbO;
-wire [2:0] bram_infoAO;
+wire [3:0] bram_infoAO;
 assign {bram_infoAO, bram_sinbO, bram_cosbO} = bram_reqR[W_REQ_BASE+:2*P+4];
 //----------------------------------------------------------------------------
 // BRAM Control Signals (Next Values)
@@ -409,6 +409,8 @@ always_comb begin: memorySwitchingBlock
             n_f_run_Computation = 0;
         end
     end
+	 default: begin
+	 end
     endcase
     
 end

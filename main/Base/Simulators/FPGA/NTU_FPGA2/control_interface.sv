@@ -184,9 +184,6 @@ logic [3:0] n_rPos;      // next byte position
 reg [3:0] fetchMaxPos;   //Max bytes to fetch (0=1 byte, 7=8 bytes)
 logic [3:0] n_fetchMaxPos;    // Next max position
 
-reg [10:0] txBRPos; // position to store the byte 
-logic [10:0] n_txBRPos; // position to store the byte  // BRAM transmit position
-
 reg [10:0] rBRPos; // position to store the byte 
 logic [10:0] n_rBRPos; // position to store the byte  // Next BRAM transmit position
 
@@ -315,14 +312,13 @@ always_comb begin: main_StateBlock
       n_rT = rT;                          // Keep temporary register
       n_rU = rU;                          // Keep address register
       n_txPos = '0;                        // Reset TX position
-      n_txBRPos = '0;                      // Reset BRAM TX position
       tf_data = '0;                        // No TX FIFO write by default
       tf_write = '0;                       // TX FIFO write disabled
       n_rPos = rPos;                      // Keep receive position
       n_rBRPos = rBRPos;                  // Keep BRAM receive position
       
-      n_ag_Param = rT;                    // BRAM write data = rT
-      n_ag_addr_Param = rA;               // BRAM write data = rT
+      n_ag_Param = rT[NM-1:0];                    // BRAM write data = rT
+      n_ag_addr_Param = rA[7:0];               // BRAM write data = rT
       n_ag_wen = '0;
       
       // RX FIFO read request: read if (1) FIFO not empty AND (2) not in IDLE
@@ -345,7 +341,7 @@ always_comb begin: main_StateBlock
             FETCH_DATA: begin
                   // Extract byte from FIFO and place in rT at current position
                   n_rT[rPos*8+:8] = rf_data; // [rPos*8+:8] = 8 bits starting at rPos*8
-                  n_rPos = rPos + 1;         // Move to next byte position
+                  n_rPos = rPos + 1'b1;         // Move to next byte position
 
                   // If all bytes received, get next opcode
                   if(rPos == fetchMaxPos) begin
@@ -535,7 +531,7 @@ always_comb begin: main_StateBlock
       // s_WAIT_COMP: Wait for arithmetic operation to complete
       //------------------------------------------------------------------------
       s_WAIT_COMP: begin
-            n_c_wait = c_wait + 1;            // Increment wait counter
+            n_c_wait = c_wait + 1'b1;            // Increment wait counter
             
             // When counter reaches target latency, write result
             if(c_wait == opa_c_wait) begin
@@ -631,7 +627,7 @@ always_comb begin: main_StateBlock
             STORE_LEN: begin
                   // Extract byte from rU at current position
                   tf_data = rU[txPos*8+:8];   // Get byte from rU
-                  n_txPos = txPos + 1;        // Move to next byte
+                  n_txPos = txPos + 1'b1;        // Move to next byte
                   
                   // If all bytes transmitted, return to idle
                   if(txPos == txMaxPos) begin
@@ -644,7 +640,6 @@ always_comb begin: main_StateBlock
             // Default/STORE_WAIT: Hold position
             default: begin
                   n_txPos = txPos;
-                  n_txBRPos = txBRPos;
             end
             endcase
       end
@@ -654,7 +649,6 @@ always_comb begin: main_StateBlock
       //------------------------------------------------------------------------
       default: begin
             // Reset all counters and prepare for next command
-            n_txBRPos = 0;              // Reset BRAM TX position
             n_txPos = 0;                // Reset TX byte position
             n_c_wait = 0;               // Reset wait counter
             n_state = s_Fetch;          // Go to fetch state
@@ -691,8 +685,8 @@ always @(posedge CLK) begin
             opa_c_wait <= '0;
             CMD <= '0;
             
-            ag_addr_Param <= 'hff;
-            ag_Param <= 'hfffff;
+            ag_addr_Param <= '1;
+            ag_Param <= '1;
             ag_wen <= '0;
 	end      
       //------------------------------------------------------------------------
