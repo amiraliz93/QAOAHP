@@ -127,7 +127,7 @@ begin
 	 FAN_INIT_INDEX <= FAN_INIT_INDEX;
 end
 
-always@(FAN_INIT_INDEX)
+always@(iClk)
 begin
 	case(FAN_INIT_INDEX)
 	0	:	FAN_REG_DATA	<=	16'h004e;//  - default fan speed 3000rpm
@@ -135,6 +135,8 @@ begin
 	2	:	FAN_REG_DATA	<=	16'h04f5;//  - setup GPIO Definition Register. GPIO1 serves as a FULL ON input and GPIO0 serves as an ALERT output
 	3	:	FAN_REG_DATA	<=	16'h0807;//  - Alarm-Enable Register. Enable Tachometer Overflow / Minimum Output Level and Maximum Output Level alarm.
 	4	:	FAN_REG_DATA	<=	16'h1602;//  - setup Tachometer Count-Time Register. Count Time = 1sec
+	default: FAN_REG_DATA	<=	16'h004e;
+	
 	endcase
 end
 

@@ -322,7 +322,7 @@ wire clk50 = OSC_50_B4D;
 wire clk2M;
 wire RSTorg = ~CPU_RESET_n;
 wire RST;
-pll2 (
+pll2 pll2_inst(
       .refclk(OSC_MAIN),   //  refclk.CLK
       .rst(RSTorg),      //   reset.reset
       .outclk_0(CLK), // outclk0.CLK
@@ -347,7 +347,7 @@ assign RST = sync_stage2;
 
 Fan_Control u0
 (
- 	.CLK(OSC_50_B4D),
+ 	.CLK_2M(clk2M),
  	.RST_N(BUTTON[0]),
    .Speed_Set(Speed_Switch),//need set more than 1500rpm
 	.Speed_Detected(),
@@ -367,6 +367,7 @@ reg [16:0] dt;
 always @(posedge CLK) begin
 	if(RST) begin
 		cnt <= 32'b0;
+		dt <= '0;
 	end	
 	else begin 
 		cnt <= cnt + 1;
@@ -396,8 +397,8 @@ top1_uart #(.UART_CLKS_PER_BIT(200000000/115200)) ntuS
 
 assign LED[0] = ~o_Status[0];
 assign LED[1] = ~o_Status[1];
-assign LED[2] = ~o_Status[2];
-assign LED[3] = ~cnt[25];
+assign LED[2] = ~cnt[23];
+assign LED[3] = ~cnt[24];
 
 assign GPIO[7:0] = o_Status[15:8];
 assign GPIO[15:8] = dt[7:0];
