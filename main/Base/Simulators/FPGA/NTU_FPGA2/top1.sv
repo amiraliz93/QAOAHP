@@ -41,7 +41,7 @@ wire [1:0] ag_mixSwitch;
 wire f_run_Computation;
 
 wire [NM-1:0] ag_cAddr;       // Next address counter
-wire [NM-1:0] ag_cAddrCF;     // Next address counter
+wire [NM-1:0] ag_cAddrGC;     // Next address counter
 wire [N_BIT_SWAP_POINTER-1:0] bsp1;
 wire [N_BIT_SWAP_POINTER-1:0] bsp2;
 
@@ -108,7 +108,7 @@ addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM)) addr_gen_inst(
    .f_L1Computation_out(f_L1Computation),
    .en_Inits_out(ag_en_Inits),
    .mixSwitch_out(ag_mixSwitch),
-   .cAddrCF_out(ag_cAddrCF),
+   .cAddrGC_out(ag_cAddrGC),
    // connected to bit_swap
    .cAddr_out(ag_cAddr),
    .bsp1_out(bsp1),
@@ -119,9 +119,9 @@ assign ag_info[1] = ag_enCostF;
 assign ag_info[2] = f_L1Computation;
 assign ag_info[4:3] = ag_mixSwitch;
 assign ag_info[20:5] = ag_en_Inits;
-assign ag_info[21+:NM] = ag_cAddrCF;
+assign ag_info[21+:NM] = ag_cAddrGC;
 
-qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni), .N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER)) qs2
+qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM), .Ni(Ni)) qs2
 (
    .CLK(CLK),
    .RST(RST),
