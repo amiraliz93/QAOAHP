@@ -16,11 +16,11 @@ module receiver
    output [7:0] o_Rx_Byte
    );
    
-  parameter s_IDLE         = 3'b000;
-  parameter s_RX_START_BIT = 3'b001;
-  parameter s_RX_DATA_BITS = 3'b010;
-  parameter s_RX_STOP_BIT  = 3'b011;
-  parameter s_CLEANUP      = 3'b100;
+  localparam s_IDLE         = 3'b000;
+  localparam s_RX_START_BIT = 3'b001;
+  localparam s_RX_DATA_BITS = 3'b010;
+  localparam s_RX_STOP_BIT  = 3'b011;
+  localparam s_CLEANUP      = 3'b100;
    
   reg           r_Rx_Data_R ;
   reg           r_Rx_Data ;
@@ -81,7 +81,7 @@ module receiver
               end
             else
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_RX_START_BIT;
               end
           end // case: s_RX_START_BIT
@@ -92,7 +92,7 @@ module receiver
           begin
             if (r_Clock_Count < CLKS_PER_BIT-1)
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_RX_DATA_BITS;
               end
             else
@@ -103,7 +103,7 @@ module receiver
                 // Check if we have received all bits
                 if (r_Bit_Index < 7)
                   begin
-                    r_Bit_Index <= r_Bit_Index + 1;
+                    r_Bit_Index <= r_Bit_Index + 1'b1;
                     r_SM_Main   <= s_RX_DATA_BITS;
                   end
                 else
@@ -121,7 +121,7 @@ module receiver
             // Wait CLKS_PER_BIT-1 clock cycles for Stop bit to finish
             if (r_Clock_Count < CLKS_PER_BIT-1)
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_RX_STOP_BIT;
               end
             else
