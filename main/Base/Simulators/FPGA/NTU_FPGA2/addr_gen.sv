@@ -130,6 +130,7 @@ reg f_L1Compute; logic lf_L2Compute;
 assign f_L1Computation_out = f_L1Compute;
 reg f_B1GenCost; logic lf_B2GenCost;
 reg v_mixer; logic n_v_mixer;
+reg v_GenCost; logic n_v_GenCost;
 reg v_Flushing; logic n_v_Flushing;
 
 integer i;
@@ -150,7 +151,7 @@ always_comb begin: computingBlock
     n_AddrMask  = AddrMask;
     n_t_B2Mixer  = t_B2Mixer;
     n_tb_B2Mixer  = tb_B2Mixer;
-	 n_t_L2Compute = t_L2Compute;
+	n_t_L2Compute = t_L2Compute;
     if(wen) begin
         case(addr_Param) 
             AG_SET_t_L2Addr: begin
@@ -202,6 +203,7 @@ always_comb begin: computingBlock
     n_en_Pipe = '0; // with en_Pipe = 0, result of the compute will not be written back to the memory.
     n_en_mixer = 0;
     n_v_mixer = 0;
+    n_v_GenCost = 0;
     // -------------------------------------------------------
     // Block to generate flags.
     // -------------------------------------------------------
@@ -213,7 +215,7 @@ always_comb begin: computingBlock
     lf_L2Mixer = lf_L2Pipe && (bsp2 == L1Qbit);
     lf_B2Mixer = (t_B2Mixer == c_Compute);
     lf_L2CostF = lf_L2Addr && en_CostF;
-    lf_B2CostF = (cAddrGC == t_L2PipeGC);
+    lf_B2CostF = (cAddrGC == t_L2PipeGC) && v_GenCost;
     lf_L2Compute = (cPLayer == nPLayer) && (t_L2Compute == c_Compute);
     
     // --------- Checking list -----------
@@ -237,6 +239,7 @@ always_comb begin: computingBlock
         n_mixSwitch[0] = ~cAddr[0] && ~en_CostF; // 0 for cost
         n_mixSwitch[1] = cAddr[0]  && ~en_CostF; // 0 for cost
         n_v_mixer = v_mixer;
+        n_v_GenCost = v_GenCost;
         n_v_Flushing = v_Flushing;
         
         n_bsp2 = bsp2;
@@ -266,6 +269,7 @@ always_comb begin: computingBlock
             end
             2'b10: begin 
                 n_en_CostF = '0;
+                n_v_GenCost = 0;
             end
 				default: begin end
         endcase
@@ -290,6 +294,7 @@ always_comb begin: computingBlock
         end
         if(f_B1GenCost) begin
             n_cAddrGC = '0; // Start cost function generation.
+            n_v_GenCost = 1;
         end
 
         if(f_L1Compute) begin 
@@ -314,10 +319,10 @@ always_ff @(posedge CLK) begin
         t_L2Pipe  <= '1;
         nPLayer <= '1;
         L1Qbit <= '1;
-        f_L1Compute <= 0;
         AddrMask <= '1;
         t_L2Compute <= '1;
         wen <= 0;
+        f_L1Compute <= 0;
         f_run_Computation2 <= 0;
         f_run_Computation1 <= 0;
         f_run_Computation <= 0;
@@ -336,9 +341,9 @@ always_ff @(posedge CLK) begin
         t_L2Pipe  <= n_t_L2Pipe;
         nPLayer <= n_nPLayer;
         L1Qbit <= n_L1Qbit;
+        AddrMask <= n_AddrMask;
         f_L1Compute <= lf_L2Compute;
         wen <= wen_in;
-        AddrMask <= n_AddrMask;
         f_run_Computation2 <= f_run_Computation_in;
         f_run_Computation1 <= f_run_Computation2;
         f_run_Computation <= f_run_Computation1;    
@@ -348,6 +353,7 @@ always_ff @(posedge CLK) begin
     v_Flushing <= n_v_Flushing;
     f_L1All <= lf_L2All;
     v_mixer <= n_v_mixer;
+    v_GenCost <= n_v_GenCost;
     f_B1Mixer <= lf_B2Mixer;
     version <= 'hfa920a2d;
     cAddr     <= n_cAddr;

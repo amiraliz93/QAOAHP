@@ -37,7 +37,7 @@ module qaoa_system2#(
     parameter NM = 32,   // BRAM address width (2^13 = 8192 elements)
     parameter P = 64,    // Data width (64bit FP)
     parameter NBRAM=4,   // number of Bram banks
-    parameter Ni=32     // must be greater than or equal to 32.
+    parameter L_BRAM_R = 3
 	 )  
   (
     //------------------------------------------------------------------------
@@ -77,14 +77,14 @@ module qaoa_system2#(
     output reg [P-1:0] sinb,        // sin(β) parameter, for all pipelines
     output reg [P-1:0] mix_ar,        // State real part input
     output reg [P-1:0] mix_ai,        // State imaginary part input
-    output reg [Ni-1:0] mix_info,     // Control info (address, enable, etc.)
+    output reg [NM:0] mix_info,     // Control info (address, enable, etc.)
     output reg [1:0] mix_switch,     // Control info (address, enable, etc.)
     
 
     // Output from Mixer
     input [P-1:0] mix_ar_res,
     input [P-1:0] mix_ai_res,
-    input [Ni-1:0] mix_info_res,
+    input [NM:0] mix_info_res,
 
     //------------------------------------------------------------------------
     // COST HAMILTONIAN INTERFACE
@@ -121,6 +121,7 @@ localparam qa_RUNB1 = 8'h4;   // Executing mixer operation
 localparam qa_RUNC  = 8'h8;   // Executing mixer operation
 
 localparam W_REQ_BASE = NM + 8;
+localparam LATENCY_BRAM = L_BRAM_R + 1; // need to add 1, for output register inside this block
 //============================================================================
 // INTERNAL REGISTERS & SIGNALS
 //============================================================================
@@ -161,12 +162,15 @@ logic [P-1:0] n_sinb;         // Next sin(β), buffer to align the timining
 reg [P-1:0] b_cosb;         // Next cos(β), buffer to align the timining 
 reg [P-1:0] b_sinb;         // Next sin(β), buffer to align the timining 
 logic [P-1:0] n_gamma;        // Next γ
+logic [P-1:0] nb_gamma;        // Next γ
+reg [P-1:0] b_gamma; // cos gamma - γ parameter
+
 //----------------------------------------------------------------------------
 // Mixer Operation Registers
 //----------------------------------------------------------------------------
 logic [P-1:0] n_mix_ar;         // Next mixer real input
 logic [P-1:0] n_mix_ai;         // Next mixer imaginary input
-logic [Ni-1:0] n_mix_info;      // Next mixer control info
+logic [NM:0] n_mix_info;      // Next mixer control info
 logic [1:0]  n_mix_switch;
 //----------------------------------------------------------------------------
 // Cost function Operation Registers
@@ -177,19 +181,21 @@ logic [P-1:0] n_HGC;            // next Cost Hamiltonian coefficient
 //----------------------------------------------------------------------------
 // BRAM Request Pipeline (3-stage delay)
 //----------------------------------------------------------------------------
-reg [W_REQ_BASE + 2*P+4-1:0] bram_reqP[2];     // 2-stage pipeline
-reg [W_REQ_BASE + 2*P+4-1:0] bram_reqR;       // Final delayed request
-logic [W_REQ_BASE + 2*P+4-1:0] n_bram_reqQ;   // Next request (input to pipeline)
+reg [W_REQ_BASE + 3*P+4-1:0] bram_reqP[LATENCY_BRAM];     // 2-stage pipeline
+logic [W_REQ_BASE + 3*P+4-1:0] n_bram_reqQ;   // Next request (input to pipeline)
 
+logic [P-1:0] n_bram_gammaQ;
 logic [P-1:0] n_bram_cosbQ;
 logic [P-1:0] n_bram_sinbQ;
 logic [3:0] n_bram_infoAQ;
-assign n_bram_reqQ[W_REQ_BASE+:2*P+4] = {n_bram_infoAQ, n_bram_sinbQ, n_bram_cosbQ};
+assign n_bram_reqQ[W_REQ_BASE+:3*P+4] = {n_bram_infoAQ, n_bram_sinbQ, n_bram_cosbQ, n_bram_gammaQ};
 
+wire [P-1:0] bram_gammaO;
 wire [P-1:0] bram_cosbO;
 wire [P-1:0] bram_sinbO;
 wire [3:0] bram_infoAO;
-assign {bram_infoAO, bram_sinbO, bram_cosbO} = bram_reqR[W_REQ_BASE+:2*P+4];
+wire [W_REQ_BASE-1:0] bram_reqR;   
+assign {bram_infoAO, bram_sinbO, bram_cosbO, bram_gammaO, bram_reqR} = bram_reqP[LATENCY_BRAM-1];
 //----------------------------------------------------------------------------
 // BRAM Control Signals (Next Values)
 //----------------------------------------------------------------------------
@@ -230,16 +236,17 @@ always_comb begin: memorySwitchingBlock
     n_HGC = 'd0;
 
     n_f_run_Computation = f_run_Computation;
-    n_sinb = 64'h3fefbf675480d903; // 0.9921147013144779; default value
+    n_gamma = 64'h0; // 0; default value 
     n_cosb = 64'h3fc00aeb5da15be0; // 0.12533323356430426; default value  
-
+    n_sinb = 64'h3fefbf675480d903; // 0.9921147013144779; default value
+    n_bram_gammaQ = 64'h3eafbf675480d903;
     n_bram_cosbQ =  64'h3eafbf675480d903;
     n_bram_sinbQ = '0;
     n_bram_infoAQ = '0;
 
     nb_cosb = b_cosb; // keep
     nb_sinb = b_sinb; // keep
-    n_gamma = gamma;  // Keep γ
+    nb_gamma = b_gamma;  // Keep γ
 
     n_P5pointer = P5pointer;
     // read cosb, sinb, gamma, at the beginning of the first 
@@ -256,7 +263,7 @@ always_comb begin: memorySwitchingBlock
         nb_sinb = bram_data_r[3]; // store to temporal buffer
     end
     if(en_Inits_in[5]) begin 
-        n_gamma = bram_data_r[3];
+        nb_gamma = bram_data_r[3];
     end
     //------------------------------------------------------------------------
     // MAIN STATE MACHINE
@@ -376,6 +383,7 @@ always_comb begin: memorySwitchingBlock
         n_mix_ai = bram_data_r[1];
         n_sinb = bram_sinbO;
         n_cosb = bram_cosbO;
+        n_gamma = bram_gammaO;
         n_mix_info[NM-1:0] = bram_reqR[NM-1:0];
         n_mix_info[NM] = bram_infoAO[0]; // contains write enable.
 
@@ -395,10 +403,12 @@ always_comb begin: memorySwitchingBlock
         if(enCostF_in) begin  
             n_bram_cosbQ = Hr_res; // provided to mixer, pipe line of n_bram_reqQcosb consists of  bit swap  and memory access latency.
             n_bram_sinbQ = Hi_res; // provided to mixer
+            n_bram_gammaQ = gamma; // keep the old value
         end
         else begin 
             n_bram_cosbQ = b_cosb; // provided to mixer
             n_bram_sinbQ = b_sinb; // provided to mixer
+            n_bram_gammaQ = b_gamma; // provide the next value
         end
         n_bram_infoAQ[0] = enPipe_in; // enable write back the result
         n_bram_infoAQ[1] = mixSwitch_in[0]; // 0 for cost
@@ -418,7 +428,7 @@ end
 //============================================================================
 // SEQUENTIAL LOGIC - Register Updates
 //============================================================================
-
+integer i;
 always@(posedge CLK) begin
 
     //------------------------------------------------------------------------
@@ -450,6 +460,7 @@ always@(posedge CLK) begin
         cosb <= 64'h3fb999999999999a;  // cos(0.1) in FP64
         sinb <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
         gamma <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
+        b_gamma <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
 		  
         b_cosb <= 64'h3fb999999999999a;  // cos(0.1) in FP64
         b_sinb <= 64'hbfeccccccccccccd;  // -sin(0.1) in FP64
@@ -462,10 +473,9 @@ always@(posedge CLK) begin
         HGC <= 'd0;
 
         // Pipeline
-        bram_reqR <= 'd0;
-        bram_reqP[0] <= 'd0;
-        bram_reqP[1] <= 'd0;
-
+        for(i=0;i<LATENCY_BRAM;i=i+1) begin 
+            bram_reqP[i] <= '0;
+        end 
         // Debug
         testReg <= 'd0;
 
@@ -517,14 +527,16 @@ always@(posedge CLK) begin
 
         // BRAM request pipeline (3-stage delay for timing)
         bram_reqP[0] <= n_bram_reqQ;
-        bram_reqP[1] <= bram_reqP[0]; 
-        bram_reqR <= bram_reqP[1]; // Final delayed request
+        for(i=0;i<LATENCY_BRAM-1;i=i+1) begin 
+            bram_reqP[i+1] <= bram_reqP[i];
+        end 
         
         cosb <= n_cosb;
         sinb <= n_sinb;
         b_cosb <= nb_cosb;
         b_sinb <= nb_sinb;
-        gamma <= n_gamma;  // -sin(0.1) in FP64
+        gamma <= n_gamma; 
+        b_gamma <= nb_gamma;
 
         // QAOA parameters
         // Mixer interface
@@ -536,7 +548,7 @@ always@(posedge CLK) begin
         // Debug
         Status[7:0] <= n_cmd[7:0];
         Status[32] <= f_run_Computation;
-        Status[8+:NM] <= swapped_cAddr_in;
+        Status[8+:NM] <= P5pointer;
         testReg <= n_testReg;
         // en_CostF = 1, after finish cost generation. Do not use global timing, because
         // need to be disscussed more in detail.
