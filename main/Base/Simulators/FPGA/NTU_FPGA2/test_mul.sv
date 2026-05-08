@@ -1,7 +1,7 @@
 // pipelined ALU test code for 2 fixed points.
 // Amir Alizadeh & Hiroki Shibata, Tokyo Metropollitan University, created at Nottingham Trent University.
 
-module test_mul
+module Mul_FIX64
 #(
 	parameter P = 64
 )
