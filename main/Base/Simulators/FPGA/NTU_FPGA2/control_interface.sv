@@ -115,10 +115,6 @@ localparam OP_ADD_B2A    = 8'd80;  // rA = rA + rB (64-bit fixed, 2 cycles)
 localparam OP_MUL_B2A    = 8'd81;  // rA = rA * rB (24-bit fixed, 8 cycles)
 localparam OP_INC_A     = 8'd84;    // rA = rA + 1 (64-bit fixed, 1 cycles)
 
-// ---------------  Arithmetic Operations (Floating-Point)
-localparam OP_ADDFP_B2A  = 8'd82;  // rA = rA + rB (FP64, 27 cycles)
-localparam OP_MULFP_B2A  = 8'd83;  // rA = rA * rB (FP64, 24 cycles)
-
 //-------------------- Memory Operations 
 localparam OP_WRITE_T2RAM = 8'd111;  // Write rT to BRAM[rA]
 localparam OP_READ_RAM2U  = 8'd112;  // Read BRAM[rA] → rU
@@ -224,19 +220,12 @@ reg [63:0] addA, addB;        // Adder inputs
 reg [47:0] res_mulAB;         // Multiply result
 reg [63:0] res_addAB;         // Add result
 
-//---------------------- Floating-point units
-// Performs: res_addFP64 = rA2 + rB2
-// Latency: 27 clock cycles (pipelined)
-reg [63:0] res_addFP64;       // FP64 add result
-reg [63:0] res_mulFP64;       // FP64 multiply result
-
 //------------------  Wait Counter (for arithmetic latency)
 reg [7:0] c_wait;             // Current wait cycles
 reg [7:0] opa_c_wait;         // Target wait cycles
 logic [7:0] n_c_wait;         // Next wait count
 logic [7:0] n_opa_c_wait;     // Next target
 
-//============================================================================
 
 //============================================================================
 //---------------------- FIFO Interface Signals & Registers
@@ -445,19 +434,6 @@ always_comb begin: main_StateBlock
                   n_state = s_WAIT_COMP;
                   n_bwriteReg = WRITE_mul_rA;
             end
-            // OP_ADDFP_B2A: Floating-point addition (rA = rA + rB)
-            OP_ADDFP_B2A: begin
-                  n_opa_c_wait = 'd27;          // Wait 27 cycles (addFPF64 latency)
-                  n_state = s_WAIT_COMP;
-                  n_bwriteReg = WRITE_addFP64_rA;
-            end
-            
-            // OP_MULFP_B2A: Floating-point multiplication (rA = rA * rB)
-            OP_MULFP_B2A: begin
-                  n_opa_c_wait = 'd24;          // Wait 24 cycles (mulFPF64 latency)
-                  n_state = s_WAIT_COMP;
-                  n_bwriteReg = WRITE_mulFP64_rA;
-            end
             
             //--------------------------------------------------------------------
             // DATA RETRIEVAL OPERATIONS
@@ -566,17 +542,6 @@ always_comb begin: main_StateBlock
                   WRITE_A2U: begin
                         n_rU = rA;
                   end
-                  
-                  // WRITE_mulFP64_rA: rA = FP64 multiply result
-                  WRITE_mulFP64_rA: begin
-                        n_rA = res_mulFP64;
-                  end
-                  
-                  // WRITE_addFP64_rA: rA = FP64 add result
-                  WRITE_addFP64_rA: begin
-                        n_rA = res_addFP64;
-                  end
-                  
                   // WRITE_mul_rA: rA = fixed multiply result
                   WRITE_mul_rA: begin
                         n_rA = res_mulAB;
@@ -787,27 +752,6 @@ fifo1	fifoW_inst (
       .q ( tx_data_out )    // Output: byte to UART transmitter
 );
 
-
-addFPF64 addFPF64(
-      .clk(CLK),
-      .areset(RSTlv1A),      // Active-high reset
-      .a(rA),                // Input A (delayed by 2 cycles from rA)
-      .b(rB),                // Input B (delayed by 2 cycles from rB)
-      .q(res_addFP64)        // Output: A + B (available after 27 cycles)
-);
-
-//----------------------------------------------------------------------------
-// FLOATING-POINT MULTIPLIER (64-bit IEEE 754)
-//----------------------------------------------------------------------------
-// Performs: res_mulFP64 = rA4 * rB4
-// Latency: 24 clock cycles (pipelined)
-mulFPF64 mf64i(
-      .clk(CLK),
-      .areset(RSTlv1A),      // Active-high reset
-      .a(rA),                // Input A (delayed by 4 cycles from rA)
-      .b(rB),                // Input B (delayed by 4 cycles from rB)
-      .q(res_mulFP64)        // Output: A * B (available after 24 cycles)
-);
 
 //----------------------------------------------------------------------------
 // FIXED-POINT ARITHMETIC UNITS

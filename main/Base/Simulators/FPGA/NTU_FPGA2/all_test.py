@@ -10,10 +10,14 @@ import numpy as np
 import random
 import sys
 import datetime
+
+import time
+
+
 """
 Main configurable parameter blocks. 
 """
-seed = random.getrandbits(31)
+seed = 0x22a2028e#random.getrandbits(31)
 random.seed(seed)
 uart_port = 'COM3'
 # uart_port = "/dev/ttyUSB0"
@@ -22,13 +26,17 @@ baud_rate = 115200
 l_cosb = []
 l_sinb = []
 l_gamma = []
-NQ = 8
+NQ = 4
 NS = 2**NQ # number of layers
-Np = 4 # number of p layers.
-Lc = 223 + 4 # cost gen latency, memory and register latency.
-Lm = 52 + 3 + 2  # mixer latency 52 + 2 memory read + 2 write + 12 marginal latency.
+Np = 3 # number of p layers.
+L_BRAM_A = 2
+L_BRAM_D = 2
+L_BRAM_R = L_BRAM_A + L_BRAM_D + 2
+L_BRAM_W = L_BRAM_A + L_BRAM_D + 1
+
+Lc = 223 + 1 + L_BRAM_R # cost gen latency, output H latency, memory and register latency.
+Lm = 52 + L_BRAM_R + 1 + L_BRAM_W + 1 # mixer latency 52 + 2 memory read + 2 write.
 LInit = 18
-NM = 1024
 output_command_sv = "all_test_cmd.sv"
 """
 Parameter modification blocks. The following block will modify the parameter if it does not meet the constraint. 
@@ -74,7 +82,6 @@ print("Np:", Np)
 print("Lc:", Lc)
 print("Lm:", Lm)
 print("LInit:", LInit)
-print("NM:", NM)
 print("tbGenCost:", tbGenCost)
 print("tGenCost:", tGenCost)
 print("t_Mixer:", t_Mixer)
@@ -192,13 +199,16 @@ costFOP = []
 # initialize state vector 
 Lm = 0
 for i in range(NS):
-    sr = random.uniform(1, -1)
-    si = random.uniform(1, -1)
+    if i == -1:
+        sr = 1
+        si = 0
+    else:
+        sr = random.uniform(1, -1)
+        si = random.uniform(1, -1)
     com = complex(sr, si)
     Lm = Lm + sr*sr + si*si
     sv.append(com)
 
-#sv[0] = complex(1, 0)
 for i in range(NS):
     sv[i] = sv[i]/Lm
 
@@ -229,9 +239,9 @@ lcq = list(range(NQ))
 """
 Generate simulated result in this script.
 """
-
-path = f"simulation.txt"
-f = open(path, "w")
+print("a")
+simpath = f"simulation.txt"
+f = open(simpath, "w")
 f.write(f"-------------------------------------------------------\n")
 f.write(f"Version {random.random()}, {datetime.datetime.now()}\n")
 f.write(f"-------------------------------------------------------\n")
@@ -239,6 +249,8 @@ for i in range(NS):
     f.write(f"H_{i}, {H[i]}\n")
 for i in range(NS):
     f.write(f"p_{i}, {sv[i]}\n")
+
+start1 = time.perf_counter()
 
 for p in range(Np):
     # output the current state vector
@@ -249,21 +261,21 @@ for p in range(Np):
     l_sinb.append(sinb)
     l_cosb.append(cosb)
     l_gamma.append(gamma)
-    f.write(f"-------------------------------------------------------\n")
-    f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
-    f.write(f"-------------------------------------------------------\n")
+    #f.write(f"-------------------------------------------------------\n")
+    #f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
+    #f.write(f"-------------------------------------------------------\n")
     
     for i in range(NS):
         gHt = gamma*H[i]
         costFt = math.cos(gHt) + 1j*math.sin(gHt)
-        f.write(f"F_{i}: {costFt}\n")
+        #f.write(f"F_{i}: {costFt}\n")
         sv[i] = costFt*sv[i]
-    for i in range(NS):
-        f.write(f"F_{i}p_{i}: {sv[i]}\n")
+    #for i in range(NS):
+    #    f.write(f"F_{i}p_{i}: {sv[i]}\n")
 
     # apply mixer operator
-    for cq in lcq: #counter of qbit.
-        f.write(f"\n---{p}-th layer {cq}-th qbit----------------------\n\n")
+    for cq in lcq: # counter of qbit.
+        #f.write(f"\n---{p}-th layer {cq}-th qbit----------------------\n\n")
         for id2 in range(NS//2):
             sa = id2*2
             sb = id2*2 + 1
@@ -279,18 +291,18 @@ for p in range(Np):
             tsb = -1j*sinb * sv[a] + cosb * sv[b]
             sv[a] = tsa
             sv[b] = tsb
-            f.write(f"p_{a}: {tsa}\n")
-            f.write(f"p_{b}: {tsb}\n")
+            #f.write(f"p_{a}: {tsa}\n")
+            #f.write(f"p_{b}: {tsb}\n")
 
             # p'_a = cos p_a + i sin p_b
             # p'_b = i sin p_a + cos p_b
+end1 = time.perf_counter()
 
 f.write(f"\n---Results----------------------\n\n")
 for i in range(NS):
     f.write(f"Re(p_{i}), {sv[i].real}\n")
 for i in range(NS):
     f.write(f"Im(p_{i}), {sv[i].imag}\n")
-
 f.close()
 
 path = f"result.txt"
@@ -503,16 +515,18 @@ for i, b in enumerate(data_array):
             f.write(f" // {bfp64(b)}{lineend}")
 f.write("};" + lineend)
 f.close()
-
 f = open("resultpy.txt", "w")
 # send to serial interface, for physical test of the implementation.
+start2 = time.perf_counter()
+end2 = time.perf_counter()
 ser = serial.Serial(port = uart_port, baudrate = baud_rate, timeout=None)
 for b in data_array:
     if b == HOST_WAIT:
         # must wait here.
+        start2 = time.perf_counter()
+
         for i in range(1024):
             print("waiting...:")
-            time.sleep(0.2)
             ser.write(OP_MOV_S2U)
             ser.write(OP_FETCH1U)
             dr = ser.read(1)
@@ -523,9 +537,11 @@ for b in data_array:
             print("Status:", opecode, ir)
             if dr == qa_WAIT: # check the state is qa_WAIT
                 break 
+            time.sleep(0.01)
+        end2 = time.perf_counter()
 
         continue
-    
+
     fr = float("inf")
     opecode = ""
     if len(b) == 8:
@@ -543,6 +559,17 @@ for b in data_array:
     elif b == OP_FETCH1U:
         dr = ser.read(1)
         print(f"Received {1} bytes: hex={dr.hex()} int={int.from_bytes(dr, "little")}\n")
-    
-f.close()
 ser.close()
+f.close()
+f = open(simpath, "a")
+
+f.write(f"\n---------------------------------------\n")    
+f.write(f"  summary of the computation \n")    
+f.write(f"---------------------------------------\n\n")   
+dt1 =  end1 - start1
+dt2 =  end2 - start2
+f.write(f"Python time: {dt1:.6f} s\n")    
+f.write(f"PFGA time: {dt2:.6f} s\n")    
+f.write(f"python/PFGA: {dt1/dt2:.6f}\n")    
+f.close()
+
