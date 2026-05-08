@@ -1,0 +1,5 @@
+localparam logic [63:0] gamma_data = 64'h05e239a2d00b1a00;   // gamma = +0.367730747210493 rad (Q4.60)
+localparam logic [63:0] data_sample [1:0] = '{64'hf956842208f3e400, 64'h01c1fbbfe245cf00};
+// H_Q4.60 = -0.416377894450085, +0.109859227701566
+localparam logic [63:0] costF_sample [3:0] = '{64'h0fd0147ce4f20600, 64'hfd8f49efc667b700, 64'h0ffca873fe43a680, 64'h00a56d7f597bbaf8};
+// (cos, sin) Q4.60 = +0.988300788753919,+0.999184086893573,-0.152517379168346,+0.0403876280395099
