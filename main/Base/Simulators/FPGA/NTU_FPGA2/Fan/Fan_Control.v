@@ -38,7 +38,7 @@ wire        i2c_cmd_finish;
 
 I2C_Config u0 (
     .iClk           (CLK_2M), 
-    .iRst_n         (RST_N),
+    .iRST_n         (RST_N),
     .oStart         (i2c_reg_control_start),
     .oSlave_Addr    (slave_addr),
     .oWord_Addr     (reg_addr),
