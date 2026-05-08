@@ -1,5 +1,5 @@
 // https://github.com/jsagoe1/Verilog-SystemVerilog/blob/master/parameterized_barrel_shift.sv
-
+// 1400 MHz, 20260419
 module barrel_shifter #(int n=4, parameter Ni=16)(
       input CLK,
       output  [n-1:0] d_out,   
