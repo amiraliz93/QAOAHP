@@ -318,7 +318,6 @@ assign  Speed_Switch = (SW[0]==0)?13'd2000:13'd5000;
 
 wire CLK;
 wire lockedclk;
-wire clk50 = OSC_50_B4D;
 wire clk2M;
 wire RSTorg = ~CPU_RESET_n;
 wire RST;
@@ -400,8 +399,10 @@ assign LED[1] = ~o_Status[1];
 assign LED[2] = ~cnt[23];
 assign LED[3] = ~cnt[24];
 
-assign GPIO[7:0] = o_Status[15:8];
-assign GPIO[15:8] = dt[7:0];
+assign GPIO[0] = SW[0];
+assign GPIO[1] = SW[1];
+assign GPIO[2] = cnt[24];
+assign GPIO[3+:8] = o_Status[0+:8];
 
 endmodule
 
