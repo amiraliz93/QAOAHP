@@ -1,7 +1,7 @@
 // pipelined ALU test code for 2 fixed points.
 // Amir Alizadeh & Hiroki Shibata, Tokyo Metropollitan University, created at Nottingham Trent University.
 
-module Mul_FIX64
+module Mul_64_FixedP
 #(
 	parameter P = 64
 )
@@ -27,12 +27,12 @@ reg signed [P-1:0] b_[0:REDUN];
 
 
 // how to check --> ax_clock=0, ayscan_in_clock = 0, az_clock = 0
-(* preserve, dont_merge *) reg signed [35:0] mul_p [0:NC-1][0:NC-1]; // pipline stage (in DSP)
-(* preserve, dont_merge *) reg signed [35:0] prod_s1 [0:NC-1][0:NC-1]; // output stage (inside DSP)
+(* preserve, dont_merge *) reg [35:0] mul_p [0:NC-1][0:NC-1]; // pipline stage (in DSP)
+(* preserve, dont_merge *) reg [35:0] prod_s1 [0:NC-1][0:NC-1]; // output stage (inside DSP)
 // buffer reg 
-(* preserve, dont_merge *) reg signed [35:0]   prod_s2 [0:NC-1][0:NC-1];
-wire signed [CW-1:0] ac [0: NC-1]; // ac[i] = is 1D array of 4 chunks
-wire signed [CW-1:0] bc [0:NC-1]; // ac[0], ac[1], ac[2], ac[3] each is [17:0]
+(* preserve, dont_merge *) reg [35:0]   prod_s2 [0:NC-1][0:NC-1];
+wire  [CW-1:0] ac [0: NC-1]; // ac[i] = is 1D array of 4 chunks
+wire [CW-1:0] bc [0:NC-1]; // ac[0], ac[1], ac[2], ac[3] each is [17:0]
 
 
 
@@ -61,12 +61,16 @@ generate
 		
 	if (ci == NC-1) begin
 		// sign-extend the top chunk
-		assign ac[ci] = {{(CW-WID){a_[REDUN][HI-1]}}, a_[REDUN][HI-1:LO]}; //  slices a_[REDUN] into 4 chunk ac[0..3]
-		assign bc[ci] = {{(CW-WID){b_[REDUN][HI-1]}}, b_[REDUN][HI-1:LO]};
+		//assign ac[ci] = {{(CW-WID){a_[REDUN][HI-1]}}, a_[REDUN][HI-1:LO]}; //  slices a_[REDUN] into 4 chunk ac[0..3]
+		//assign bc[ci] = {{(CW-WID){b_[REDUN][HI-1]}}, b_[REDUN][HI-1:LO]};
+        assign ac[ci] = {{(CW-WID){1'b0}}, a_[REDUN][HI-1:LO]};
+        assign bc[ci] = {{(CW-WID){1'b0}}, b_[REDUN][HI-1:LO]};
 		end else begin
 		// zero-extend lower chunks
-		assign ac[ci] = {{(CW-WID){1'b0}}, a_[REDUN][HI-1:LO]};
-		assign bc[ci] = {{(CW-WID){1'b0}}, b_[REDUN][HI-1:LO]};
+		//assign ac[ci] = {{(CW-WID){1'b0}}, a_[REDUN][HI-1:LO]};
+		//assign bc[ci] = {{(CW-WID){1'b0}}, b_[REDUN][HI-1:LO]};
+        assign ac[ci] = a_[REDUN][HI-1:LO];
+        assign bc[ci] = b_[REDUN][HI-1:LO];
 		end
 	end
 
@@ -76,14 +80,14 @@ endgenerate
 /////////////////////////////////////////////////////
 // -----stage 1: 16 parallel 18x18 multiplies in DSPs -----
 // Per-DSP input registers, holding the chunk directly
-(* preserve, dont_merge *) reg signed [CW-1:0] ac_dsp [0:NC-1][0:NC-1];
-(* preserve, dont_merge *) reg signed [CW-1:0] bc_dsp [0:NC-1][0:NC-1];
+(* preserve, dont_merge *) reg  [CW-1:0] ac_dsp [0:NC-1][0:NC-1];
+(* preserve, dont_merge *) reg  [CW-1:0] bc_dsp [0:NC-1][0:NC-1];
 
 
 // prod[i][j] = ac[i] * bc[j] - Each is an 18×18 multiply → 36-bit result.
 //(* preserve, dont_merge *) - can be add before syntax of reg to prevent optimization and merging by synthesis
 // Replicate each cunk into 16 registers. "ac_dssp" = 4x4 array of 18 bits
-reg signed [35:0] prod_buf [0:NC-1][0:NC-1]; // buffer reg for prod_s1, to prevent long wires from DSP to next stage
+reg [35:0] prod_buf [0:NC-1][0:NC-1]; // buffer reg for prod_s1, to prevent long wires from DSP to next stage
 
 always @(posedge CLK) begin
 // Replicate to 16 copies (synthesis will place each near its DSP)
@@ -114,7 +118,7 @@ end
 localparam AW2 = 128;
 
 reg signed [AW2-1:0] result_s4;
-reg signed [37:0] diag [0:6];   // d = 0..6, 7 diagonals
+reg [37:0] diag [0:6];   // d = 0..6, 7 diagonals
 
 always @(posedge CLK) begin
     diag[0] <= prod_s1[0][0];
@@ -125,36 +129,49 @@ always @(posedge CLK) begin
     diag[5] <= prod_s1[2][3] + prod_s1[3][2];
     diag[6] <= prod_s1[3][3];
 end
-reg signed [127:0] sum_e_lo, sum_e_hi;   // even diagonals split
-reg signed [127:0] sum_o_lo, sum_o_hi;   // odd diagonals split
+reg  [127:0] sum_e_lo, sum_e_hi;   // even diagonals split
+reg [127:0] sum_o_lo, sum_o_hi;   // odd diagonals split
 
 always @(posedge CLK) begin
     // Even diagonals (offsets 0, 36, 72, 108)
-    sum_e_lo <= ($signed(diag[0]) <<<   0)
-              + ($signed(diag[2]) <<<  36);
-    sum_e_hi <= ($signed(diag[4]) <<<  72)
-              + ($signed(diag[6]) <<< 108);
+    sum_e_lo <= ((diag[0]) <<<   0)
+              + ((diag[2]) <<<  36);
+    sum_e_hi <= ((diag[4]) <<<  72)
+              + ((diag[6]) <<< 108);
 
     // Odd diagonals (offsets 18, 54, 90)
-    sum_o_lo <= ($signed(diag[1]) <<<  18)
-              + ($signed(diag[3]) <<<  54);
-    sum_o_hi <=  $signed(diag[5]) <<<  90;   // only one term, just place it
+    sum_o_lo <= ((diag[1]) <<<  18)
+              + ((diag[3]) <<<  54);
+    sum_o_hi <=  (diag[5]) <<<  90;   // only one term, just place it
 end
 
 // ---- Stage B2: combine even and odd halves ----
-reg signed [127:0] sum_even, sum_odd;
+reg [127:0] sum_even, sum_odd;
+reg signed [127:0] result_q;
+// ------- Sign correction (Baugh-Wooley) -----
+localparam CORR_LAT = 6;
+reg [64:0] corr_pre [0: CORR_LAT-1];
+reg [127:0] correction_pos;
+
+
+// sign correction: 
+//if a_[REDUN] is negative, add b_[REDUN] shifted by 64; if b_[REDUN] is negative, add a_[REDUN] shifted by 64
+always @(posedge CLK) begin 
+	corr_pre[0] <= (a_[REDUN][P-1] ? {1'b0, b_[REDUN]} : 65'd0)
+				+ (b_[REDUN][P-1] ? {1'b0, a_[REDUN]} : 65'd0);
+	for (int k=0; k< CORR_LAT-1; k++) begin
+		corr_pre[k+1] <= corr_pre[k];
+	end
+	correction_pos <= {corr_pre[CORR_LAT-1][63:0], 64'b0};
+end
+
 
 always @(posedge CLK) begin
     sum_even <= sum_e_lo + sum_e_hi;
     sum_odd  <= sum_o_lo + sum_o_hi;
-   
+    result_q <= sum_even + sum_odd - correction_pos;
 end
 
-// ---- Stage C: final 128-bit CPA (unchanged) ----
-reg signed [127:0] result_q;
-always @(posedge CLK) begin
-    result_q <= sum_even + sum_odd;
-end
 assign q = result_q;
 endmodule	
 
