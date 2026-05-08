@@ -1,0 +1,359 @@
+Analysis & Elaboration report for Golden_TOP
+Fri May  8 12:25:50 2026
+Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Standard Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Analysis & Elaboration Summary
+  3. Parallel Compilation
+  4. Parameter Settings for User Entity Instance: Top-level Entity: |mul_slice
+  5. Analysis & Elaboration Settings
+  6. Analysis & Elaboration Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 2025  Altera Corporation. All rights reserved.
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and any partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, the Altera Quartus Prime License Agreement,
+the Altera IP License Agreement, or other applicable license
+agreement, including, without limitation, that your use is for
+the sole purpose of programming logic devices manufactured by
+Altera and sold by Altera or its authorized distributors.  Please
+refer to the Altera Software License Subscription Agreements 
+on the Quartus Prime software download page.
+
+
+
++-------------------------------------------------------------------------------------+
+; Analysis & Elaboration Summary                                                      ;
++-------------------------------+-----------------------------------------------------+
+; Analysis & Elaboration Status ; Successful - Fri May  8 12:25:49 2026               ;
+; Quartus Prime Version         ; 25.1std.0 Build 1129 10/21/2025 SC Standard Edition ;
+; Revision Name                 ; Golden_TOP                                          ;
+; Top-level Entity Name         ; mul_slice                                           ;
+; Family                        ; Stratix V                                           ;
+; Logic utilization (in ALMs)   ; N/A until Partition Merge                           ;
+; Total registers               ; N/A until Partition Merge                           ;
+; Total pins                    ; N/A until Partition Merge                           ;
+; Total virtual pins            ; N/A until Partition Merge                           ;
+; Total block memory bits       ; N/A until Partition Merge                           ;
+; Total PLLs                    ; N/A until Partition Merge                           ;
+; Total DLLs                    ; N/A until Partition Merge                           ;
++-------------------------------+-----------------------------------------------------+
+
+
++------------------------------------------+
+; Parallel Compilation                     ;
++----------------------------+-------------+
+; Processors                 ; Number      ;
++----------------------------+-------------+
+; Number detected on machine ; 8           ;
+; Maximum allowed            ; 4           ;
+;                            ;             ;
+; Average used               ; 1.00        ;
+; Maximum used               ; 1           ;
+;                            ;             ;
+; Usage by Processor         ; % Time Used ;
+;     Processor 1            ; 100.0%      ;
++----------------------------+-------------+
+
+
++---------------------------------------------------------------------------+
+; Parameter Settings for User Entity Instance: Top-level Entity: |mul_slice ;
++----------------+-------+--------------------------------------------------+
+; Parameter Name ; Value ; Type                                             ;
++----------------+-------+--------------------------------------------------+
+; P              ; 64    ; Signed Integer                                   ;
+; IA             ; 4     ; Signed Integer                                   ;
+; IB             ; 4     ; Signed Integer                                   ;
+; IOUT           ; 4     ; Signed Integer                                   ;
++----------------+-------+--------------------------------------------------+
+Note: In order to hide this table in the UI and the text report file, please set the "Show Parameter Settings in Synthesis Report" option in "Analysis and Synthesis Settings -> More Settings" to "Off".
+
+
++---------------------------------------------------------------------------------------------------------------------------+
+; Analysis & Elaboration Settings                                                                                           ;
++---------------------------------------------------------------------------------+--------------------+--------------------+
+; Option                                                                          ; Setting            ; Default Value      ;
++---------------------------------------------------------------------------------+--------------------+--------------------+
+; Device                                                                          ; 5SGXEABN3F45I3YY   ;                    ;
+; Top-level entity name                                                           ; mul_slice          ; Golden_TOP         ;
+; Family name                                                                     ; Stratix V          ; Cyclone V          ;
+; Maximum processors allowed for parallel compilation                             ; All                ;                    ;
+; Verilog Show LMF Mapping Messages                                               ; Off                ;                    ;
+; Verilog Version                                                                 ; SystemVerilog_2005 ; Verilog_2001       ;
+; Use smart compilation                                                           ; Off                ; Off                ;
+; Enable parallel Assembler and Timing Analyzer during compilation                ; On                 ; On                 ;
+; Enable compact report table                                                     ; Off                ; Off                ;
+; Restructure Multiplexers                                                        ; Auto               ; Auto               ;
+; MLAB Add Timing Constraints For Mixed-Port Feed-Through Mode Setting Don't Care ; Off                ; Off                ;
+; Create Debugging Nodes for IP Cores                                             ; Off                ; Off                ;
+; Preserve fewer node names                                                       ; On                 ; On                 ;
+; Intel FPGA IP Evaluation Mode                                                   ; Enable             ; Enable             ;
+; VHDL Version                                                                    ; VHDL_1993          ; VHDL_1993          ;
+; State Machine Processing                                                        ; Auto               ; Auto               ;
+; Safe State Machine                                                              ; Off                ; Off                ;
+; Extract Verilog State Machines                                                  ; On                 ; On                 ;
+; Extract VHDL State Machines                                                     ; On                 ; On                 ;
+; Ignore Verilog initial constructs                                               ; Off                ; Off                ;
+; Iteration limit for constant Verilog loops                                      ; 5000               ; 5000               ;
+; Iteration limit for non-constant Verilog loops                                  ; 250                ; 250                ;
+; Add Pass-Through Logic to Inferred RAMs                                         ; On                 ; On                 ;
+; Infer RAMs from Raw Logic                                                       ; On                 ; On                 ;
+; Parallel Synthesis                                                              ; On                 ; On                 ;
+; DSP Block Balancing                                                             ; Auto               ; Auto               ;
+; NOT Gate Push-Back                                                              ; On                 ; On                 ;
+; Power-Up Don't Care                                                             ; On                 ; On                 ;
+; Remove Redundant Logic Cells                                                    ; Off                ; Off                ;
+; Remove Duplicate Registers                                                      ; On                 ; On                 ;
+; Ignore CARRY Buffers                                                            ; Off                ; Off                ;
+; Ignore CASCADE Buffers                                                          ; Off                ; Off                ;
+; Ignore GLOBAL Buffers                                                           ; Off                ; Off                ;
+; Ignore ROW GLOBAL Buffers                                                       ; Off                ; Off                ;
+; Ignore LCELL Buffers                                                            ; Off                ; Off                ;
+; Ignore SOFT Buffers                                                             ; On                 ; On                 ;
+; Limit AHDL Integers to 32 Bits                                                  ; Off                ; Off                ;
+; Optimization Technique                                                          ; Balanced           ; Balanced           ;
+; Carry Chain Length                                                              ; 70                 ; 70                 ;
+; Auto Carry Chains                                                               ; On                 ; On                 ;
+; Auto Open-Drain Pins                                                            ; On                 ; On                 ;
+; Perform WYSIWYG Primitive Resynthesis                                           ; Off                ; Off                ;
+; Auto ROM Replacement                                                            ; On                 ; On                 ;
+; Auto RAM Replacement                                                            ; On                 ; On                 ;
+; Auto DSP Block Replacement                                                      ; On                 ; On                 ;
+; Auto Shift Register Replacement                                                 ; Auto               ; Auto               ;
+; Allow Shift Register Merging across Hierarchies                                 ; Auto               ; Auto               ;
+; Auto Clock Enable Replacement                                                   ; On                 ; On                 ;
+; Strict RAM Replacement                                                          ; Off                ; Off                ;
+; Allow Synchronous Control Signals                                               ; On                 ; On                 ;
+; Force Use of Synchronous Clear Signals                                          ; Off                ; Off                ;
+; Auto Resource Sharing                                                           ; Off                ; Off                ;
+; Allow Any RAM Size For Recognition                                              ; Off                ; Off                ;
+; Allow Any ROM Size For Recognition                                              ; Off                ; Off                ;
+; Allow Any Shift Register Size For Recognition                                   ; Off                ; Off                ;
+; Use LogicLock Constraints during Resource Balancing                             ; On                 ; On                 ;
+; Ignore translate_off and synthesis_off directives                               ; Off                ; Off                ;
+; Timing-Driven Synthesis                                                         ; On                 ; On                 ;
+; Report Parameter Settings                                                       ; On                 ; On                 ;
+; Report Source Assignments                                                       ; On                 ; On                 ;
+; Report Connectivity Checks                                                      ; On                 ; On                 ;
+; Ignore Maximum Fan-Out Assignments                                              ; Off                ; Off                ;
+; Synchronization Register Chain Length                                           ; 3                  ; 3                  ;
+; Power Optimization During Synthesis                                             ; Normal compilation ; Normal compilation ;
+; HDL message level                                                               ; Level2             ; Level2             ;
+; Suppress Register Optimization Related Messages                                 ; Off                ; Off                ;
+; Number of Removed Registers Reported in Synthesis Report                        ; 5000               ; 5000               ;
+; Number of Swept Nodes Reported in Synthesis Report                              ; 5000               ; 5000               ;
+; Number of Inverted Registers Reported in Synthesis Report                       ; 100                ; 100                ;
+; Clock MUX Protection                                                            ; On                 ; On                 ;
+; Auto Gated Clock Conversion                                                     ; Off                ; Off                ;
+; Block Design Naming                                                             ; Auto               ; Auto               ;
+; SDC constraint protection                                                       ; Off                ; Off                ;
+; Synthesis Effort                                                                ; Auto               ; Auto               ;
+; Shift Register Replacement - Allow Asynchronous Clear Signal                    ; On                 ; On                 ;
+; Pre-Mapping Resynthesis Optimization                                            ; Off                ; Off                ;
+; Analysis & Synthesis Message Level                                              ; Medium             ; Medium             ;
+; Disable Register Merging Across Hierarchies                                     ; Auto               ; Auto               ;
+; Resource Aware Inference For Block RAM                                          ; On                 ; On                 ;
+; Automatic Parallel Synthesis                                                    ; On                 ; On                 ;
+; Partial Reconfiguration Bitstream ID                                            ; Off                ; Off                ;
++---------------------------------------------------------------------------------+--------------------+--------------------+
+
+
++---------------------------------+
+; Analysis & Elaboration Messages ;
++---------------------------------+
+Info: *******************************************************************
+Info: Running Quartus Prime Analysis & Elaboration
+    Info: Version 25.1std.0 Build 1129 10/21/2025 SC Standard Edition
+    Info: Processing started: Fri May  8 12:25:34 2026
+Info: Command: quartus_map --read_settings_files=on --write_settings_files=off Golden_TOP -c Golden_TOP --analysis_and_elaboration
+Info (20030): Parallel compilation is enabled and will use 4 of the 4 processors detected
+Info (12021): Found 1 design units, including 1 entities, in source file mul_64_fixedp.sv
+    Info (12023): Found entity 1: Mul_64_FixedP File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Mul_64_FixedP.sv Line: 4
+Info (12021): Found 1 design units, including 1 entities, in source file mul_slice_tb.sv
+    Info (12023): Found entity 1: mul_slice_tb File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mul_slice_tb.sv Line: 4
+Info (12021): Found 1 design units, including 1 entities, in source file mul_slice.sv
+    Info (12023): Found entity 1: mul_slice File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mul_slice.sv Line: 5
+Info (12021): Found 1 design units, including 1 entities, in source file cordicr/synthesis/cordicr.v
+    Info (12023): Found entity 1: cordicR File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/cordicR.v Line: 6
+Info (12021): Found 1 design units, including 0 entities, in source file cordicr/synthesis/submodules/dspba_library_package.vhd
+    Info (12022): Found design unit 1: dspba_library_package (cordicr) File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library_package.vhd Line: 17
+Info (12021): Found 6 design units, including 3 entities, in source file cordicr/synthesis/submodules/dspba_library.vhd
+    Info (12022): Found design unit 1: dspba_delay-delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd Line: 34
+    Info (12022): Found design unit 2: dspba_sync_reg-sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd Line: 117
+    Info (12022): Found design unit 3: dspba_pipe-rtl File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd Line: 356
+    Info (12023): Found entity 1: dspba_delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd Line: 18
+    Info (12023): Found entity 2: dspba_sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd Line: 93
+    Info (12023): Found entity 3: dspba_pipe File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/dspba_library.vhd Line: 343
+Info (12021): Found 2 design units, including 1 entities, in source file cordicr/synthesis/submodules/cordicr_cordic_0.vhd
+    Info (12022): Found design unit 1: cordicR_CORDIC_0-normal File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/cordicR_CORDIC_0.vhd Line: 46
+    Info (12023): Found entity 1: cordicR_CORDIC_0 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/synthesis/submodules/cordicR_CORDIC_0.vhd Line: 36
+Info (12021): Found 2 design units, including 2 entities, in source file bit_swap.sv
+    Info (12023): Found entity 1: bit_swap File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/bit_swap.sv Line: 11
+    Info (12023): Found entity 2: bit_swapper_tb File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/bit_swap.sv Line: 69
+Info (12021): Found 1 design units, including 1 entities, in source file control_interface.sv
+    Info (12023): Found entity 1: control_interface File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/control_interface.sv Line: 19
+Info (12021): Found 2 design units, including 2 entities, in source file barrel_shifter.sv
+    Info (12023): Found entity 1: barrel_shifter File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/barrel_shifter.sv Line: 3
+    Info (12023): Found entity 2: barrel_shifter_tb File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/barrel_shifter.sv Line: 40
+Info (12021): Found 1 design units, including 1 entities, in source file mixer2.sv
+    Info (12023): Found entity 1: mixer2 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2.sv Line: 6
+Info (12021): Found 1 design units, including 1 entities, in source file golden_top3.v
+    Info (12023): Found entity 1: Golden_TOP3 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Golden_TOP3.v Line: 42
+Info (12021): Found 1 design units, including 1 entities, in source file gen_cost.sv
+    Info (12023): Found entity 1: gen_cost File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/gen_cost.sv Line: 5
+Warning (12019): Can't analyze file -- file my_bram.sv is missing
+Info (12021): Found 1 design units, including 1 entities, in source file top1_uart.sv
+    Info (12023): Found entity 1: top1_uart File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/top1_uart.sv Line: 1
+Info (12021): Found 1 design units, including 1 entities, in source file top1.sv
+    Info (12023): Found entity 1: top1 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/top1.sv Line: 1
+Info (12021): Found 1 design units, including 1 entities, in source file qaoa_system2.sv
+    Info (12023): Found entity 1: qaoa_system2 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/qaoa_system2.sv Line: 33
+Warning (12019): Can't analyze file -- file alutest.v is missing
+Warning (12019): Can't analyze file -- file alutest_tb.v is missing
+Warning (12019): Can't analyze file -- file Golden_TOP2.v is missing
+Info (12021): Found 1 design units, including 1 entities, in source file transmitter.v
+    Info (12023): Found entity 1: transmitter File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/transmitter.v Line: 7
+Info (12021): Found 1 design units, including 1 entities, in source file receiver.v
+    Info (12023): Found entity 1: receiver File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/receiver.v Line: 9
+Info (12021): Found 1 design units, including 1 entities, in source file fan/i2c_config.v
+    Info (12023): Found entity 1: I2C_Config File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fan/I2C_Config.v Line: 1
+Info (12021): Found 1 design units, including 1 entities, in source file fan/i2c_bus_controller.v
+    Info (12023): Found entity 1: I2C_Bus_Controller File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fan/I2C_Bus_Controller.v Line: 48
+Info (12021): Found 1 design units, including 1 entities, in source file fan/fan_control.v
+    Info (12023): Found entity 1: Fan_Control File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fan/Fan_Control.v Line: 1
+Info (12021): Found 1 design units, including 1 entities, in source file golden_top.v
+    Info (12023): Found entity 1: Golden_TOP File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Golden_TOP.v Line: 42
+Info (12021): Found 1 design units, including 1 entities, in source file fifo1.v
+    Info (12023): Found entity 1: fifo1 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/fifo1.v Line: 40
+Info (12021): Found 1 design units, including 1 entities, in source file pll2.v
+    Info (12023): Found entity 1: pll2 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2.v Line: 8
+Info (12021): Found 1 design units, including 1 entities, in source file pll2/pll2_0002.v
+    Info (12023): Found entity 1: pll2_0002 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2/pll2_0002.v Line: 2
+Info (12021): Found 1 design units, including 1 entities, in source file addfix8.v
+    Info (12023): Found entity 1: addfix8 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addfix8.v Line: 40
+Info (12021): Found 1 design units, including 1 entities, in source file mulfpf64.v
+    Info (12023): Found entity 1: mulFPF64 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64.v Line: 8
+Info (12021): Found 1 design units, including 0 entities, in source file mulfpf64/dspba_library_package.vhd
+    Info (12022): Found design unit 1: dspba_library_package (mulfpf64) File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/dspba_library_package.vhd Line: 17
+Info (12021): Found 6 design units, including 3 entities, in source file mulfpf64/dspba_library.vhd
+    Info (12022): Found design unit 1: dspba_delay-delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/dspba_library.vhd Line: 34
+    Info (12022): Found design unit 2: dspba_sync_reg-sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/dspba_library.vhd Line: 117
+    Info (12022): Found design unit 3: dspba_pipe-rtl File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/dspba_library.vhd Line: 356
+    Info (12023): Found entity 1: dspba_delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/dspba_library.vhd Line: 18
+    Info (12023): Found entity 2: dspba_sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/dspba_library.vhd Line: 93
+    Info (12023): Found entity 3: dspba_pipe File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/dspba_library.vhd Line: 343
+Info (12021): Found 2 design units, including 1 entities, in source file mulfpf64/mulfpf64_0002.vhd
+    Info (12022): Found design unit 1: mulFPF64_0002-normal File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/mulFPF64_0002.vhd Line: 46
+    Info (12023): Found entity 1: mulFPF64_0002 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64/mulFPF64_0002.vhd Line: 36
+Info (12021): Found 1 design units, including 1 entities, in source file mulfix8.v
+    Info (12023): Found entity 1: mulfix8 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulfix8.v Line: 40
+Info (12021): Found 1 design units, including 1 entities, in source file addfpf64.v
+    Info (12023): Found entity 1: addFPF64 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64.v Line: 8
+Info (12021): Found 1 design units, including 0 entities, in source file addfpf64/dspba_library_package.vhd
+    Info (12022): Found design unit 1: dspba_library_package (addfpf64) File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/dspba_library_package.vhd Line: 17
+Info (12021): Found 6 design units, including 3 entities, in source file addfpf64/dspba_library.vhd
+    Info (12022): Found design unit 1: dspba_delay-delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/dspba_library.vhd Line: 34
+    Info (12022): Found design unit 2: dspba_sync_reg-sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/dspba_library.vhd Line: 117
+    Info (12022): Found design unit 3: dspba_pipe-rtl File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/dspba_library.vhd Line: 356
+    Info (12023): Found entity 1: dspba_delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/dspba_library.vhd Line: 18
+    Info (12023): Found entity 2: dspba_sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/dspba_library.vhd Line: 93
+    Info (12023): Found entity 3: dspba_pipe File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/dspba_library.vhd Line: 343
+Info (12021): Found 2 design units, including 1 entities, in source file addfpf64/addfpf64_0002.vhd
+    Info (12022): Found design unit 1: addFPF64_0002-normal File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/addFPF64_0002.vhd Line: 46
+    Info (12023): Found entity 1: addFPF64_0002 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64/addFPF64_0002.vhd Line: 36
+Info (12021): Found 1 design units, including 1 entities, in source file ram.v
+    Info (12023): Found entity 1: ram File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/ram.v Line: 40
+Info (12021): Found 1 design units, including 1 entities, in source file fp2fix53.v
+    Info (12023): Found entity 1: FP2Fix53 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53.v Line: 8
+Info (12021): Found 1 design units, including 0 entities, in source file fp2fix53/dspba_library_package.vhd
+    Info (12022): Found design unit 1: dspba_library_package (fp2fix53) File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/dspba_library_package.vhd Line: 17
+Info (12021): Found 6 design units, including 3 entities, in source file fp2fix53/dspba_library.vhd
+    Info (12022): Found design unit 1: dspba_delay-delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/dspba_library.vhd Line: 34
+    Info (12022): Found design unit 2: dspba_sync_reg-sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/dspba_library.vhd Line: 117
+    Info (12022): Found design unit 3: dspba_pipe-rtl File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/dspba_library.vhd Line: 356
+    Info (12023): Found entity 1: dspba_delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/dspba_library.vhd Line: 18
+    Info (12023): Found entity 2: dspba_sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/dspba_library.vhd Line: 93
+    Info (12023): Found entity 3: dspba_pipe File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/dspba_library.vhd Line: 343
+Info (12021): Found 2 design units, including 1 entities, in source file fp2fix53/fp2fix53_0002.vhd
+    Info (12022): Found design unit 1: FP2Fix53_0002-normal File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/FP2Fix53_0002.vhd Line: 45
+    Info (12023): Found entity 1: FP2Fix53_0002 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53/FP2Fix53_0002.vhd Line: 36
+Info (12021): Found 1 design units, including 1 entities, in source file fix53tofp64.v
+    Info (12023): Found entity 1: Fix53toFP64 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64.v Line: 8
+Info (12021): Found 1 design units, including 0 entities, in source file fix53tofp64/dspba_library_package.vhd
+    Info (12022): Found design unit 1: dspba_library_package (fix53tofp64) File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/dspba_library_package.vhd Line: 17
+Info (12021): Found 6 design units, including 3 entities, in source file fix53tofp64/dspba_library.vhd
+    Info (12022): Found design unit 1: dspba_delay-delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/dspba_library.vhd Line: 34
+    Info (12022): Found design unit 2: dspba_sync_reg-sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/dspba_library.vhd Line: 117
+    Info (12022): Found design unit 3: dspba_pipe-rtl File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/dspba_library.vhd Line: 356
+    Info (12023): Found entity 1: dspba_delay File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/dspba_library.vhd Line: 18
+    Info (12023): Found entity 2: dspba_sync_reg File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/dspba_library.vhd Line: 93
+    Info (12023): Found entity 3: dspba_pipe File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/dspba_library.vhd Line: 343
+Info (12021): Found 2 design units, including 1 entities, in source file fix53tofp64/fix53tofp64_0002.vhd
+    Info (12022): Found design unit 1: Fix53toFP64_0002-normal File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/Fix53toFP64_0002.vhd Line: 45
+    Info (12023): Found entity 1: Fix53toFP64_0002 File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64/Fix53toFP64_0002.vhd Line: 36
+Warning (10222): Verilog HDL Parameter Declaration warning at mixer2.sv(24): Parameter Declaration in module "mixer2" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2.sv Line: 24
+Warning (10222): Verilog HDL Parameter Declaration warning at mixer2.sv(25): Parameter Declaration in module "mixer2" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2.sv Line: 25
+Warning (10222): Verilog HDL Parameter Declaration warning at mixer2.sv(26): Parameter Declaration in module "mixer2" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2.sv Line: 26
+Critical Warning (10846): Verilog HDL Instantiation warning at Golden_TOP3.v(331): instance has no name File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Golden_TOP3.v Line: 331
+Warning (10222): Verilog HDL Parameter Declaration warning at receiver.v(19): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/receiver.v Line: 19
+Warning (10222): Verilog HDL Parameter Declaration warning at receiver.v(20): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/receiver.v Line: 20
+Warning (10222): Verilog HDL Parameter Declaration warning at receiver.v(21): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/receiver.v Line: 21
+Warning (10222): Verilog HDL Parameter Declaration warning at receiver.v(22): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/receiver.v Line: 22
+Warning (10222): Verilog HDL Parameter Declaration warning at receiver.v(23): Parameter Declaration in module "receiver" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/receiver.v Line: 23
+Warning (10222): Verilog HDL Parameter Declaration warning at transmitter.v(31): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/transmitter.v Line: 31
+Warning (10222): Verilog HDL Parameter Declaration warning at transmitter.v(32): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/transmitter.v Line: 32
+Warning (10222): Verilog HDL Parameter Declaration warning at transmitter.v(33): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/transmitter.v Line: 33
+Warning (10222): Verilog HDL Parameter Declaration warning at transmitter.v(34): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/transmitter.v Line: 34
+Warning (10222): Verilog HDL Parameter Declaration warning at transmitter.v(35): Parameter Declaration in module "transmitter" behaves as a Local Parameter Declaration because the module has a Module Parameter Port List File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/transmitter.v Line: 35
+Critical Warning (10846): Verilog HDL Instantiation warning at Golden_TOP.v(330): instance has no name File: C:/new_fpga/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Golden_TOP.v Line: 330
+Info (12127): Elaborating entity "mul_slice" for the top level hierarchy
+Warning (20013): Ignored 16 assignments for entity "FP2Fix53" -- entity does not exist in design
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_NAME altera_fp_functions -entity FP2Fix53 -sip FP2Fix53.sip -library lib_FP2Fix53 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_VERSION 25.1 -entity FP2Fix53 -sip FP2Fix53.sip -library lib_FP2Fix53 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_ENV mwpim -entity FP2Fix53 -sip FP2Fix53.sip -library lib_FP2Fix53 was ignored
+Warning (20013): Ignored 65 assignments for entity "FP2Fix53_0002" -- entity does not exist in design
+Warning (20013): Ignored 16 assignments for entity "Fix53toFP64" -- entity does not exist in design
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_NAME altera_fp_functions -entity Fix53toFP64 -sip Fix53toFP64.sip -library lib_Fix53toFP64 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_VERSION 25.1 -entity Fix53toFP64 -sip Fix53toFP64.sip -library lib_Fix53toFP64 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_ENV mwpim -entity Fix53toFP64 -sip Fix53toFP64.sip -library lib_Fix53toFP64 was ignored
+Warning (20013): Ignored 65 assignments for entity "Fix53toFP64_0002" -- entity does not exist in design
+Warning (20013): Ignored 16 assignments for entity "addFPF64" -- entity does not exist in design
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_NAME altera_fp_functions -entity addFPF64 -sip addFPF64.sip -library lib_addFPF64 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_VERSION 25.1 -entity addFPF64 -sip addFPF64.sip -library lib_addFPF64 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_ENV mwpim -entity addFPF64 -sip addFPF64.sip -library lib_addFPF64 was ignored
+Warning (20013): Ignored 65 assignments for entity "addFPF64_0002" -- entity does not exist in design
+Warning (20013): Ignored 22 assignments for entity "cordicR" -- entity does not exist in design
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_NAME Qsys -entity cordicR -sip cordicR/simulation/cordicR.sip -library lib_cordicR was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_VERSION 25.1 -entity cordicR -sip cordicR/simulation/cordicR.sip -library lib_cordicR was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_ENV Qsys -entity cordicR -sip cordicR/simulation/cordicR.sip -library lib_cordicR was ignored
+Warning (20013): Ignored 38 assignments for entity "cordicR_CORDIC_0" -- entity does not exist in design
+Warning (20013): Ignored 16 assignments for entity "mulFPF64" -- entity does not exist in design
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_NAME altera_fp_functions -entity mulFPF64 -sip mulFPF64.sip -library lib_mulFPF64 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_VERSION 25.1 -entity mulFPF64 -sip mulFPF64.sip -library lib_mulFPF64 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_ENV mwpim -entity mulFPF64 -sip mulFPF64.sip -library lib_mulFPF64 was ignored
+Warning (20013): Ignored 65 assignments for entity "mulFPF64_0002" -- entity does not exist in design
+Warning (20013): Ignored 16 assignments for entity "pll2" -- entity does not exist in design
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_NAME altera_pll -entity pll2 -sip pll2.sip -library lib_pll2 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_VERSION 25.1 -entity pll2 -sip pll2.sip -library lib_pll2 was ignored
+    Warning (20014): Assignment for entity set_global_assignment -name IP_TOOL_ENV mwpim -entity pll2 -sip pll2.sip -library lib_pll2 was ignored
+Warning (20013): Ignored 318 assignments for entity "pll2_0002" -- entity does not exist in design
+Info: Quartus Prime Analysis & Elaboration was successful. 0 errors, 49 warnings
+    Info: Peak virtual memory: 4967 megabytes
+    Info: Processing ended: Fri May  8 12:25:50 2026
+    Info: Elapsed time: 00:00:16
+    Info: Total CPU time (on all processors): 00:00:26
+
+
