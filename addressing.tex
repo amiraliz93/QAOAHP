@@ -76,7 +76,7 @@
 \maketitle
 In this document we describe components of QAOA system mathematically, and introduce a novel parallelization algorithm for QAOA system. I, Shibata, supposes further discussion to improve and expand the QAOA system needs basic symbols and formulas to define it. Therefore, I wrote an article here. Please tell me any suggestion easily.
 Terminologies may be incorrect.
-\begin{XA}
+
 \section{Notations}
 For \(n\in\sN\), 
 \begin{equation}
@@ -137,7 +137,7 @@ Then we denote it as,
 \]
 Any mapping of indexes in this documents have an expression as in \eqref{ePerm}. We make any index mappings in this document represent its equivalent permutation as in \eqref{ePerm} without ambiguity. \(h\) here is bijection of \(B^N\to B^N\), and \(\hat{h}\) is also a bijection of \([N]\to [N]\).
 
-\end{XA}.
+.
 \section{Address for 1st qubit mixer operation}
 \label{s1stmixer}
 Indexes are critical to implement the QAOA system precisely on FPGAs, rather than matrix-vector expression because we must calculate equivalent index expressions when those matrixes operation is implemented on logical circuit. So, the indexing and its relation to operation is defined strictly, from actual easy example to general case.
@@ -203,7 +203,7 @@ We further formalize mixer operation here. The sets of indexes pairs that the mi
     \eqlabel{eSn}
     S_n = \cbr{\cbr{p, q}| p_n\neq q_n, \forall i\in [N]_n \br{p_i = q_i}},
 \end{equation}
-\begin{XA}where notation \([N]\) and \([N]_n\) is defined in \eqref{eNn}. Note that \(\sum_{i\in [N]}S_i = S\).For example, indexes \(p, q\) defined in the \(n\)-th swapping case of \eqref{e4} satisfy \(\cbr{p, q}\in S_n\), and that of 1st qbit case of \eqref{s1stmixer} satisfy \(\cbr{p, q}\in S_1\).\end{XA}
+where notation \([N]\) and \([N]_n\) is defined in \eqref{eNn}. Note that \(\sum_{i\in [N]}S_i = S\).For example, indexes \(p, q\) defined in the \(n\)-th swapping case of \eqref{e4} satisfy \(\cbr{p, q}\in S_n\), and that of 1st qbit case of \eqref{s1stmixer} satisfy \(\cbr{p, q}\in S_1\).
 
 \textbf{Mixer Operatoin} is defined for all qbit here. The processing of mixer operation can be as following. Picking up each \(n\in [N]\) and then for all \(\cbr{p, q}\in S_n\) 
 \begin{align}
@@ -212,9 +212,9 @@ We further formalize mixer operation here. The sets of indexes pairs that the mi
     \eqlabel{emg2}
     \psi_{q}' &= -\ci\psi_{p} \sin \beta + \psi_{q} \cos \beta.
 \end{align}
-\textbf{Theorem} \begin{XA}We can take any order of picking up for \(n\), precisely, we can take any sequence \((n_1, n_2,..., n_N)\) satisfying \(\cbr{n_i|i\in [N]} = [N]\) to apply mixer operations in the order of \(n_1, n_2,..., n_N\)-th qbit. And for any fixed \(n = n_i\) we can take any order of picking up for \(\cbr{p, q}\) from \(S_n\).
+\textbf{Theorem} We can take any order of picking up for \(n\), precisely, we can take any sequence \((n_1, n_2,..., n_N)\) satisfying \(\cbr{n_i|i\in [N]} = [N]\) to apply mixer operations in the order of \(n_1, n_2,..., n_N\)-th qbit. And for any fixed \(n = n_i\) we can take any order of picking up for \(\cbr{p, q}\) from \(S_n\).
 
-\textbf{Proof of the theorem} Because the problem on \(p, q\)\end{XA} is evident we see only problem on \(n\) here. The case we apply mixer operator for qbits \(n,m\in [N], n\neq m\) is considered. Application order \(m \to n\) and \(n\to m\) is considered respectively, then it is proved that both results are the same. 
+\textbf{Proof of the theorem} Because the problem on \(p, q\)is evident we see only problem on \(n\) here. The case we apply mixer operator for qbits \(n,m\in [N], n\neq m\) is considered. Application order \(m \to n\) and \(n\to m\) is considered respectively, then it is proved that both results are the same. 
 
 For a result with the order of \(n\to m\) is shown firstly. For any \(p=0,1,...,D/2-1\), there uniquely exists \(q\) that satisfies \(\cbr{p, q}\in S_{m}\) and a pair \(\cbr{a, b}\) that satisfies \(\cbr{p, a}, \cbr{q, b}\in S_{n}\) from the definition of \eqref{eSn}. And because  operator of \(n\)-th qbit is already applied, then using \eqref{emg2},
 \begin{align}
@@ -279,27 +279,27 @@ Here, for example, to compute the mixer operation, the input is set as,
         \phi_{1}' = \psi_\hatj\\
         c_1' = \cos\beta\\
         s_1' = \sin\beta\\
-        \chi_1' = 0j_0\\
+        \chi_1' = j_0\overline{j_0}\\
         A_1 = \hatj
     \end{matrix} 
 \end{equation}
-where \(\hatj\) is an index \begin{XA}applied a permutation to \(j\), \end{XA}defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 00\), it must be satisfied that \(\cbr{\hatj, q}\) is set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). If the input is end of the pair, \(\chi_1'\) must be 01. The way above supplying \(\chi_1' = 0j_0\) will satisfy these restriction.
+where \(\hatj\) is an index applied a permutation to \(j\), defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 01\), it must be satisfied that \(\cbr{\hatj, q}\) is a set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). In the opposite case of \(\chi_1' = 01\), with a preceeding index \(p\), the case \(\cbr{p, \hatj}\in S_n\) must hold. For more example, if the input is the last amplitude, \(\chi_1' = 10\) must hold, because the last element should compose a pair with preceeding one. The way above supplying \(\chi_1' = j_0\overline{j_0}\) will satisfy these cases.
 
-The meaning of precedent \(0\) for \(\chi\) is explained in the reuse method of this unit for cost function operation later. First this document describes the use of this pipeline in mixer operation.
+We futher make the case \(\chi=00\) stands for cost function operation later, because this pipeline designed for mixer operation can be used only with slight modification. First this document describes the use of this pipeline in mixer operation.
 Updating the pipeline values as,
 \[
     \br{\phi, \chi, A, c, s}'_{\tau +1} = \br{\phi, \chi, A,c,s}_{\tau}, \tau=1,2,...,T
 \]  \
-then complex number operation is defined as following.\begin{XA}
+then complex number operation is defined as following.
 \begin{align}
     \eqlabel{ep00}
-    \psi_{A_{T}}' &= \xi_{T} - \zeta_{T-1} &\Leftarrow \chi_T = 00,\\
+    \psi_{A_{T}}' &= \xi_{T} - \zeta_{T-1} &\Leftarrow \chi_T = 01,\\
     \eqlabel{ep01}
-    \psi_{A_{T}}' &= -\zeta_{T+1} + \xi_{T} &\Leftarrow \chi_T = 01,\\
+    \psi_{A_{T}}' &= -\zeta_{T+1} + \xi_{T} &\Leftarrow \chi_T = 10,\\
     \eqlabel{ep10}
-    \psi_{A_{T}}' &= \xi_{T} +  \zeta_{T} &\Leftarrow \chi_T = 10,
+    \psi_{A_{T}}' &= \xi_{T} +  \zeta_{T} &\Leftarrow \chi_T = 00,
 \end{align}
-where, \end{XA}
+where, 
 \begin{equation}
     \xi_{\tau} = \phi_\tau c_\tau, \zeta_\tau = \ci\phi_\tau  s_\tau,
 \end{equation}
@@ -313,19 +313,31 @@ This pipline can be used also for cost function operation. For this, we set the 
         \phi_{1}' = \psi_j,\\
         c_1' = \ORe(H_j),\\
         s_1' = \OIm(H_j),\\
-        \chi_1' = 10,\\
+        \chi_1' = 00,\\
         A_1 = j,
     \end{matrix} 
 \end{equation}
 where \(H_j\in\sC\) is a cost function operator.
 When we apply the input with \eqref{eminit}, \eqref{ep00} and \eqref{ep01} is applied alternately to get a result for 2 mixed amplitude in this order. That is, setting \eqref{eminit} make the pipeline calculate 2 mixer operation with 2 clocks. The throughput is 1 per 1 clock. On the other hand, when we apply the input with \eqref{ecinit}, only \eqref{ep10} is applied 
-\begin{XA}
+
 \subsection{Non-stopping pipeline}
 This subsection introduces another addressing by which the system does not need to stop the pipeline to flash the elements in its pipeline, for the case \(T < 2^{N-1}-1\). Basically \(T\) is fixed regardless of the state vector size \(D=2^N\) and usually \(T\approx 100\) and \(2^N > 10000\). So this condition is satisfied in the practical use.
 
 Trivial sapping bits method introduced in the previous section \ref{sAddrGen} gives this condition \(T < 2^{N-1}\), while general bit permutation other than swapping or rotations may give more strict condition \(T < 2^{N/2}\). In this section only the case of the swapping is described and let the general worst case in \ref{sMinGen}.
 
 It is assumed that the system is applying mixer operations of \(n, m=n+1\) in this order without flashing the pipeline before start \(n\)-th operation. If \(\cbr{p, q}\in S_n\) is the pair now the system will process, then there are indexes \(a, b\), such that \(\cbr{p, a}, \cbr{q, b}\in S_{m}\) as shown in section \ref{mixerInvariance}. To process mixer operation of \(n\)-th qbit for \(\psi_p, \psi_q\), these \(\psi_p, \psi_q\) must be finished mixer operation on \(m\)-th qbit in advance, that is, before the \(n\)-th mixer operation on \(p, q\), the pipeline need to have stored the results of \(\psi_p, \psi_q\) to the place where the pipeline can read again to make the computation consistent. More in general, to state that, not only \(\psi_a, \psi_q\), but also all 4 elements \(\psi_a, \psi_p, \psi_b, \psi_q\) must have been finished \(m\)-th mixer operation.
+\begin{figure}
+    \includegraphics[width=\linewidth]{timingStrict.pdf}
+    \caption{Diagram of the timing in the caes the system will wait for flushing of pipeline. }
+    \label{fts}
+\end{figure}
+
+\begin{figure}
+    \includegraphics[width=\linewidth]{timingNonStop.pdf}
+    \caption{Diagram of the timing in the caes the system will not wait for flushing of pipeline. }
+    \label{ftns}
+\end{figure}
+
 
 To see the timing formally, the document will formalize the schedule of indexes and value of qbit \(n\) supplied to the pipeline here. Let \(l^t, t\in[ND-1]\) be a series of indexes and \(q^t\) is a qbit that means \(q^t\)-th mixer operation is applied to \(\psi_{l^t}\) at the time \(t\). They are defined as,
 \begin{align}
@@ -428,7 +440,6 @@ Therefore, \(Y_*\) in \eqref{eTabcd} takes the value, \(Y_* = 2^{N-1} -1\). \(T 
 \end{equation}
 The proof is provided in section \ref{sMinGen}. In the case of rotation, I expect similar order, \(Y_* \approx 2^{N-1}\) (Proof will take time but in the same manner.). General case gives much stricter condition. So we are recommended to utilize swapping or rotation permutation.
 
-\end{XA}
 
 \section{Addressing for parallel processing}
 Letting \(K=2^M\) be a number of parallel blocks. In naive implementation like in bottom of Fig. \ref{f1}, if we parallelized the system in \(K=2^M\) blocks, the system need inter local memory (like BRAMs) access \(M\)-times both for read and write. The implementation describes here reduce it to \(1\) regardless of \(M\). Whole blocks work parallelly and there is no serial processing in this implementation either. Fundamental idea to this tricky implementation is that, exchange local qbits and global qbits after completing the computing of local qbits. After processing global qbits (place in local qbits), back qbits to the original places. In other words, it re-arrage memory assignment for each amplitude of the state vector at the time of transfer for greater qbits that is used to divide the system into blocks (such qbits refers to global qbits here.).
@@ -506,7 +517,7 @@ Cost function operation can be applied at the stage of restoration between the p
  
 If we can set \(\hat{M} = N/2\), way of pipline do is totally the same as for both of operations on global and local qbits.
 \begin{figure}
-    \includegraphics[width=\linewidth]{diagram.pdf}
+    \includegraphics[width=\linewidth]{diagram2.pdf}
     \caption{(Top) Block diagram of current system with only 1 pipeline. Pipeline is exists in the block of QAOA system (invisible in this figure). (Bottom) pipeline's working image to each amplitude. The pipeline takes 2 input sequentially, and it computes them using 2 clocks. So the throughput is 1 element per 1 clock. (Bottom right) Cross part is described in the case using 2 blocks for 2 parallelization. Generalization of this example to \(K > 2\) parallelization is the main topic of this article.}
     \label{f1}
 \end{figure}
@@ -549,7 +560,7 @@ We can substitute \(h = \Theta_{n,1}\psi\) without changing the domain the above
 \end{align*}
 So we proved \eqref{einvn1}.
 
-\begin{XA}Letting \(\Theta_{n, m}\) is an operator exchanging \(n\) and \(m\)-th qbit index, then it can be composed as \(\Theta_{n, m} = \Theta_{n, 1}\Theta_{m, 1}\Theta_{n, 1}\). \end{XA}Using this fact and \eqref{einvn1}, we have the follwing general case,
+Letting \(\Theta_{n, m}\) is an operator exchanging \(n\) and \(m\)-th qbit index, then it can be composed as \(\Theta_{n, m} = \Theta_{n, 1}\Theta_{m, 1}\Theta_{n, 1}\). Using this fact and \eqref{einvn1}, we have the follwing general case,
 \begin{align}
     \eqlabel{e1nm}
     &U_n \psi = \Theta_{n, m}  U_{m} \Theta_{n, m}\psi\\
@@ -621,7 +632,7 @@ But we have \eqref{erotate}, therefore,
     & =  U_{N}\cdots U_1 \psi 
 \end{align*}
 It implies \(\psi^N = \psi^{\sigma^{-1}\hatM\sigma L}\ (L=N-\hatM)\) (\eqref{eblockmixA}).
-\begin{XA}
+
 \section{Memory access topology}
 This section discusses the memory access topology. It means a graph on which nodes represent each block represented with global qbits, and an edge represents there is a data transfer between nodes connected by the edge. Fig. \ref{f3} repesents one example for the case of \(N=4\) and parallel level \(K=4\). Number of global qbits is \(2\) in the case \(K=4\), therefore, as in the figure \(k=00, 01, 10, 11\) can represent each block. The case of A in Fig. \ref{f3} describes there is data transfer between the pairs \(\cbr{10, 00}, \cbr{11, 01}\). How index operation \(\sigma\) in \eqref{eshuffle} induce a data transfer between blocks is discussed formally here after. Computational cost of data transfer is also discussed.
 \begin{figure}
@@ -746,18 +757,57 @@ For \eqref{e1by1},
 \end{align*}
  The number of distinct pair of \(k, k', k\neq k'\) is \(2^{M+1} - 2^M = 2^M = K\).  The second factor is has the size \(2^{N-M-1}\). So \( Q(k\to k') = 2^{N-M-1} = D/(2K)\). It is repeated \(K\) times. So the above holds.
 
-\end{XA}
+\section{Simple parallel Implementation for block mixing}
+It is good to simplify the memory access topology in parallel implementation. Not rotation, but considering batch swapping like \(\sigma\), such that,
+\[
+\sigma(p_N \cdots p_1) = p_{N-M}\cdots p_{N-2M+1}\ p_N\cdots p_{N-M+1}\ p_{N-2M}\cdots p_1
+\]
+we can restrict the memory transfer within a pair and continuous, because, \(\sigma^2(p) = p\) which means \(\sigma^{-1} = \sigma\), and the least \(N-2M\) bits are the same. We can prove this batch swapping is valid for block mixing algorithm in a same manner of the proof for the rotation. Consider the case \(M=3, N=10\) and an instance of one index,
+\[
+ p = 001\ 010\ q_4q_3q_2q_1.
+\]
+Then let a destination position of this index \(p\) be \(p'\). It can be obtained by applying permutation as, 
+\[
+ p' = \sigma\br{p} = 010\ 001\ q_4q_3q_2q_1.
+\]
+It corresponds to just exchange top 3 bits and 4-6th bits. Remaining 4 bits are arbitrary. So we can transmit \(2^4\) data to the same position (in terms of least 4 bits) of the block with the global qbits \(010\) from global qbits \(001\).
+
+We need remove the amplitude from the destination \(p'\) to receive a value from \(p\). So we need send the value at \(p'\) to keep it somewhere. But that place is clear now. Letting the destination place of \(p'\) be \(p''\), it can also be obtain by applying permutation, that is, 
+\[
+ p'' = \sigma\br{p'} = \sigma\br{\sigma\br{p}} = p = 001\ 010\ q_4q_3q_2q_1.
+\]
+
+We can see, we just need to exchange value on the positions between \(010\ 001\ q_4q_3q_2q_1\) and \(001\ 010\ q_4q_3q_2q_1\). 
+\subsection{Block mixing and non-stopping pipeline}
+Idea without proof. Just consider, for example, the following 4 indexes.
+\[
+ p = 000\ 001\ q_4q_3q_2q_1,  p' = \sigma\br{p} = 001\ 000\ q_4q_3q_2q_1.
+\]
+\[
+ q = 010\ 001\ q_4q_3q_2q_1,  q' = \sigma\br{p} = 001\ 010\ q_4q_3q_2q_1.
+\]
+we can see, \(\cbr{q', p'}\in S_6\). Futher, letting \(k, j\in B^3\) and consider ,
+\begin{align*}
+    p^j = j\ k\ q_4q_3q_2q_1,  q^j = \sigma\br{p} = k\ j\ q_4q_3q_2q_1.
+\end{align*}
+we can see again, \(\exists n\in\cbr{4,5,6}, \cbr{q^j, q^{j+1}}\in S_n\). So for each block \(k\), by making the system transmit data \(j \to  k\), and \(j + 1\to  k\) after that, we can mix these consequent data immediately before storing it to BRAMs of \(k\)-th block. See Fig. \ref{fblocknon} for example. Formal detailed description is under construction.
+\begin{figure}
+    \includegraphics[width=\linewidth]{block-non-stoppingex.pdf}
+    \caption{Example of block mixing transfer and non-stopping pipeline combination.}
+    \label{fblocknon}
+\end{figure}
+
+Proof of this system is valid is a little bit difficult, because we need to combine swapping and batch swapping operator here.
 
 \section{Problem of Memory bandwidth}
 The problem of memory bandwidth in our FPGA is discussed. As a result I recommend to challenge to the memory bandwidth should be in the future work.
 
 Recent demand to memory bandwidth is really huge. To respond the demand, manufactures have tried their best to increase the memory bandwidth of their products, in the level from 120 GB/s to 2 TB/s.
 
-Our FPGA, Stratix 5, only implements \begin{XA}64 bits data bus for external DDR memory with 1600 MHz. It means, \(64\times 1600 \mathrm{Mbits}/s = 12.8 \mathrm{GB/s}\)\end{XA} is the maximum theoretical speed to the external memory. In the case of BRAM, we have more than 16 K bits of bus for BRAM and maximum clock of 500 Mhz, the maximum bandwidth of BRAM is \(8 \mathrm{TB/s}\) even in our relatively old FPGA. This is far faster than memory bandwidth of current state-of-the-art GPU's external memory. If we implement our Algorithm, it may outperform even modern processors with our relatively old FPGA for the small case of qbits which can be stored only in BRAMs. Order of \(2^{16}\) qbits can be in BRAMs for example.
+Our FPGA, Stratix 5, only implements 64 bits data bus for external DDR memory with 1600 MHz. It means, \(64\times 1600 \mathrm{Mbits}/s = 12.8 \mathrm{GB/s}\)is the maximum theoretical speed to the external memory. In the case of BRAM, we have more than 16 K bits of bus for BRAM and maximum clock of 500 Mhz, the maximum bandwidth of BRAM is \(8 \mathrm{TB/s}\) even in our relatively old FPGA. This is far faster than memory bandwidth of current state-of-the-art GPU's external memory. If we implement our Algorithm, it may outperform even modern processors with our relatively old FPGA for the small case of qbits which can be stored only in BRAMs. Order of \(2^{16}\) qbits can be in BRAMs for example.
 
 Speaking to the pipeline defined in section \ref{spipe}, it already has the data processing speed of \(8 \mathrm{GB/s}\), when it runs at 500 MHz. Because it processes 128 bits data per 1 clock, the performance is \(128 \mathrm{bit}/ (8 \mathrm{bit/B}) \times 0.5 \mathrm{GHz} = 8 \mathrm{GB/s}\). Therefore, if we use external memory without any caching mechanism to hide the memory speed bottleneck (12.8 GB/s), increasing the pipeline does not provide meaningful improvement on the speed. Possible method to cover up the low speed of external DDR memory is using block mixing described so far in the section \ref{sBMA}, because it also can be used to reduce the amount of access to the global memory space. For example, if we set the number of local qbit to \(M\), the maximum reduction of speed is \(1/M\). In the case \(M=8\) which is possible number, the memory speed can be seen up to \(8\times 6.4 = 51.2 \mathrm{GB/s}\), though it is still far slower even than modern CPUs having around 100 GB/s commonly. Of course CPUs cannot utilize theoretical speed whereas our implementation always does. However, we are recommended to plan to obtain modern FPGA environment if we talk about external memory. We still can consider algorithm for the future replacement of the FPGA and can also try basic experiments on our current FPGA. Such experiments should give us enough insight that allows us to implement our architecture on the new FPGA immediately. Trial on Multi-FPGA solution should much beneficial.
 
-\begin{XA}
 \section{Appendix}
 
 \subsection{Necessary condition of the mixer pipeline in general index permutation}
@@ -830,6 +880,6 @@ Therefore,
 \[
 A(q') > A(q).
 \]
-\end{XA}
+
 
 \end{document}
