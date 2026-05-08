@@ -35,7 +35,7 @@ wire [15:0] ag_en_Inits;
 wire [1:0] ag_mixSwitch;
 
 wire [NM-1:0] cAddr;       // Next address counter
-wire [NM-1:0] cAddrCF;     // Next address counter
+wire [NM-1:0] cAddrGC;     // Next address counter
 wire [N_BIT_SWAP_POINTER-1:0] bsp1;
 wire [N_BIT_SWAP_POINTER-1:0] bsp2;
 wire [31:0] version;
@@ -54,7 +54,7 @@ addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM)) addr_gen_inst(
    .f_L1Computation_out(f_L1Computation),
    .en_Inits_out(ag_en_Inits),
    .mixSwitch_out(ag_mixSwitch),
-   .cAddrCF_out(cAddrCF),
+   .cAddrGC_out(cAddrGC),
    .cAddr_out(cAddr),
    // connected to bit_swap
    .bsp1_out(bsp1),
@@ -62,6 +62,8 @@ addr_gen #(.N_BIT_SWAP_POINTER(N_BIT_SWAP_POINTER), .NM(NM)) addr_gen_inst(
    .version(version)
 )
 ;
+`include "all_test_cmd.sv"  // The contents of the file will be expanded here.
+
 localparam AG_SET_t_L2Addr   = 0;
 localparam AG_SET_t_L2PipeGC = 1;
 localparam AG_SET_tb_B2GenCost= 2;
@@ -72,17 +74,6 @@ localparam AG_SET_AddrMask  = 6;
 localparam AG_SET_t_B2GenCost  = 7;
 localparam AG_SET_t_B2Mixer  = 8;
 localparam AG_SET_t_L2Compute  = 9;
-
-integer t_L2Addr   = 62;
-integer t_L2PipeGC = 225;
-integer tb_B2GenCost= 394;
-integer t_L2Pipe  = 87;
-integer nPLayer   = 8;
-integer L1Qbit    = 5;
-integer AddrMask  = 31;
-integer t_B2GenCost  = 38;
-integer tb_B2Mixer  = 87;
-
 integer i;
 
 // test for transmitter
