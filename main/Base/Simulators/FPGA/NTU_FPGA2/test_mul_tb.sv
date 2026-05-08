@@ -16,7 +16,7 @@ module test_mul_tb ();
 	wire [2*P-1:0] q;
 
 
-test_mul CI 
+Mul_64_FixedP CI 
 (
    .CLK(CLK2),        // Connect to your system clock wire
    .RST(RST2),        // Connect to your system reset wire
