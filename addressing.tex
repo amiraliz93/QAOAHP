@@ -69,9 +69,9 @@
 \newcommand{\hatk}{{\hat{k}}}
 \newcommand{\jbar}{{\MidBar{j}}}
 \newcommand{\hatM}{{\hat{M}}}
-\title{Mathematical description and parallelization of QAOA system}
-\date{April, 7th, 2026}
-\author{Hiroki Shibata, at Tokyo Metropolitan University}
+\title{Mathematical description and parallelization of QAOA system\\Version 2.0}
+\date{May, 8th, 2026}
+\author{Hiroki Shibata, Amir Alizadeh\\Tokyo Metropolitan University and Nottigham Trent University}
 \begin{document}
 \maketitle
 In this document we describe components of QAOA system mathematically, and introduce a novel parallelization algorithm for QAOA system. I, Shibata, supposes further discussion to improve and expand the QAOA system needs basic symbols and formulas to define it. Therefore, I wrote an article here. Please tell me any suggestion easily.
@@ -283,7 +283,7 @@ Here, for example, to compute the mixer operation, the input is set as,
         A_1 = \hatj
     \end{matrix} 
 \end{equation}
-where \(\hatj\) is an index applied a permutation to \(j\), defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 01\), it must be satisfied that \(\cbr{\hatj, q}\) is a set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). In the opposite case of \(\chi_1' = 01\), with a preceeding index \(p\), the case \(\cbr{p, \hatj}\in S_n\) must hold. For more example, if the input is the last amplitude, \(\chi_1' = 10\) must hold, because the last element should compose a pair with preceeding one. The way above supplying \(\chi_1' = j_0\overline{j_0}\) will satisfy these cases.
+where \(\hatj\) is an index applied a permutation to \(j\), defined in section \ref{sAddrGen}. \(\overline{\cdot}\) means bit flipping operation, that is, \(\overline{1} = 0, \overline{0} = 1\). If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 01\), it must be satisfied that \(\cbr{\hatj, q}\) is a set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). In the opposite case of \(\chi_1' = 01\), with a preceeding index \(p\), the case \(\cbr{p, \hatj}\in S_n\) must hold. For more example, if the input is the last amplitude, \(\chi_1' = 10\) must hold, because the last element should compose a pair with preceeding one. The way above supplying \(\chi_1' = j_0\overline{j_0}\) will satisfy these cases.
 
 We futher make the case \(\chi=00\) stands for cost function operation later, because this pipeline designed for mixer operation can be used only with slight modification. First this document describes the use of this pipeline in mixer operation.
 Updating the pipeline values as,
@@ -758,6 +758,7 @@ For \eqref{e1by1},
  The number of distinct pair of \(k, k', k\neq k'\) is \(2^{M+1} - 2^M = 2^M = K\).  The second factor is has the size \(2^{N-M-1}\). So \( Q(k\to k') = 2^{N-M-1} = D/(2K)\). It is repeated \(K\) times. So the above holds.
 
 \section{Simple parallel Implementation for block mixing}
+\begin{XA} \textbf{under construction, but it finished the proof.}
 It is good to simplify the memory access topology in parallel implementation. Not rotation, but considering batch swapping like \(\sigma\), such that,
 \[
 \sigma(p_N \cdots p_1) = p_{N-M}\cdots p_{N-2M+1}\ p_N\cdots p_{N-M+1}\ p_{N-2M}\cdots p_1
@@ -799,6 +800,76 @@ we can see again, \(\exists n\in\cbr{4,5,6}, \cbr{q^j, q^{j+1}}\in S_n\). So for
 
 Proof of this system is valid is a little bit difficult, because we need to combine swapping and batch swapping operator here.
 
+\[
+\sigma(p_N \cdots p_1) = k\ p_O\cdots p_1, k\in B^M, O = N-M
+\]
+Fetching data.
+\[
+\psi_{p}' = \psi_{q}, q = p_M \cdots p_1\ p_N\cdots p_{N-M + 1} k_O \cdots k_1.
+\]
+Fetching data for the place of \(q\), 
+\[
+\psi_{q}' = \psi_{\sigma q} = \psi_{p} \because q = \sigma p, \sigma^2 p = p.
+\]
+Let \(a\) have the 2 expressions, \(a = \sigma q = h p\). Then, 
+\[
+    t_a = (n-1)E + p, t = n E  + q, E = 2^{O}
+\] 
+\[
+    t - t_a = q + E - p  = 2^O + \sum_{j=1}^O 2^{j-1}(q_j-p_j).
+\]
+\[
+\sigma q = q_O\cdots q_{M+1} \cdots k_M\cdots k_1, hp = p_1 p_{O-1}\cdots p_2 p_O.
+\]
+Because \(\sigma\) is not an bijective, it does not have inverse mapping. Hence, we consider \(h^{-1}\sigma q =  p\). It is,
+\[
+ h^{-1}\sigma q  = k_1 q_{O-1}\cdots q_{M+1} \cdots k_M\cdots k_2 q_O
+\]
+therefore, 
+\begin{align*}
+ t - t_a &= 2^O + 2^{O-1} (q_O - k_1) + \sum_{j=2}^{M} 2^{j-1}(q_j-k_j) + (q_1 - q_O) 
+\end{align*}
+we consider the minimum value of the above. The instance is, 
+\[
+q_O = 0, k_1 = 1, q_1 = 0, \forall j\in M_2(q_j = 0, k_j = 1).
+\]
+So, we have, 
+\begin{align*}
+ t - t_a &\geq 2^O - 2^{O-1} - \sum_{j=2}^{M} 2^{j-1} + 0 \\
+ &\geq 2^{N-M-1} - 2^{M} + 2. \because O = N-M.
+\end{align*}
+A little strict than the serial case of \(2^{N-1}\). \(M=2, N = 8\), then, \(t - t_a = 30.\) \(M=2, N=9 \Rightarrow t-t_a = 62\). \(M=6, N=16 \Rightarrow t-t_a = 450\). Still usefule for big number of qbits. \(M\) global qbits means \(K=2^M\) parallel blocks exist. \(M=6\) means then \(64\) parallel. 
+
+There is another strategy. (1) immidiate after cost function, apply exchange of \(M\) global qbits and \(M\) local qbits. (2) applying mixer to \(M\) local qbits (originally global), (3) exchange again. (4) Apply local mixer to \(1-O\)-th qbits.
+
+For (1)-(2) non stopping deal, \(h\) is identity mapping \(hp=p\) because cost function does not swap qbits. (2)-(4) non stopping deal \(h\) swaps \(1\) and \(M\)-th qbits. 
+
+For the case (2)-(4), 
+\[
+h^{-1}\sigma q  = q_O q_{O-1}\cdots q_{M+1} \cdots k_M \cdots k_2 k_1
+\]
+hence, 
+\begin{align*}
+ t - t_a &= 2^O + \sum_{j=1}^{O} 2^{j-1}(q_j-p_j) \\
+ &= 2^O + \sum_{j=2}^{M} 2^{j-1}(q_j-k_j)\\
+ &\geq 2^O - 2^{M} + 2 - 1.\\
+ &\geq 2^O - 2^{M} + 1.\\
+\end{align*}
+
+So, (2)-(4) case then,
+\[
+h^{-1}\sigma q  = q_O q_{O-1}\cdots q_{M+1} \cdots k_1 k_{M-1}\cdots k_2 k_M
+\]
+hence, 
+\begin{align*}
+ t - t_a &= 2^O + \sum_{j=1}^{O} 2^{j-1}(q_j-p_j) \\
+ &= 2^O + 2^{M-1}(q_M-k_1) + \sum_{j=2}^{M-1} 2^{j-1}(q_j-k_j) + (q_1-k_M)\\
+ &\geq 2^O - 2^{M-1} - 2^{M-1} + 2 - 1.\\
+ &\geq 2^O - 2^{M} + 1.\\
+\end{align*}
+
+Results are the same, but both conditions became loose than the perivious case. 
+\end{XA}
 \section{Problem of Memory bandwidth}
 The problem of memory bandwidth in our FPGA is discussed. As a result I recommend to challenge to the memory bandwidth should be in the future work.
 
