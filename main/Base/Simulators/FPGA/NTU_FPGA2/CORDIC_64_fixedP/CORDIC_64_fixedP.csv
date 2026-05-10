@@ -1,0 +1,20 @@
+# system info CORDIC_64_fixedP on 2026.05.09.21:53:13
+system_info:
+name,value
+DEVICE,5SGXEABN3F45I3YY
+DEVICE_FAMILY,Stratix V
+GENERATION_ID,1778359964
+#
+#
+# Files generated for CORDIC_64_fixedP on 2026.05.09.21:53:13
+files:
+filepath,kind,attributes,module,is_top
+simulation/CORDIC_64_fixedP.v,VERILOG,,CORDIC_64_fixedP,true
+simulation/submodules/dspba_library_package.vhd,VHDL,,CORDIC_64_fixedP_CORDIC_0,false
+simulation/submodules/dspba_library.vhd,VHDL,,CORDIC_64_fixedP_CORDIC_0,false
+simulation/submodules/CORDIC_64_fixedP_CORDIC_0.vhd,VHDL,,CORDIC_64_fixedP_CORDIC_0,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+CORDIC_64_fixedP.CORDIC_0,CORDIC_64_fixedP_CORDIC_0
