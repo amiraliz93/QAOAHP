@@ -1,7 +1,9 @@
 
 //Amir ALizadeh & Hiroki Shibata, Tokyo Metropollitan University, created at Nottingham Trent University.
-
 // Supply p_a, p_b altanatively clock by clock.
+// formatation: the input and output of multiplier is better have same format 
+// all data is better to be in signed 64bit Q3.61 (1 bit sign, 3 bit int, 61 frac) - [-4, 4) range. This is for the consideration of the range of cost function and the angle of mixer. But it can be changed by adjusting the format of multiplier and slicer.
+// so we have: Q3.61 × Q3.61 → Q6.122 → slice → Q3.61
 
 module Update_mixer
 #(
@@ -43,7 +45,10 @@ reg [P-1:0] add1_a, add1_b, add2_a, add2_b;
 
 
 
-
+wire [2*P-1:0] mul1_raw;
+wire [2*P-1:0] mul2_raw;
+wire [2*P-1:0] mul3_raw;
+wire [2*P-1:0] mul4_raw;
 wire [P-1:0] n_prc_N1Pip;
 wire [P-1:0] n_prs_N1Pip;
 wire [P-1:0] n_pic_N1Pip;
@@ -56,36 +61,65 @@ assign p_ai_o = pi_N3Pip; //
 assign info_out = p_info[NPip-1]; // connect output info to the last pipeline register
 
 // Instantiate the module
-// input of the mul is pr_0Pip  &pi_0Pip = Qm.n and sin_beta & cos_beta is Qm.n
+// input of the mul is pr_0Pip & pi_0Pip = format is signed Q2.61 (1 bit sign, 2 bit int, 61 frac) [2, 2)
+
+
 
 Mul_64_FixedP mul1(
     .CLK(CLK),    //    clk.clk
     .RST(RST), // areset.reset
-    .a(pr_0Pip),      //      a.a format is Qm.n
+    .a(pr_0Pip),      //      a.a format is signed Q2.61 (1 bit sign, 2 bit int, 61 frac)
     .b(cos_beta_0Pip),      //      b.b format is Qm.n
-    .q(n_prc_N1Pip)       //      q.q
+    .q(mul1_raw)   // n_prc_N1Pip    //      q.q
 );
+mul_slice slicer1 (
+      .CLK(CLK),
+      >RST(RST),
+      .a(mul1_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
+      .q(n_prc_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
+)
+
 Mul_64_FixedP mul2(
     .CLK(CLK),    //    clk.clk
     .RST(RST), // areset.reset
-    .a(pr_0Pip),      //      a.a format is Qm.n
+    .a(pr_0Pip),      //      a.a Q3.61
     .b(sin_beta_0Pip),      //      b.b format is Qm.n
-    .q(n_prs_N1Pip)       //      q.q
+    .q(mul2_raw)       //      q.q
 );
+mul_slice slicer2 (
+      .CLK(CLK),
+      >RST(RST),
+      .a(mul2_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
+      .q(n_prs_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
+)
+
 Mul_64_FixedP mul3(
     .CLK(CLK),    //    clk.clk
     .RST(RST), // areset.reset
-    .a(pi_0Pip),      //      a.a
+    .a(pi_0Pip),      //      Q3.61
     .b(cos_beta_0Pip),      //      b.b
-    .q(n_pic_N1Pip)       //      q.q
+    .q(mul3_raw)       //      q.q
 );
+mul_slice slicer3 (
+      .CLK(CLK),
+      >RST(RST),
+      .a(mul3_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
+      .q(n_pic_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
+)
 Mul_64_FixedP mul4(
     .CLK(CLK),    //    clk.clk
     .RST(RST), // areset.reset
-    .a(pi_0Pip),      //      a.a
+    .a(pi_0Pip),      //      Q3.61
     .b(sin_beta_0Pip),      //      b.b
-    .q(n_pis_N1Pip)       //      q.q
+    .q(mul4_raw)       //      q.q
 );
+mul_slice slicer4 (
+      .CLK(CLK),
+      >RST(RST),
+      .a(mul4_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
+      .q(n_pis_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
+)
+
 // need to wait one clock.
 addFPF64 add1(
       .clk(CLK),    //    clk.clk
@@ -158,7 +192,7 @@ always @(posedge CLK) begin
                         // adder 1 will performe, pp_ar = cosb * p_ar - sinb * p_bi
                         // adder 2 will performe, pp_ai = cosb * p_ai + sinb * p_br
                         add1_a <= prc_N1Pip[1];
-                        add1_b <= pis_N1Pip[0] ^ SIGN_MASK;
+                        add1_b <= -pis_N1Pip[0] // this is for float ^ SIGN_MASK;
                         add2_a <= pic_N1Pip[1];
                         add2_b <= prs_N1Pip[0];
                   end
@@ -167,7 +201,7 @@ always @(posedge CLK) begin
                         // adder 1 will performe, pp_br = - sinb * p_ai + cosb * p_br
                         // adder 2 will performe, pp_bi = sinb * p_ar + cosb * p_bi
                         add1_a <= prc_N1Pip[1];
-                        add1_b <= pis_N1Pip[2] ^ SIGN_MASK;
+                        add1_b <= -pis_N1Pip[2] //^ SIGN_MASK;
                         add2_a <= pic_N1Pip[1];
                         add2_b <= prs_N1Pip[2];
                   end
@@ -176,7 +210,7 @@ always @(posedge CLK) begin
                         // adder 1 will performe, pp_ar = - sinb* p_ai + cosb *p_ar
                         // adder 2 will performe, pp_ai = sinb *p_ar + cosb *p_ai
                         add1_a <= prc_N1Pip[1];
-                        add1_b <= pis_N1Pip[1] ^ SIGN_MASK;
+                        add1_b <= -pis_N1Pip[1] //^ SIGN_MASK;
                         add2_a <= pic_N1Pip[1];
                         add2_b <= prs_N1Pip[1];
                   end
