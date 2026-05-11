@@ -61,8 +61,8 @@ assign p_ai_o = pi_N3Pip; //
 assign info_out = p_info[NPip-1]; // connect output info to the last pipeline register
 
 // Instantiate the module
-// input of the mul is pr_0Pip & pi_0Pip = format is signed Q2.61 (1 bit sign, 2 bit int, 61 frac) [2, 2)
-
+// input of the mul is pr_0Pip & pi_0Pip = format is signed Q3.61 (1 bit sign, 2 bit int, 61 frac) [-4, 4)
+// 
 
 
 Mul_64_FixedP mul1(
@@ -88,10 +88,10 @@ Mul_64_FixedP mul2(
 );
 mul_slice slicer2 (
       .CLK(CLK),
-      >RST(RST),
+      .RST(RST),
       .a(mul2_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
       .q(n_prs_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
-)
+);
 
 Mul_64_FixedP mul3(
     .CLK(CLK),    //    clk.clk
@@ -102,10 +102,10 @@ Mul_64_FixedP mul3(
 );
 mul_slice slicer3 (
       .CLK(CLK),
-      >RST(RST),
+      .RST(RST),
       .a(mul3_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
       .q(n_pic_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
-)
+);
 Mul_64_FixedP mul4(
     .CLK(CLK),    //    clk.clk
     .RST(RST), // areset.reset
@@ -118,7 +118,7 @@ mul_slice slicer4 (
       >RST(RST),
       .a(mul4_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
       .q(n_pis_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
-)
+);
 
 // need to wait one clock.
 addFPF64 add1(
