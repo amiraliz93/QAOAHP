@@ -1,7 +1,10 @@
 `timescale 1ns / 1ns
 // Amir Alizadeh - Hiroki Shibata, NTU and Tokyo Metropollitan University, created at Nottingham Trent University.
 
-// gamma should be in [-pi, pi]. 
+// data path γ×H→ slicer → CORDIC input
+// need H and gamma be in format of Q3.61, 64 bits (1 sign, 2 int,61fract) range [-4, 4)
+// gamma should be in [-pi, pi]. -> signed 64-bits Q3.61
+// H is range [-1, 1] -> but its better to be in 64-bits Q3.61
 module gen_cost
   #(
   parameter P=64, // number of word width
@@ -55,7 +58,9 @@ mul_slice #(
       .q(slicer_out)   // input of cordic
       );
 		
-
+// cordic input is (signed Q3.61 radians​) (1 bit sign , 3 bit int, 61 frac) - [-4, 4) range]
+// But the valid CORDIC angle range is [-pi, pi]
+// CORDIC outpu is signed 63-bit (1 bit sign, 2 bit int, 61 frac) - [-2, 2) range.
 CORDIC_64_fixedP inst_cordic(
       	.a(cordic_in),  //  input (it is H*gamma) wire width = [63:0] 
 		.areset(RST),    // areset.reset        
@@ -81,6 +86,7 @@ always @(posedge CLK) begin
             end
             slicer_in <= mul_out; // input of slicer is the output 
 		cordic_in <= slicer_out; // input of cordic is the output of multiplier after N0 cycles.
+            // sign-extend it to 64 bits - this do Q2.61, 63-bit into Q3.61, 64-bit
 		cordic_c_out <= {{1{cordic_cos_out[P-2]}}, cordic_cos_out}; // sign extend to 64 bit
 		cordic_s_out <= {{1{cordic_sin_out[P-2]}}, cordic_sin_out};
 
