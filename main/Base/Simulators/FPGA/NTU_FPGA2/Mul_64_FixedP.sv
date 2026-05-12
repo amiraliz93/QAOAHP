@@ -1,18 +1,17 @@
 // pipelined ALU test code for 2 fixed points.
 // Amir Alizadeh & Hiroki Shibata, Tokyo Metropollitan University, created at Nottingham Trent University.
-
+// input need to be 64-b sign Q3.61 (1 bit for sign, 2int, 61 frac) - [-4, 4) range
+//latency is 8 cycle
 module Mul_64_FixedP
 #(
 	parameter P = 64
 )
 (
 	input CLK,
-	input RST,
 	input signed [P-1:0] a, 
 	input signed [P-1:0] b, 
 	output signed [2*P-1:0] q
 );
-
 // Chunk widths for 18-bit DSP decomposition
 //   chunk 0  : bits [17: 0]  → 18 bits
 //   chunk 1  : bits [35:18]  → 18 bits
@@ -25,7 +24,6 @@ localparam REDUN = 1; // redundant input register
 reg signed [P-1:0] a_[0:REDUN];
 reg signed [P-1:0] b_[0:REDUN];
 
-
 // how to check --> ax_clock=0, ayscan_in_clock = 0, az_clock = 0
 (* preserve, dont_merge *) reg [35:0] mul_p [0:NC-1][0:NC-1]; // pipline stage (in DSP)
 (* preserve, dont_merge *) reg [35:0] prod_s1 [0:NC-1][0:NC-1]; // output stage (inside DSP)
@@ -33,8 +31,6 @@ reg signed [P-1:0] b_[0:REDUN];
 (* preserve, dont_merge *) reg [35:0]   prod_s2 [0:NC-1][0:NC-1];
 wire  [CW-1:0] ac [0: NC-1]; // ac[i] = is 1D array of 4 chunks
 wire [CW-1:0] bc [0:NC-1]; // ac[0], ac[1], ac[2], ac[3] each is [17:0]
-
-
 
 always @(posedge CLK) begin 
 	a_[0] <= a;
@@ -75,7 +71,6 @@ generate
 	end
 
 endgenerate
-
 
 /////////////////////////////////////////////////////
 // -----stage 1: 16 parallel 18x18 multiplies in DSPs -----
@@ -149,7 +144,7 @@ end
 reg [127:0] sum_even, sum_odd;
 reg signed [127:0] result_q;
 // ------- Sign correction (Baugh-Wooley) -----
-localparam CORR_LAT = 6;
+localparam CORR_LAT = 5; // number of clock cycles delay -> From a_[REDUN] to final subtraction result_q <= sum_even + sum_odd - correction_pos
 reg [64:0] corr_pre [0: CORR_LAT-1];
 reg [127:0] correction_pos;
 

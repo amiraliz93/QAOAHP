@@ -1,0 +1,10 @@
+	component CORDIC_64_fixedP is
+		port (
+			a      : in  std_logic_vector(63 downto 0) := (others => 'X'); -- a
+			areset : in  std_logic                     := 'X';             -- reset
+			c      : out std_logic_vector(62 downto 0);                    -- c
+			clk    : in  std_logic                     := 'X';             -- clk
+			s      : out std_logic_vector(62 downto 0)                     -- s
+		);
+	end component CORDIC_64_fixedP;
+
