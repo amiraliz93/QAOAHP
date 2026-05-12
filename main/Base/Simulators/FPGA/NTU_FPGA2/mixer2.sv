@@ -10,7 +10,6 @@ module mixer2
   ) 
   (
    input       CLK,
-   input       RST,
    input  [P-1:0]  cb, // cos beta
    input  [P-1:0]  sb, // cos beta
    input  [P-1:0]   p_ar,
@@ -54,28 +53,28 @@ assign info_out = p_info[NPip-1];
 // Instantiate the module
 mulFPF64 mul1(
       .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
+      .areset(), // areset.reset
       .a(pr_0Pip),      //      a.a
       .b(cb_0Pip),      //      b.b
       .q(n_prc_N1Pip)       //      q.q
 );
 mulFPF64 mul2(
       .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
+      .areset(), // areset.reset
       .a(pr_0Pip),      //      a.a
       .b(sb_0Pip),      //      b.b
       .q(n_prs_N1Pip)       //      q.q
 );
 mulFPF64 mul3(
       .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
+      .areset(), // areset.reset
       .a(pi_0Pip),      //      a.a
       .b(cb_0Pip),      //      b.b
       .q(n_pic_N1Pip)       //      q.q
 );
 mulFPF64 mul4(
       .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
+      .areset(), // areset.reset
       .a(pi_0Pip),      //      a.a
       .b(sb_0Pip),      //      b.b
       .q(n_pis_N1Pip)       //      q.q
@@ -85,14 +84,14 @@ mulFPF64 mul4(
 // need to wait one clock.
 addFPF64 add1(
       .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
+      .areset(), // areset.reset
       .a(add1_a),      //      a.a
       .b(add1_b),      //      b.b
       .q(add1_res)       //      q.q
 );
 addFPF64 add2(
       .clk(CLK),    //    clk.clk
-      .areset(RST), // areset.reset
+      .areset(), // areset.reset
       .a(add2_a),      //      a.a
       .b(add2_b),      //      b.b
       .q(add2_res)       //      q.q

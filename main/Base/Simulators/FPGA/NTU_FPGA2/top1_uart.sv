@@ -6,7 +6,7 @@ module top1_uart
    output  o_Tx_Serial,
    output [31:0]  o_Status // counter to wait read FIFO latency. 
 );
-
+ 
 // Declare signals to connect to the UART module
 wire r_req;
 wire rbram_vd;
