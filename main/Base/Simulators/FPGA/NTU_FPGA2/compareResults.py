@@ -21,8 +21,8 @@ def mean_absolute_error(a, b):
 
 if __name__ == "__main__":
     result_file = "result.txt"
-    ref_file = "simulation/questa/result_sim1.txt"
-    #ref_file = "resultpy.txt"
+    #ref_file = "simulation/questa/result_sim1.txt"
+    ref_file = "resultFPGA.txt"
 
     result_values = load_floats(result_file)
     ref_values = load_floats(ref_file)
