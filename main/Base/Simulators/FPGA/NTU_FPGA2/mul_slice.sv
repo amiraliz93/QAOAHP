@@ -4,9 +4,9 @@
 
 module mul_slice #(
     parameter P = 64,
-    parameter int IA = 4, // integer bits of a (e.g. 4 for Q4.60)
-    parameter int IB = 4, // integer bits of b
-    parameter int IOUT = 4 // int of output Q-format
+    parameter int IA = 3, // integer bits of a (e.g. 4 for Q4.60)
+    parameter int IB = 3, // integer bits of b
+    parameter int IOUT = 3 // int of output Q-format
 )
 (
     input CLK,
