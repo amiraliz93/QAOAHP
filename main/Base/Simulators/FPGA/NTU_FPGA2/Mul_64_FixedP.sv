@@ -1,13 +1,13 @@
 // pipelined ALU test code for 2 fixed points.
 // Amir Alizadeh & Hiroki Shibata, Tokyo Metropollitan University, created at Nottingham Trent University.
 // input need to be 64-b sign Q3.61 (1 bit for sign, 2int, 61 frac) - [-4, 4) range
+//latency is 8 cycle
 module Mul_64_FixedP
 #(
 	parameter P = 64
 )
 (
 	input CLK,
-	input RST,
 	input signed [P-1:0] a, 
 	input signed [P-1:0] b, 
 	output signed [2*P-1:0] q
@@ -144,7 +144,7 @@ end
 reg [127:0] sum_even, sum_odd;
 reg signed [127:0] result_q;
 // ------- Sign correction (Baugh-Wooley) -----
-localparam CORR_LAT = 6; // number of clock cycles delay -> From a_[REDUN] to final subtraction result_q <= sum_even + sum_odd - correction_pos
+localparam CORR_LAT = 5; // number of clock cycles delay -> From a_[REDUN] to final subtraction result_q <= sum_even + sum_odd - correction_pos
 reg [64:0] corr_pre [0: CORR_LAT-1];
 reg [127:0] correction_pos;
 
