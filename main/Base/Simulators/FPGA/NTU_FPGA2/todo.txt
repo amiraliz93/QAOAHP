@@ -137,7 +137,7 @@ We purchased C232HM. This cable can manipulate voltage at the output via USB. So
 
 The manual: DS_C232HM_MPSSE_CABLE.pdf.
 It can be manupulated using  pyftdi in python.
-spi_test.py: Python example to manupilate C232HM.
+spi_test.py: Python example to manupilate C232HM. The folowing driver hacking tools is necessary to use DS_C232HM_MPSSE_CABLE on Windows 11. It looks suspicious, I chekced it is OK.
 
 Driver: https://zadig.akeo.ie/
 Steps
