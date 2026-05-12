@@ -1,0 +1,58 @@
+// latency_probe_tb.sv — measure end-to-end latency of one Mul + slicer + adder chain
+`timescale 1ns/1ns
+
+module latency_check_tb();
+parameter P = 64;
+reg CLK,
+reg RST,
+reg signed [P-1:0] a , b;
+wire signed [2*P-1:0] q_mul;
+wire signed [P-1:0] q_add;
+wire signed [P-1:0] q_slicer;
+
+always #1 CLK = #CLK;
+
+ Mul_64_FixedP u_mul (
+    .CLK(CLK), 
+    .RST(RST), 
+    .a(a), 
+    .b(b),
+    .q(mul_q));
+
+mul_sclice #(.P(P), .IA(3), .IB(3), .IOUT(3)) u_slicer (
+    .CLK(CLK),
+    .RST(RST),
+    .a(mul_q),
+    .q(q_slicer)
+);
+adder_64_fixedP adder (
+    .CLK(CLK),
+    .RST(RST),
+    .a(q_slicer),
+    .b(64'h0000_0000_0000_0001), // add a small value to see the change in output
+    .q(q_add)
+);
+
+integer cycle;
+
+initial begin 
+    RST = 1;
+    CLK = 0;
+    a = 0,
+    b = 0;
+    cycle = 0;
+    #10 RST =0; // release reset after 10ns
+    @(posedge CLK); 
+    a = 64'sd2305843009213693952;  // +1.0 in Q3.61
+    b = 64'sd2305843009213693952;  // +1.0 in Q3.61  → product is +1.0
+    @(posedge CLK);
+    a = 0; b = 0;
+    repeat (40) begin
+        @(posedge CLK);
+        cycle = cycle +1;
+        $display("t=%0d  mul_q=%h  slc_q=%h  add_q=%h", cycle, mul_q, slc_q, add_q);
+    end
+    $stop;
+end
+endmodule
+
