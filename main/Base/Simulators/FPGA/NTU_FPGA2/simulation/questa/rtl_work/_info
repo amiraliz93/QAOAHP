@@ -1,0 +1,321 @@
+m255
+K4
+z2
+!s12c _opt1
+Z0 !s99 nomlopt
+!s12c _opt
+R0
+!s11f vlog 2025.2 2025.05, May 31 2025
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z1 dC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/simulation/questa
+T_opt
+!i145 1
+!i144 0
+!s110 1778361079
+VmHVn5P;2:g:zCcW[UeJ:M1
+Z2 04 9 4 work mixer2_tb fast 0
+=1-d43b04c1c8c0-69ffa2f5-16a-326c
+R0
+Z3 !s12f OEM100
+Z4 !s12b OEM100
+Z5 !s124 OEM10U8 
+Z6 !s135 nogc
+Z7 o-quiet -auto_acc_if_foreign -work work -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L stratixv_ver -L stratixv_hssi_ver -L stratixv_pcie_hip_ver -L stratixv -L stratixv_hssi -L stratixv_pcie_hip -L rtl_work -L work -L CORDIC_0 +acc
+Z8 tCvgOpt 0 defaultOptions 1107585188
+n@_opt
+Z9 OL;O;2025.2;82
+R1
+T_opt1
+!i145 1
+!i144 0
+!s110 1778362365
+V?ZoXeS@UOA:cjgS>m1Uhi1
+R2
+=1-d43b04c1c8c0-69ffa7fb-2d8-6298
+R0
+R3
+R4
+R5
+R6
+R7
+R8
+n@_opt1
+R9
+vaddFPF64
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64_sim/addFPF64.vo
+Z10 !s110 1778362359
+!i10b 1
+!s100 cgEBObT5eX<O^<:JC_C<D2
+I`hS1:bS0fJbDUXW60gVWV0
+R1
+Z11 w1778252146
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64_sim/addFPF64.vo
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64_sim/addFPF64.vo
+!i122 4
+L0 32 16424
+Z12 VDg1SIo80bB@j0V0VzS_@n1
+Z13 OL;L;2025.2;82
+r1
+!s85 0
+31
+Z14 !s108 1778362359.000000
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64_sim/addFPF64.vo|
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64_sim/addFPF64.vo|
+!i113 0
+Z15 o-L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z16 tCvgOpt 0 defaultOptions 1085333592
+nadd@f@p@f64
+vCORDIC_64_fixedP
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/CORDIC_64_fixedP.v
+!s110 1778362354
+!i10b 1
+!s100 L_3LX=O@zf@4`8V@ja`XG2
+IcezY[z6;UNZdKFKj8SeCl3
+R1
+w1778359966
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/CORDIC_64_fixedP.v
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/CORDIC_64_fixedP.v
+!i122 0
+Z17 L0 6 17
+R12
+R13
+r1
+!s85 0
+31
+!s108 1778362354.000000
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/CORDIC_64_fixedP.v|
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/CORDIC_64_fixedP.v|
+!i113 0
+R15
+R16
+n@c@o@r@d@i@c_64_fixed@p
+vcordicR
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/cordicR.v
+!s110 1778362357
+!i10b 1
+!s100 czo?iR=3T71OiiFzkTj`E1
+IdM>agVN5zEgVae8=ne91n3
+R1
+Z18 w1778252147
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/cordicR.v
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/cordicR.v
+!i122 1
+R17
+R12
+R13
+r1
+!s85 0
+31
+!s108 1778362357.000000
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/cordicR.v|
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/cordicR.v|
+!i113 0
+R15
+R16
+ncordic@r
+vFix53toFP64
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64_sim/Fix53toFP64.vo
+Z19 !s110 1778362360
+!i10b 1
+!s100 V_7:01ZdHz`mXe<GdMF8a0
+InL8o_R0hc4h9A>U<ERM]70
+R1
+R11
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64_sim/Fix53toFP64.vo
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64_sim/Fix53toFP64.vo
+!i122 6
+L0 32 4716
+R12
+R13
+r1
+!s85 0
+31
+Z20 !s108 1778362360.000000
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64_sim/Fix53toFP64.vo|
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64_sim/Fix53toFP64.vo|
+!i113 0
+R15
+R16
+n@fix53to@f@p64
+vFP2Fix53
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53_sim/FP2Fix53.vo
+R10
+!i10b 1
+!s100 h:zV1kW`F>EeK`z@GY4kO3
+I=;ebKHRX78==Qoz]W90Xc0
+R1
+R11
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53_sim/FP2Fix53.vo
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53_sim/FP2Fix53.vo
+!i122 5
+L0 32 5013
+R12
+R13
+r1
+!s85 0
+31
+R14
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53_sim/FP2Fix53.vo|
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53_sim/FP2Fix53.vo|
+!i113 0
+R15
+R16
+n@f@p2@fix53
+vmixer2_tb
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2_tb.sv
+Z21 DXx6 sv_std 3 std 0 22 @5XbY]_OacJl=`ToSm<M^0
+!s110 1778362362
+!i10b 1
+!s100 <JiW_R0Z8J=VX]ImcKQ`V0
+IIYK1a^]bT]>iaNAS019Ki2
+S1
+R1
+w1778361537
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2_tb.sv
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2_tb.sv
+!i122 10
+L0 5 167
+R12
+R13
+r1
+!s85 0
+31
+!s108 1778362362.000000
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2_tb.sv|
+!s90 -reportprogress|300|-sv|-work|work|+incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mixer2_tb.sv|
+!i113 0
+Z22 o-sv -work work -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z23 !s92 -sv -work work +incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2 -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+R16
+vMul_64_FixedP
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Mul_64_FixedP.sv
+R21
+Z24 !s110 1778362361
+!i10b 1
+!s100 f>2`5iChUS9FbTz`kI`Be1
+I>>_0<H9MdT<PA_QE?oCmg3
+S1
+R1
+R11
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Mul_64_FixedP.sv
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Mul_64_FixedP.sv
+!i122 9
+L0 4 173
+R12
+R13
+r1
+!s85 0
+31
+Z25 !s108 1778362361.000000
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Mul_64_FixedP.sv|
+!s90 -reportprogress|300|-sv|-work|work|+incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Mul_64_FixedP.sv|
+!i113 0
+R22
+R23
+R16
+n@mul_64_@fixed@p
+vmulfix8
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulfix8.v
+R21
+R19
+!i10b 1
+!s100 ;F[HXYC7W]HC59b?Z@:Z63
+I=PYKdDYX=D6M;@EgIYhmD0
+S1
+R1
+R18
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulfix8.v
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulfix8.v
+!i122 7
+L0 40 34
+R12
+R13
+r1
+!s85 0
+31
+R20
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulfix8.v|
+!s90 -reportprogress|300|-sv|-work|work|+incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulfix8.v|
+!i113 0
+R22
+R23
+R16
+vmulFPF64
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64_sim/mulFPF64.vo
+Z26 !s110 1778362358
+!i10b 1
+!s100 e0EzaHlKc;Yama76S^Y0k0
+ImTd28O9PidUMMHIY9g``c2
+R1
+R18
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64_sim/mulFPF64.vo
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64_sim/mulFPF64.vo
+!i122 3
+L0 32 10405
+R12
+R13
+r1
+!s85 0
+31
+Z27 !s108 1778362358.000000
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64_sim/mulFPF64.vo|
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64_sim/mulFPF64.vo|
+!i113 0
+R15
+R16
+nmul@f@p@f64
+vpll2
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2_sim/pll2.vo
+R26
+!i10b 1
+!s100 agPGeEn<jfmk]njb3a@UP1
+Ic]1VC:6gIzIG:86_iZYGZ0
+R1
+R18
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2_sim/pll2.vo
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2_sim/pll2.vo
+!i122 2
+L0 32 267
+R12
+R13
+r1
+!s85 0
+31
+R27
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2_sim/pll2.vo|
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2_sim/pll2.vo|
+!i113 0
+R15
+R16
+vUpdate_mixer
+2C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Update_mixer.sv
+R21
+R24
+!i10b 1
+!s100 U3kfijAjBZzMJ]2H7l2m62
+Igja0OUlV_jccEhj4^Q7RC0
+S1
+R1
+w1778362321
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Update_mixer.sv
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Update_mixer.sv
+!i122 8
+L0 6 183
+R12
+R13
+r1
+!s85 0
+31
+R25
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Update_mixer.sv|
+!s90 -reportprogress|300|-sv|-work|work|+incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Update_mixer.sv|
+!i113 0
+R22
+R23
+R16
+n@update_mixer
