@@ -26,7 +26,7 @@ baud_rate = 115200
 l_cosb = []
 l_sinb = []
 l_gamma = []
-NQ = 9
+NQ = 5
 NS = 2**NQ # number of layers
 Np = 2 # number of p layers.
 LP_BRAM_A = 2
@@ -264,21 +264,21 @@ for p in range(Np):
     l_sinb.append(sinb)
     l_cosb.append(cosb)
     l_gamma.append(gamma)
-    f.write(f"-------------------------------------------------------\n")
-    f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
-    f.write(f"-------------------------------------------------------\n")
+    #f.write(f"-------------------------------------------------------\n")
+    #f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
+    #f.write(f"-------------------------------------------------------\n")
     
     for i in range(NS):
         gHt = gamma*H[i]
         costFt = math.cos(gHt) + 1j*math.sin(gHt)
-        f.write(f"F_{i}: {costFt}\n")
+        #f.write(f"F_{i}: {costFt}\n")
         sv[i] = costFt*sv[i]
-    for i in range(NS):
-        f.write(f"F_{i}p_{i}: {sv[i]}\n")
+    #for i in range(NS):
+    #    f.write(f"F_{i}p_{i}: {sv[i]}\n")
 
     # apply mixer operator
     for cq in lcq: # counter of qbit.
-        f.write(f"\n---{p}-th layer {cq}-th qbit----------------------\n\n")
+        #f.write(f"\n---{p}-th layer {cq}-th qbit----------------------\n\n")
         for id2 in range(NS//2):
             sa = id2*2
             sb = id2*2 + 1
@@ -294,8 +294,8 @@ for p in range(Np):
             tsb = -1j*sinb * sv[a] + cosb * sv[b]
             sv[a] = tsa
             sv[b] = tsb
-            f.write(f"p_{a}: {tsa}\n")
-            f.write(f"p_{b}: {tsb}\n")
+            #f.write(f"p_{a}: {tsa}\n")
+            #f.write(f"p_{b}: {tsb}\n")
 
             # p'_a = cos p_a + i sin p_b
             # p'_b = i sin p_a + cos p_b
@@ -518,7 +518,7 @@ for i, b in enumerate(data_array):
             f.write(f" // {bfp64(b)}{lineend}")
 f.write("};" + lineend)
 f.close()
-f = open("resultpy.txt", "w")
+f = open("resultFPGA.txt", "w")
 # send to serial interface, for physical test of the implementation.
 start2 = time.perf_counter()
 end2 = time.perf_counter()
