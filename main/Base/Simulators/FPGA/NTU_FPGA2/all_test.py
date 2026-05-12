@@ -17,7 +17,7 @@ import time
 """
 Main configurable parameter blocks. 
 """
-seed = 0x22a2028e#random.getrandbits(31)
+seed = 0x22a2039#random.getrandbits(31)
 random.seed(seed)
 uart_port = 'COM3'
 # uart_port = "/dev/ttyUSB0"
@@ -26,17 +26,20 @@ baud_rate = 115200
 l_cosb = []
 l_sinb = []
 l_gamma = []
-NQ = 4
+NQ = 9
 NS = 2**NQ # number of layers
-Np = 3 # number of p layers.
-L_BRAM_A = 2
-L_BRAM_D = 2
-L_BRAM_R = L_BRAM_A + L_BRAM_D + 2
-L_BRAM_W = L_BRAM_A + L_BRAM_D + 1
+Np = 2 # number of p layers.
+LP_BRAM_A = 2
+LP_BRAM_D = 1
+LP_GEN_COST = 2
+LP_MIXER_IN = 1
+LP_MIXER_OUT = 1
+L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
+L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
 
-Lc = 223 + 1 + L_BRAM_R # cost gen latency, output H latency, memory and register latency.
-Lm = 52 + L_BRAM_R + 1 + L_BRAM_W + 1 # mixer latency 52 + 2 memory read + 2 write.
-LInit = 18
+Lc = 223 + 1 + L_BRAM_R + 1 + LP_GEN_COST + LP_GEN_COST# cost gen latency, output H latency, memory and register latency, address output latency.
+Lm = 52 + 1 + L_BRAM_R + 1 + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  # mixer latency 52, output latency to mixer + memory read, output of address + write latency + write address latency.
+LInit = 24
 output_command_sv = "all_test_cmd.sv"
 """
 Parameter modification blocks. The following block will modify the parameter if it does not meet the constraint. 
@@ -261,21 +264,21 @@ for p in range(Np):
     l_sinb.append(sinb)
     l_cosb.append(cosb)
     l_gamma.append(gamma)
-    #f.write(f"-------------------------------------------------------\n")
-    #f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
-    #f.write(f"-------------------------------------------------------\n")
+    f.write(f"-------------------------------------------------------\n")
+    f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
+    f.write(f"-------------------------------------------------------\n")
     
     for i in range(NS):
         gHt = gamma*H[i]
         costFt = math.cos(gHt) + 1j*math.sin(gHt)
-        #f.write(f"F_{i}: {costFt}\n")
+        f.write(f"F_{i}: {costFt}\n")
         sv[i] = costFt*sv[i]
-    #for i in range(NS):
-    #    f.write(f"F_{i}p_{i}: {sv[i]}\n")
+    for i in range(NS):
+        f.write(f"F_{i}p_{i}: {sv[i]}\n")
 
     # apply mixer operator
     for cq in lcq: # counter of qbit.
-        #f.write(f"\n---{p}-th layer {cq}-th qbit----------------------\n\n")
+        f.write(f"\n---{p}-th layer {cq}-th qbit----------------------\n\n")
         for id2 in range(NS//2):
             sa = id2*2
             sb = id2*2 + 1
@@ -291,8 +294,8 @@ for p in range(Np):
             tsb = -1j*sinb * sv[a] + cosb * sv[b]
             sv[a] = tsa
             sv[b] = tsb
-            #f.write(f"p_{a}: {tsa}\n")
-            #f.write(f"p_{b}: {tsb}\n")
+            f.write(f"p_{a}: {tsa}\n")
+            f.write(f"p_{b}: {tsb}\n")
 
             # p'_a = cos p_a + i sin p_b
             # p'_b = i sin p_a + cos p_b
