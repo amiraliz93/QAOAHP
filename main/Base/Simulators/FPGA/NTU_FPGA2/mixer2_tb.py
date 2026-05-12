@@ -40,8 +40,10 @@ Hr = []
 costF = []
 solutionM = [N]
 solutionC = [N]
-
+seed = 123
+random.seed(seed)
 beta = random.uniform(-2*math.pi, 2*math.pi)
+random.seed(seed)
 gamma = random.uniform(-2*math.pi, 2*math.pi)
 
 cosb, sinb = math.cos(beta), math.sin(beta)
@@ -60,6 +62,20 @@ for i in range(N):
     data.append(r1)
     Hr.append(Hrt)
     costF.append(costFt)
+def q3_61_int(x, frac_bits=61):
+    s = int(round(x * (1 << frac_bits)))
+    # Optional range check for signed 64-bit
+    if s < -(1 << 63) or s > (1 << 63) - 1:
+        raise ValueError("Out of range for signed 64-bit Q3.61")
+    return s
+
+def q3_61_hex(x, frac_bits=61):
+    s = q3_61_int(x, frac_bits)
+    return f"{(s & ((1 << 64) - 1)):016x}"
+
+def q3_61_dec(x, frac_bits=61):
+    s = q3_61_int(x, frac_bits)
+    return s / float(1 << frac_bits)
 
 for id2 in range(N//2):
     sa = id2*2
@@ -69,8 +85,8 @@ for id2 in range(N//2):
     # swap bits, so that a is an index only flipped cq-th bit of b. 
     # in other words, a is a neighbor index of b in terms of cq-th bit.
     # apply rotation
-    tsa = cosb * data[a] + 1j * sinb * data[b]
-    tsb = 1j*sinb * data[a] + cosb * data[b]
+    tsa = cosb * data[a] - 1j * sinb * data[b]
+    tsb = -1j*sinb * data[a] + cosb * data[b]
     solutionM[a] = tsa
     solutionM[b] = tsb
 
@@ -127,3 +143,6 @@ print(f"64'h{fp64b(b0).hex()}, // {b0}")
 print(f"64'h{fp64b(-0.1).hex()}, // {-0.1}")
 print("64'h"+ fp64b(10).hex() + ",")
 print("64'h"+ fp64b(-0.1).hex() + ",")
+
+
+
