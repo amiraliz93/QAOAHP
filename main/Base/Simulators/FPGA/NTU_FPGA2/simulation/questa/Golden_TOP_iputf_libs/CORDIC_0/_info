@@ -1,0 +1,270 @@
+m255
+K4
+z2
+!s11e vcom 2025.2 2025.05, May 31 2025
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/simulation/questa
+Ecordic_64_fixedp_cordic_0
+Z1 w1778359993
+Z2 DPx3 lpm 14 lpm_components 0 22 2o<bl5F=Rg0cm3lEccSaa3
+Z3 DPx12 altera_lnsim 23 altera_lnsim_components 0 22 IkVUgNVX366BneI70`VBS2
+Z4 DPx9 altera_mf 20 altera_mf_components 0 22 50VKBiXXd1l`N;@a6hzj`0
+Z5 DPx4 work 21 dspba_library_package 0 22 :[ze94hA2j:Of@bg;PfI?1
+Z6 DPx4 ieee 9 math_real 0 22 gNk<PdFJ<XNPcfef`f?Z81
+Z7 DPx4 ieee 11 numeric_std 0 22 aU^R8eGcicLcUFIaBQSL>3
+Z8 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z9 DPx4 ieee 14 std_logic_1164 0 22 cVAk:aDinOX8^VGI1ekP<3
+!i122 26
+R0
+Z10 8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/submodules/CORDIC_64_fixedP_CORDIC_0.vhd
+Z11 FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/submodules/CORDIC_64_fixedP_CORDIC_0.vhd
+l0
+Z12 L36 1
+VXB7RKJXPE`cA0j15hOB953
+!s100 JPlz25>V2@JikCH^2NRPS2
+Z13 OL;C;2025.2;82
+32
+!s110 1778362353
+!i10b 1
+Z14 !s108 1778362353.000000
+Z15 !s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/submodules/CORDIC_64_fixedP_CORDIC_0.vhd|-work|CORDIC_0|
+Z16 !s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/submodules/CORDIC_64_fixedP_CORDIC_0.vhd|
+!i113 0
+Z17 o-work CORDIC_0
+Z18 tExplicit 1 CvgOpt 0 defaultOptions 1083072464
+Anormal
+R2
+R3
+R4
+R5
+R6
+R7
+R8
+R9
+DEx4 work 25 cordic_64_fixedp_cordic_0 0 22 XB7RKJXPE`cA0j15hOB953
+!i122 26
+l7781
+L46 33196
+Vl[MDM3FoJEcON@RRA[PkC0
+!s100 miU^N]lemNAe1A3P4@T=l1
+R13
+32
+!s110 1778362354
+!i10b 1
+R14
+R15
+R16
+!i113 0
+R17
+R18
+Ecordicr_cordic_0
+Z19 w1778252147
+R2
+R3
+R4
+R5
+R6
+R7
+R8
+R9
+!i122 29
+R0
+Z20 8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/cordicR_CORDIC_0.vhd
+Z21 FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/cordicR_CORDIC_0.vhd
+l0
+R12
+ViAHH`FQWjdEZ0`^f_4Nb30
+!s100 CZ1kPnoW4i5=k:Q`[<h>D3
+R13
+32
+Z22 !s110 1778362356
+!i10b 1
+Z23 !s108 1778362356.000000
+Z24 !s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/cordicR_CORDIC_0.vhd|-work|CORDIC_0|
+Z25 !s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/cordicR_CORDIC_0.vhd|
+!i113 0
+R17
+R18
+Anormal
+R2
+R3
+R4
+R5
+R6
+R7
+R8
+R9
+Z26 DEx4 work 16 cordicr_cordic_0 0 22 iAHH`FQWjdEZ0`^f_4Nb30
+!i122 29
+Z27 l8527
+Z28 L46 36485
+Z29 V?28G^=Sda3C@5[<e9:g4i2
+Z30 !s100 @W`KL94Bdz1n^U=fNl:_]2
+R13
+32
+!s110 1778362357
+!i10b 1
+R23
+R24
+R25
+!i113 0
+R17
+R18
+Edspba_delay
+R19
+R5
+R8
+R9
+!i122 28
+R0
+Z31 8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library.vhd
+Z32 FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library.vhd
+l0
+L18 1
+VzCL2[b6EoN26:]^n[?o3T3
+!s100 >TY9@l4a>2O5Wd_6jF4:g0
+R13
+32
+R22
+!i10b 1
+Z33 !s108 1778362355.000000
+Z34 !s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library.vhd|-work|CORDIC_0|
+Z35 !s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library.vhd|
+!i113 0
+R17
+R18
+Adelay
+R5
+R8
+R9
+DEx4 work 11 dspba_delay 0 22 zCL2[b6EoN26:]^n[?o3T3
+!i122 28
+l37
+L34 51
+Va4MkkV;PdCEC;36zIf0WQ0
+!s100 DAfPXKZhR<Ac>Wg8zYj1H3
+R13
+32
+R22
+!i10b 1
+R33
+R34
+R35
+!i113 0
+R17
+R18
+Pdspba_library_package
+R8
+R9
+!i122 27
+R19
+R0
+8C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library_package.vhd
+FC:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library_package.vhd
+l0
+L17 56
+V:[ze94hA2j:Of@bg;PfI?1
+!s100 @e;XE0e^oAdIdzY=Rc];H3
+R13
+32
+!s110 1778362355
+!i10b 1
+R33
+!s90 -reportprogress|300|C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library_package.vhd|-work|CORDIC_0|
+!s107 C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library_package.vhd|
+!i113 0
+R17
+R18
+Edspba_pipe
+R19
+R7
+R8
+R9
+!i122 28
+R0
+R31
+R32
+l0
+L343 1
+V=QD758mSEOCQQMz:<Cjlf0
+!s100 ko3XcgZgdPgSD;SDR?Wmi2
+R13
+32
+R22
+!i10b 1
+R33
+R34
+R35
+!i113 0
+R17
+R18
+Artl
+R7
+R8
+R9
+DEx4 work 10 dspba_pipe 0 22 =QD758mSEOCQQMz:<Cjlf0
+!i122 28
+l362
+L356 21
+V385`:7G1V4>ZM:no7OmlF3
+!s100 =]hA3YBJaaU9dNBMla?I?2
+R13
+32
+R22
+!i10b 1
+R33
+R34
+R35
+!i113 0
+R17
+R18
+Edspba_sync_reg
+R19
+R5
+R7
+R8
+R9
+!i122 28
+R0
+R31
+R32
+l0
+L93 1
+V]TVM=JEm`U2=M<oJEnY]i0
+!s100 G`[2Ci2RQWoL`zK>2h>oj2
+R13
+32
+R22
+!i10b 1
+R33
+R34
+R35
+!i113 0
+R17
+R18
+Async_reg
+R5
+R7
+R8
+R9
+DEx4 work 14 dspba_sync_reg 0 22 ]TVM=JEm`U2=M<oJEnY]i0
+!i122 28
+l136
+L117 219
+VZGEc;@OJzPj<0kcUV67E_2
+!s100 3CF6gEiK7^`H_<3Ne[inV2
+R13
+32
+R22
+!i10b 1
+R33
+R34
+R35
+!i113 0
+R17
+R18

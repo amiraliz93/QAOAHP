@@ -1,0 +1,81 @@
+Info: Starting: Create simulation model
+Info: qsys-generate C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP.qsys --simulation=VERILOG --allow-mixed-language-simulation --output-directory=C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP\simulation --family="Stratix V" --part=5SGXEABN3F45I3YY
+Progress: Loading NTU_FPGA2/CORDIC_64_fixedP.qsys
+Progress: Reading input file
+Progress: Adding CORDIC_0 [altera_CORDIC 25.1]
+Progress: Parameterizing module CORDIC_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: CORDIC_64_fixedP: Generating "CORDIC_64_fixedP" for SIM_VERILOG
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 400 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Warning: CORDIC_0: Frequency search for this target may take up to 10 seconds
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 600 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 500 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 450 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 475 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 462 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 469 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: Could achieve 168 cycles latency maximum at Frequency 469 MHz, padding with registers to reach requested 170 cycles latency
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 462 -name CORDIC_64_fixedP_CORDIC_0 -noChanValid -faithfulRounding -printMachineReadable -lang VHDL -constrainLatency 170 -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: DSP Blocks Used: 0
+Info: CORDIC_0: LUTs Used: 37322
+Info: CORDIC_0: Memory Bits Used: 0
+Info: CORDIC_0: Memory Blocks Used: 0
+Info: CORDIC_0: "CORDIC_64_fixedP" instantiated altera_CORDIC "CORDIC_0"
+Info: CORDIC_64_fixedP: Done "CORDIC_64_fixedP" with 2 modules, 4 files
+Info: qsys-generate succeeded.
+Info: Finished: Create simulation model
+Info: Starting: Create Modelsim Project.
+Info: sim-script-gen --spd=C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP\CORDIC_64_fixedP.spd --output-directory=C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/ --use-relative-paths=true
+Info: Doing: ip-make-simscript --spd=C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP\CORDIC_64_fixedP.spd --output-directory=C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/ --use-relative-paths=true
+Info: Generating the following file(s) for MODELSIM simulator in C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/ directory:
+Info: 	mentor/msim_setup.tcl
+Info: Generating the following file(s) for RIVIERA simulator in C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/ directory:
+Info: 	aldec/rivierapro_setup.tcl
+Info: For information on how to simulate your IP, see the explanatory comments in the simulator-specific subdirectories under C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/.
+Info: Regenerate these scripts whenever you make any change to any Quartus-generated IP in your project.
+Info: Finished: Create Modelsim Project.
+Info: Starting: Create block symbol file (.bsf)
+Info: qsys-generate C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP.qsys --block-symbol-file --output-directory=C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP --family="Stratix V" --part=5SGXEABN3F45I3YY
+Progress: Loading NTU_FPGA2/CORDIC_64_fixedP.qsys
+Progress: Reading input file
+Progress: Adding CORDIC_0 [altera_CORDIC 25.1]
+Progress: Parameterizing module CORDIC_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: qsys-generate succeeded.
+Info: Finished: Create block symbol file (.bsf)
+Info: 
+Info: Starting: Create HDL design files for synthesis
+Info: qsys-generate C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP.qsys --synthesis=VERILOG --output-directory=C:\Amir_project\github_version\QAOAHP\main\Base\Simulators\FPGA\NTU_FPGA2\CORDIC_64_fixedP\synthesis --family="Stratix V" --part=5SGXEABN3F45I3YY
+Progress: Loading NTU_FPGA2/CORDIC_64_fixedP.qsys
+Progress: Reading input file
+Progress: Adding CORDIC_0 [altera_CORDIC 25.1]
+Progress: Parameterizing module CORDIC_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: CORDIC_64_fixedP: Generating "CORDIC_64_fixedP" for QUARTUS_SYNTH
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 400 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Warning: CORDIC_0: Frequency search for this target may take up to 10 seconds
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 600 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 500 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 450 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 475 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 462 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 469 -name none -noChanValid -faithfulRounding -printMachineReadable -noFileGenerate -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: Could achieve 168 cycles latency maximum at Frequency 469 MHz, padding with registers to reach requested 170 cycles latency
+Info: CORDIC_0: C:/altera/25.1std/quartus/dspba/backend/windows64/cmdPolyEval -target StratixV -frequency 462 -name CORDIC_64_fixedP_CORDIC_0 -noChanValid -faithfulRounding -printMachineReadable -lang VHDL -constrainLatency 170 -speedgrade 3_H3 FXPSinCosCordic 64 61 1 61
+Info: CORDIC_0: DSP Blocks Used: 0
+Info: CORDIC_0: LUTs Used: 37322
+Info: CORDIC_0: Memory Bits Used: 0
+Info: CORDIC_0: Memory Blocks Used: 0
+Info: CORDIC_0: "CORDIC_64_fixedP" instantiated altera_CORDIC "CORDIC_0"
+Info: CORDIC_64_fixedP: Done "CORDIC_64_fixedP" with 2 modules, 4 files
+Info: qsys-generate succeeded.
+Info: Finished: Create HDL design files for synthesis

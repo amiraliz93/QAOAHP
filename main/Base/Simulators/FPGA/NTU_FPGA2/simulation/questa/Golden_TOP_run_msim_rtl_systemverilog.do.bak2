@@ -1,0 +1,44 @@
+transcript on
+if ![file isdirectory Golden_TOP_iputf_libs] {
+	file mkdir Golden_TOP_iputf_libs
+}
+
+if {[file exists rtl_work]} {
+	vdel -lib rtl_work -all
+}
+vlib rtl_work
+vmap work rtl_work
+
+###### Libraries for IPUTF cores 
+vlib Golden_TOP_iputf_libs/CORDIC_0
+vmap CORDIC_0 ./Golden_TOP_iputf_libs/CORDIC_0
+###### End libraries for IPUTF cores 
+###### MIF file copy and HDL compilation commands for IPUTF cores 
+
+
+vcom "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/submodules/dspba_library_package.vhd"     -work CORDIC_0
+vcom "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/submodules/dspba_library.vhd"             -work CORDIC_0
+vcom "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/submodules/CORDIC_64_fixedP_CORDIC_0.vhd" -work CORDIC_0
+vlog "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/CORDIC_64_fixedP/simulation/CORDIC_64_fixedP.v"                                     
+vcom "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library_package.vhd"              -work CORDIC_0
+vcom "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/dspba_library.vhd"                      -work CORDIC_0
+vcom "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/submodules/cordicR_CORDIC_0.vhd"                   -work CORDIC_0
+vlog "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/cordicR/simulation/cordicR.v"                                                       
+vlog "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/pll2_sim/pll2.vo"                                                                   
+vlog "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mulFPF64_sim/mulFPF64.vo"                                                           
+vlog "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/addFPF64_sim/addFPF64.vo"                                                           
+vlog "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/FP2Fix53_sim/FP2Fix53.vo"                                                           
+vlog "C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Fix53toFP64_sim/Fix53toFP64.vo"                                                     
+
+vlog -sv -work work +incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2 {C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/gen_cost_fpold.sv}
+vlog -sv -work work +incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2 {C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/Mul_64_FixedP.sv}
+vlog -sv -work work +incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2 {C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/mul_slice.sv}
+
+vlog -sv -work work +incdir+C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2 {C:/Amir_project/github_version/QAOAHP/main/Base/Simulators/FPGA/NTU_FPGA2/gen_cost_fpold_tb.sv}
+
+vsim -t 1ps -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L stratixv_ver -L stratixv_hssi_ver -L stratixv_pcie_hip_ver -L stratixv -L stratixv_hssi -L stratixv_pcie_hip -L rtl_work -L work -L CORDIC_0 -voptargs="+acc"  gen_cost_fpold_tb
+
+add wave *
+view structure
+view signals
+run -all
