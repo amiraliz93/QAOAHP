@@ -226,7 +226,7 @@ regPipeline  #(.W_INFO($bits({gamma, HGC, Hr_o, Hi_o})), .NPipe(LP_GEN_COST)) in
    .info_out({gammaP, HGCP, Hr_oP, Hi_oP})
 );
 
-gen_cost  #(.P(P)) genCost
+gen_costFixedP  #(.P(P)) inst_gencostFixedP
   (
    .CLK(CLK), // input
    .gamma(gammaP), //  gamma, input
@@ -246,15 +246,15 @@ regPipeline  #(.W_INFO($bits({p_ar_o, p_ai_o, mix_infoR})), .NPipe(LP_MIXER_IN))
    .info_out({p_ar_oP, p_ai_oP, mix_infoRP})
 );
 
-mixer2 #(.P(P),.Ni(NM+1)) mix // width of additional information
+Update_mixer #(.P(P),.Ni(NM+1)) Umix // width of additional information
 (
    .CLK(CLK),
-   .cb(cosbP), // cos beta
-   .sb(sinbP), // sin beta
-   .p_ar(p_arP),
-   .p_ai(p_aiP),
-   .p_ar_o(p_ar_o),
-   .p_ai_o(p_ai_o),
+   .cos_beta(cosbP), // cos beta
+   .sin_beta(sinbP), // sin beta
+   .p_r(p_arP),
+   .p_i(p_aiP),
+   .p_r_o(p_ar_o),
+   .p_i_o(p_ai_o),
    .switch_in(mix_switchP),
    .info_in(mix_infoP), // information, like addresses, enabled signal, and so on.
    .info_out(mix_infoR) // information, like addresses, enabled signal, and so on.
