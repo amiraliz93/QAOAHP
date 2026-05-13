@@ -13,6 +13,43 @@ import datetime
 
 import time
 
+P = 64
+N = 61
+def float_to_fixed(a):
+    scaled = int(round(a * (1 << N)))
+    
+    min_val = -(1 << (P - 1))
+    max_val = (1 << (P - 1)) - 1
+    
+    if scaled < min_val:
+        scaled = min_val
+    elif scaled > max_val:
+        scaled = max_val
+    
+    return scaled
+
+def fixed_to_hex(b):
+    mask = (1 << P) - 1
+    return hex(b & mask)
+
+def float_to_hex(a):
+    ff = float_to_fixed(a)
+    return fixed_to_hex(ff)
+def fixed_to_float(b):
+    return b / float(1 << N)
+
+def hex_to_float(hex_str):
+    # Convert hex string to integer
+    b_unsigned = int(hex_str, 16)
+    
+    # Convert from unsigned to signed (two's complement)
+    if b_unsigned >= (1 << (P - 1)):
+        b_signed = b_unsigned - (1 << P)
+    else:
+        b_signed = b_unsigned
+    
+    # Convert to float
+    return b_signed / float(1 << N)
 
 """
 Main configurable parameter blocks. 
@@ -28,7 +65,7 @@ l_sinb = []
 l_gamma = []
 NQ = 5
 NS = 2**NQ # number of layers
-Np = 2 # number of p layers.
+Np = 2     # number of p layers.
 LP_BRAM_A = 2
 LP_BRAM_D = 1
 LP_GEN_COST = 2
@@ -37,8 +74,14 @@ LP_MIXER_OUT = 1
 L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
 L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
 
-Lc = 223 + 1 + L_BRAM_R + 1 + LP_GEN_COST + LP_GEN_COST# cost gen latency, output H latency, memory and register latency, address output latency.
-Lm = 52 + 1 + L_BRAM_R + 1 + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  # mixer latency 52, output latency to mixer + memory read, output of address + write latency + write address latency.
+N1 = 1 + 11          # data arrive at prc_N1Pip[1]
+N3 = 1 + 11 + 1 + 2; # suppose  add1_a visible at cycle 13 and add1_res on cycle 14
+gcN0 = 10;  # latency new test_mul 10 cycles
+gcN1 = 170; # latency of CORDIC
+gcPipe = 1+9+1+N1+1
+
+Lc = gcPipe + 1 + L_BRAM_R + 1 + LP_GEN_COST + LP_GEN_COST# cost gen latency, output H latency, memory and register latency, address output latency.
+Lm = N3 + 1 + L_BRAM_R + 1 + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  # mixer latency 52, output latency to mixer + memory read, output of address + write latency + write address latency.
 LInit = 24
 output_command_sv = "all_test_cmd.sv"
 """
@@ -96,7 +139,7 @@ def fp64b(f):
 def bfp64(b):
     return struct.unpack('<d', b)[0]
 def ib8(i):
-    return i.to_bytes(8, "little")
+    return i.to_bytes(8, "little", signed=True)
 def ib1(i):
     return i.to_bytes(1, "little")
 
@@ -398,13 +441,13 @@ for p in range(Np+1):
     sinb = l_sinb[p]
     gamma = l_gamma[p]
     data_array += [
-        OP_SEND8T, fp64b(cosb),
+        OP_SEND8T, ib8(float_to_fixed(cosb)),
         OP_WRITE_T2RAM,
         OP_INC_A,
-        OP_SEND8T, fp64b(sinb),
+        OP_SEND8T, ib8(float_to_fixed(sinb)),
         OP_WRITE_T2RAM,
         OP_INC_A,
-        OP_SEND8T, fp64b(gamma),
+        OP_SEND8T, ib8(float_to_fixed(gamma)),
         OP_WRITE_T2RAM,
         OP_INC_A
       ]
@@ -416,7 +459,7 @@ data_array += [OP_SEND8T, ib8(0x1000_0000_0000_0000), # set the address
     OP_MOV_T2A]
 for i in range(NS): 
     value = sv0[i]
-    data_array += [OP_SEND8T, fp64b(value.real), OP_WRITE_T2RAM, OP_INC_A]
+    data_array += [OP_SEND8T, ib8(float_to_fixed(value.real)), OP_WRITE_T2RAM, OP_INC_A]
 
 # write imaginary part.
 # set the address
@@ -424,7 +467,7 @@ data_array += [OP_SEND8T, ib8(0x2000_0000_0000_0000), # set the address
       OP_MOV_T2A]
 for i in range(NS): 
     value = sv0[i]
-    data_array += [OP_SEND8T, fp64b(value.imag), OP_WRITE_T2RAM, OP_INC_A]
+    data_array += [OP_SEND8T, ib8(float_to_fixed(value.imag)), OP_WRITE_T2RAM, OP_INC_A]
     
 # set the address
 data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # set the address
@@ -432,7 +475,7 @@ data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # set the address
 # send cost function
 for i in range(NS): 
     value = H[i]
-    data_array += [OP_SEND8T, fp64b(value), OP_WRITE_T2RAM, OP_INC_A]
+    data_array += [OP_SEND8T, ib8(float_to_fixed(value)), OP_WRITE_T2RAM, OP_INC_A]
 
 # run the simulation.
 data_array += [
@@ -515,7 +558,7 @@ for i, b in enumerate(data_array):
             f.write(f" // {idop[skey]}{lineend}")
     elif len(b) == 8:
         if lineend != "":
-            f.write(f" // {bfp64(b)}{lineend}")
+            f.write(f" // {ib8(float_to_fixed(b))}{lineend}")
 f.write("};" + lineend)
 f.close()
 f = open("resultFPGA.txt", "w")
@@ -548,7 +591,8 @@ for b in data_array:
     fr = float("inf")
     opecode = ""
     if len(b) == 8:
-        fr = bfp64(b)
+        fr = int.from_bytes(b, "little")
+        fp = fixed_to_float(fr)
     if b.hex() in idop:
         opecode = idop[b.hex()]
 
@@ -556,8 +600,9 @@ for b in data_array:
     ser.write(b); time.sleep(2e-4)  # recommend to wait tiny period of time, to prevent UART buffer overflow.
     if b == OP_FETCH8U:
         dr = ser.read(8)
-        fr = bfp64(dr)
-        print(f"Received {8} bytes: hex={dr.hex()} fp64={fr}, int64={int.from_bytes(dr, "little")}\n")
+        fr = int.from_bytes(dr, "little")
+        fp = fixed_to_float(fr)
+        print(f"Received {8} bytes: hex={dr.hex()} fp64={fp}, int64={int.from_bytes(dr, "little")}\n")
         f.write(f"{fr}\n")
     elif b == OP_FETCH1U:
         dr = ser.read(1)
