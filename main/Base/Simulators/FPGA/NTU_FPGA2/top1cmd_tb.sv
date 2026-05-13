@@ -111,7 +111,7 @@ initial begin
       recState <= 0;
       txCount <=  0;
 
-      fp64 = 64'b0100000000010000100110001001001101110100101111000110101001111111; // 4.149
+      fp64 = 64'he000_0000_0000_0000; // -1
       None8 = 64'd0;
 
       #CMD_WAIT;
@@ -191,7 +191,7 @@ initial begin
                               break;
                         end 
                   end
-                  $fwrite(fd, "%.18f\n", $bitstoreal(fp64rx));
+                  $fwrite(fd, "%.18f\n", fp64rx);
             end
             else begin
                   tx_dv <= 1;

@@ -5,7 +5,7 @@
 // need H and gamma be in format of Q3.61, 64 bits (1 sign, 2 int,61fract) range [-4, 4)
 // gamma should be in [-pi, pi]. -> signed 64-bits Q3.61
 // H is range [-1, 1] -> but its better to be in 64-bits Q3.61
-module gen_cost
+module gen_costFixedP
   #(
   parameter P=64, // number of word width
   parameter Ni=32) // width of additional information
@@ -20,6 +20,7 @@ module gen_cost
 
 localparam N0 = 10; // latency new test_mul 10 cycles
 localparam N1 = 170; // latency of CORDIC
+localparam Pipe = 1+9+1+N1+1;
 
 reg signed [P-1:0] mul_in1;
 reg signed [P-1:0] mul_in2;
@@ -40,7 +41,6 @@ wire signed [P-1:0]  slicer_out; // slicer output to cordic input
 
 Mul_64_FixedP new_mul(
       .CLK(CLK),
-      .RST(RST),
       .a(mul_in1), // H input of multiplier
       .b(mul_in2),
       .q(mul_out)
@@ -74,22 +74,14 @@ CORDIC_64_fixedP inst_cordic(
 always @(posedge CLK) begin
       
       integer i;
-	if (RST) begin
-            mul_in1 <= '0; // input of mutiplier
-            mul_in2 <= '0; // second input of multiplier
-            slicer_in <= '0; // input of slicer
-            cordic_in <= '0; // input of cordic
-				end
-      else begin
-            mul_in1 <= gamma;
-            mul_in2 <= H;	
-            end
-            slicer_in <= mul_out; // input of slicer is the output 
-		cordic_in <= slicer_out; // input of cordic is the output of multiplier after N0 cycles.
-            // sign-extend it to 64 bits - this do Q2.61, 63-bit into Q3.61, 64-bit
-		cordic_c_out <= {{1{cordic_cos_out[P-2]}}, cordic_cos_out}; // sign extend to 64 bit
-		cordic_s_out <= {{1{cordic_sin_out[P-2]}}, cordic_sin_out};
 
+      mul_in1 <= gamma;
+      mul_in2 <= H;	
+      slicer_in <= mul_out; // input of slicer is the output 
+      cordic_in <= slicer_out; // input of cordic is the output of multiplier after N0 cycles.
+      // sign-extend it to 64 bits - this do Q2.61, 63-bit into Q3.61, 64-bit
+      cordic_c_out <= {{1{cordic_cos_out[P-2]}}, cordic_cos_out}; // sign extend to 64 bit
+      cordic_s_out <= {{1{cordic_sin_out[P-2]}}, cordic_sin_out};
 end
 
 assign Hr_o = cordic_c_out; 
