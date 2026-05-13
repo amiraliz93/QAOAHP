@@ -69,9 +69,9 @@
 \newcommand{\hatk}{{\hat{k}}}
 \newcommand{\jbar}{{\MidBar{j}}}
 \newcommand{\hatM}{{\hat{M}}}
-\title{Mathematical description and parallelization of QAOA system}
-\date{April, 7th, 2026}
-\author{Hiroki Shibata, at Tokyo Metropolitan University}
+\title{Mathematical description and parallelization of QAOA system\\Version 2.0}
+\date{May, 8th, 2026}
+\author{Hiroki Shibata, Amir Alizadeh\\Tokyo Metropolitan University and Nottigham Trent University}
 \begin{document}
 \maketitle
 In this document we describe components of QAOA system mathematically, and introduce a novel parallelization algorithm for QAOA system. I, Shibata, supposes further discussion to improve and expand the QAOA system needs basic symbols and formulas to define it. Therefore, I wrote an article here. Please tell me any suggestion easily.
@@ -283,7 +283,7 @@ Here, for example, to compute the mixer operation, the input is set as,
         A_1 = \hatj
     \end{matrix} 
 \end{equation}
-where \(\hatj\) is an index applied a permutation to \(j\), defined in section \ref{sAddrGen}. If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 01\), it must be satisfied that \(\cbr{\hatj, q}\) is a set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). In the opposite case of \(\chi_1' = 01\), with a preceeding index \(p\), the case \(\cbr{p, \hatj}\in S_n\) must hold. For more example, if the input is the last amplitude, \(\chi_1' = 10\) must hold, because the last element should compose a pair with preceeding one. The way above supplying \(\chi_1' = j_0\overline{j_0}\) will satisfy these cases.
+where \(\hatj\) is an index applied a permutation to \(j\), defined in section \ref{sAddrGen}. \(\overline{\cdot}\) means bit flipping operation, that is, \(\overline{1} = 0, \overline{0} = 1\). If \(q\) is successor index supplied to the pipeline and \(\chi_1' = 01\), it must be satisfied that \(\cbr{\hatj, q}\) is a set of indexes of the amplitudes to be mixed. That is, for some \(n\in[N]\), \(\cbr{\hatj, q}\in S_n\). In the opposite case of \(\chi_1' = 01\), with a preceeding index \(p\), the case \(\cbr{p, \hatj}\in S_n\) must hold. For more example, if the input is the last amplitude, \(\chi_1' = 10\) must hold, because the last element should compose a pair with preceeding one. The way above supplying \(\chi_1' = j_0\overline{j_0}\) will satisfy these cases.
 
 We futher make the case \(\chi=00\) stands for cost function operation later, because this pipeline designed for mixer operation can be used only with slight modification. First this document describes the use of this pipeline in mixer operation.
 Updating the pipeline values as,
@@ -419,10 +419,10 @@ We want to express \(p^b, p^c, p^d\) using \(q^a\). To obtain these, combining r
 
 Substituting those above into \eqref{etdiff}, we have,
 \begin{align*}
- Y_a = t - t_a  &= 2^N + 2^{n-1}\br{q^a_n - q^a_1} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 - q^a_m), \\
- Y_b = t - t_b  &= 2^N + 2^{n-1}\br{q^a_n - \bar{q^a_1}} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 - q^a_m), \\
- Y_c = t - t_c  &= 2^N + 2^{n-1}\br{q^a_n - q^a_1} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 -\bar{q^a_m}), \\
- Y_d = t - t_d  &= 2^N + 2^{n-1}\br{q^a_n - \bar{q^a_1}} + 2^{m-1}\br{q^a_m - p^a_n} + (q^a_1 -\bar{q^a_m}), \\
+ Y_a = t - t_a  &= 2^N + 2^{n-1}\br{q^a_n - q^a_1} + 2^{m-1}\br{q^a_m - q^a_n} + (q^a_1 - q^a_m), \\
+ Y_b = t - t_b  &= 2^N + 2^{n-1}\br{q^a_n - \bar{q^a_1}} + 2^{m-1}\br{q^a_m - q^a_n} + (q^a_1 - q^a_m), \\
+ Y_c = t - t_c  &= 2^N + 2^{n-1}\br{q^a_n - q^a_1} + 2^{m-1}\br{q^a_m - q^a_n} + (q^a_1 -\bar{q^a_m}), \\
+ Y_d = t - t_d  &= 2^N + 2^{n-1}\br{q^a_n - \bar{q^a_1}} + 2^{m-1}\br{q^a_m - q^a_n} + (q^a_1 -\bar{q^a_m}), \\
 \end{align*}
 Note that terms of \(k\in[N]_{1, n, m}\) vanished from the summation, because \(p^x_k = q^x_k\) for such \(k\).
 
@@ -757,47 +757,50 @@ For \eqref{e1by1},
 \end{align*}
  The number of distinct pair of \(k, k', k\neq k'\) is \(2^{M+1} - 2^M = 2^M = K\).  The second factor is has the size \(2^{N-M-1}\). So \( Q(k\to k') = 2^{N-M-1} = D/(2K)\). It is repeated \(K\) times. So the above holds.
 
-\section{Simple parallel Implementation for block mixing}
-It is good to simplify the memory access topology in parallel implementation. Not rotation, but considering batch swapping like \(\sigma\), such that,
-\[
-\sigma(p_N \cdots p_1) = p_{N-M}\cdots p_{N-2M+1}\ p_N\cdots p_{N-M+1}\ p_{N-2M}\cdots p_1
-\]
-we can restrict the memory transfer within a pair and continuous, because, \(\sigma^2(p) = p\) which means \(\sigma^{-1} = \sigma\), and the least \(N-2M\) bits are the same. We can prove this batch swapping is valid for block mixing algorithm in a same manner of the proof for the rotation. Consider the case \(M=3, N=10\) and an instance of one index,
-\[
- p = 001\ 010\ q_4q_3q_2q_1.
-\]
-Then let a destination position of this index \(p\) be \(p'\). It can be obtained by applying permutation as, 
-\[
- p' = \sigma\br{p} = 010\ 001\ q_4q_3q_2q_1.
-\]
-It corresponds to just exchange top 3 bits and 4-6th bits. Remaining 4 bits are arbitrary. So we can transmit \(2^4\) data to the same position (in terms of least 4 bits) of the block with the global qbits \(010\) from global qbits \(001\).
+\section{Practical choise of permutations for parallel Implementation of block mixing}
+\label{sPracticalChoise}
+This section introduces one practical choise of permutations for parallel implementation of block mixing algorithm.
 
-We need remove the amplitude from the destination \(p'\) to receive a value from \(p\). So we need send the value at \(p'\) to keep it somewhere. But that place is clear now. Letting the destination place of \(p'\) be \(p''\), it can also be obtain by applying permutation, that is, 
+Let \(M\) be a number of global qbits, \(K = 2^M\), and \(O = N-M\) be a number of local qbits. As in section \ref{}, we devide index into 2 parts where each part is responsible to global qbits (greatest \(M\)-th qbits)  or local qbits (least \(O\)-th qbits).
 \[
- p'' = \sigma\br{p'} = \sigma\br{\sigma\br{p}} = p = 001\ 010\ q_4q_3q_2q_1.
+p = k_M\cdots k_1\ p_O\cdots p_1
 \]
+let be \(\tau\) is a permutation to swap \(M\)-th greatest qbits and \(M\)-th least qbits, as in,
+\[
+\tau(p) = p_O\cdots p_1 k_M\cdots k_1
+\]
+We propose the following procedure for each layer.
+\begin{enumerate}
+    \item Cost layer operation on index without permutation.
+    \item Swap the bits of index using \(\tau\), 
+    \item Mixer operation on \(1\) to \(M\)-th least qbits, using \(\sigma^n n=1,2,...,M\) defined in \eqref{}
+    \item Swap the bits of index using \(\tau\),
+    \item Mixer operation on \(1\) to \(O\)-th least qbits, using \(\sigma^n n=1,2,...,M\) defined in \eqref{}.
+\end{enumerate}
+This procedure gives the same solution with naive algorithm from the result of global and local qbits swap in Section {}, and give the non-stopping condition of pipeline \(T < 2^{O}- 2^M\) for \(\tau\) and \(T < 2^{O-1}\) for \(\sigma^n\). We prepared the proof in Appendix \ref{sProofBMANonstop}.
 
-We can see, we just need to exchange value on the positions between \(010\ 001\ q_4q_3q_2q_1\) and \(001\ 010\ q_4q_3q_2q_1\). 
-\subsection{Block mixing and non-stopping pipeline}
-Idea without proof. Just consider, for example, the following 4 indexes.
-\[
- p = 000\ 001\ q_4q_3q_2q_1,  p' = \sigma\br{p} = 001\ 000\ q_4q_3q_2q_1.
-\]
-\[
- q = 010\ 001\ q_4q_3q_2q_1,  q' = \sigma\br{p} = 001\ 010\ q_4q_3q_2q_1.
-\]
-we can see, \(\cbr{q', p'}\in S_6\). Futher, letting \(k, j\in B^3\) and consider ,
+\subsection{How communication looks like}
+Just consider, for example, the following 4 indexes,
 \begin{align*}
-    p^j = j\ k\ q_4q_3q_2q_1,  q^j = \sigma\br{p} = k\ j\ q_4q_3q_2q_1.
+ p &= 000\ q_4q_3q_2q_1\ 001,  p' = \sigma\br{p} = 001\ q_4q_3q_2q_1\ 000,\\
+ q &= 010\ q_4q_3q_2q_1\ 001,  q' = \sigma\br{p} = 001\ q_4q_3q_2q_1\ 010.\\
+ x &= 001\ q_4q_3q_2q_1\ 001,  x' = \sigma\br{p} = 001\ q_4q_3q_2q_1\ 001.\\
+ y &= 011\ q_4q_3q_2q_1\ 001,  y' = \sigma\br{p} = 001\ q_4q_3q_2q_1\ 011.
 \end{align*}
-we can see again, \(\exists n\in\cbr{4,5,6}, \cbr{q^j, q^{j+1}}\in S_n\). So for each block \(k\), by making the system transmit data \(j \to  k\), and \(j + 1\to  k\) after that, we can mix these consequent data immediately before storing it to BRAMs of \(k\)-th block. See Fig. \ref{fblocknon} for example. Formal detailed description is under construction.
+we can see, \(\cbr{p', x'}\in S_1, \cbr{q', y'}\in S_1\). So, with these index, by sending as,
+\[\psi_{p'}' = \psi_p, \psi_{x'}' = \psi_x\]
+the system can mix the pair of amplitudes \((\psi_{p'}', \psi_{x'}')\) before storing it to their destination. Same as for the pair \((\psi_{q'}', \psi_{y'}')\).
+
+Futher, letting \(k, j\in B^3\) and consider, it can be generalized into
+\begin{align*}
+    p^j = j\ q_4q_3q_2q_1\ k,  q^j = \sigma\br{p} = k\ q_4q_3q_2q_1\ j.
+\end{align*}
+we can see again, for \(m=0,1,2,3,\) \(\cbr{q^{2m}, q^{2m+1}}\in S_1\). So for each block \(k\), by making the system transmit data \(j \to  k\), and \(j + 1\to  k\) after that, we can mix these consequent data immediately before storing it to BRAMs of \(k\)-th block. Because \(\sigma^2\) is an identity mapping now, exactly opposite direction of transmissions \(k \to  j\) will occur at the same time. That is, transmisshons occur and only occur between  a pair of blocks as in Fig. \ref{fblocknon}. This nature makes the implementation feasible.
 \begin{figure}
     \includegraphics[width=\linewidth]{block-non-stoppingex.pdf}
     \caption{Example of block mixing transfer and non-stopping pipeline combination.}
     \label{fblocknon}
 \end{figure}
-
-Proof of this system is valid is a little bit difficult, because we need to combine swapping and batch swapping operator here.
 
 \section{Problem of Memory bandwidth}
 The problem of memory bandwidth in our FPGA is discussed. As a result I recommend to challenge to the memory bandwidth should be in the future work.
@@ -810,11 +813,11 @@ Speaking to the pipeline defined in section \ref{spipe}, it already has the data
 
 \section{Appendix}
 
-\subsection{Necessary condition of the mixer pipeline in general index permutation}
+\subsection{Sufficient condition of the mixer pipeline in general index permutation}
 \label{sMinGen}
 This section provides a proof \eqref{eTinGen}. Because this proof is complex, and the result does not have practical benefit, it is recommended for the reader of the document to see this section only if you have special technical reason.
 
-As in \eqref{etdiff}, we only consider \(\cbr{a, b}\in S_n\). By doing so, at least we can prove \(2^{N/2} > T\) is a necessary condition not to make the pipeline to wait flashing its data before going to the next qbit. Note that the condition shown here is not sufficient, but necessary one. 
+As in \eqref{etdiff}, we only consider \(\cbr{a, b}\in S_n\). By doing so, at least we can prove \(2^{N/2} > T\) is a sufficient condition not to make the pipeline to wait flashing its data before going to the next qbit.  
 
 Relate \(a = l^t, n = q^t\) for \(l^t, q^t, t\) in \eqref{elt}. Let \(\tau, \lambda: B^N\to B^N\) are bijective mapping in \eqref{elt} defines \(n\) and \(m=n-1\)-th index operation respectively,  and make equivalent permutations of \([N]\to [N]\) be represented with the same symbols \(\tau, \lambda\) respectively. Then because \(\cbr{a, b}\in S_n\) and \(\exists c, \cbr{a, c}\in S_m\), there are \(p, q\in B^N\) having the relation,
 \begin{equation}
@@ -859,7 +862,7 @@ A(y) &\geq 2^N + \sum_{k\in L}^N 2^{k-1} (y_k - y_{hk})  + \sum_{k\in hL}2^{k-1}
 &\geq 2^{N/2}  - 1. \quad\because N/2 \leq N- \hat{N}.
 \end{align*}
 
-Substituting \(h = \lambda\tau^{-1}\) in Lemma B above is possible because \(\lambda\tau^{-1}\) is a bijection. Also substituting \(y = q^a\), we have \(Y_a = A(q^a) > 2^{N/2}-1\), that makes \eqref{eTinGen} a necessary condition the pipeline need when it does not stop before going to the next qbit.
+Substituting \(h = \lambda\tau^{-1}\) in Lemma B above is possible because \(\lambda\tau^{-1}\) is a bijection. Also substituting \(y = q^a\), we have \(Y_a = A(q^a) > 2^{N/2}-1\). Because we are talking the minimum value of \(Y_a\) for every possible permutations, the proof makes \eqref{eTinGen} a sufficient condition the pipeline does not need to stop with any index permutation. This is far strict than the condition of \(T < 2^{N-1}\) assuming the permutation is just a swap. Therefore, it is recommended to consider specific permutation that sufficiently provide necessary property of the computation.
 \subsection{Lemma A}
 \label{slemmaA}
 
@@ -881,5 +884,73 @@ Therefore,
 A(q') > A(q).
 \]
 
+\subsection{Proof of the condition that parallel block mixing algorithm enable non-stopping pipeline}
+\label{sProofBMANonstop}
+Consider the permutation,
+\[
+\sigma(p_O \cdots p_1\ k_M\cdots k_1) = k_M\cdots k_1\ p_O\cdots p_1, k\in B^M, p\in B^O, O = N-M,
+\]
+for block mixing. 
+Let \(a\) be an index now the system needs to process at the time \(t\) with the permutation \(\sigma\), and \(t_a\) is the time \(a\) processed last time with the permutation \(\tau\), where we are assuming \(\tau\) is a swapping used in mixer operation, so it is bijective. Consider \(a\) have the 2 expressions, \(a = \sigma q = \tau p\). hence we have, 
+\[
+    t_a = (n-1)E + p, t = n E  + q, E = 2^{O}
+\] 
+\[
+    t - t_a = q + E - p  = 2^O + \sum_{j=1}^O 2^{j-1}(q_j-p_j).
+\]
+\[
+\sigma q = q_O\cdots q_{M+1} \cdots k_M\cdots k_1, \tau p = p_1 p_{O-1}\cdots p_2 p_O.
+\]
+This section provides 2 cases of \(\tau\), one case (A) for \(\tau\) is a swapping used in mixer operation. Applicatoin with such swapping as \(\tau\) means \(\sigma\) is used between 2 mixer operations. Another case (B) is to chose one of identity mapping or \(M\)-th and \(1\)-st bits swapping for \(\tau\). This corresponds to that block mixing with \(\sigma\) will appear before the beginning of the mixer layer, and intermadiate period of the mixer operations just after \(M\)-th local qbits. The second case corresponds to the process introduced in the Section \ref{sPracticalChoise}. Here after this shows case (A) first, then case (B).
 
+Because \(\sigma\) is not an bijective, it does not have inverse mapping. We consider \(\tau^{-1}\sigma q =  p\) because \(\tau\) is a bijection mapping. Then it is,
+\[
+ \tau^{-1}\sigma q  = k_1 q_{O-1}\cdots q_{M+1} \cdots k_M\cdots k_2 q_O
+\]
+therefore, 
+\begin{align*}
+ t - t_a &= 2^O + 2^{O-1} (q_O - k_1) + \sum_{j=2}^{M} 2^{j-1}(q_j-k_j) + (q_1 - q_O) 
+\end{align*}
+we consider the minimum value of the above. The instance is, 
+\[
+q_O = 0, k_1 = 1, q_1 = 0, \forall j\in M_2(q_j = 0, k_j = 1).
+\]
+So, we have, 
+\begin{align*}
+ t - t_a &\geq 2^O - 2^{O-1} - \sum_{j=2}^{M} 2^{j-1} + 0 \\
+ &\geq 2^{N-M-1} - 2^{M} + 2. \because O = N-M.
+\end{align*}
+A little strict than the serial case of \(2^{N-1}\). \(M=2, N = 8\), then, \(t - t_a = 30.\) \(M=2, N=9 \Rightarrow t-t_a = 62\). \(M=6, N=16 \Rightarrow t-t_a = 450\). Still usefule for big number of qbits. \(M\) global qbits means \(K=2^M\) parallel blocks exist. \(M=6\) means then \(64\) parallel. 
+
+There is another strategy. (1) immidiate after cost function, apply exchange of \(M\) global qbits and \(M\) local qbits. (2) applying mixer to \(M\) local qbits (originally global), (3) exchange again. (4) Apply local mixer to \(1-O\)-th qbits.
+
+For (1)-(2) non stopping deal, \(h\) is identity mapping \(hp=p\) because cost function does not swap qbits. (2)-(4) non stopping deal \(h\) swaps \(1\) and \(M\)-th qbits. 
+
+For the case (1)-(2), 
+\[
+h^{-1}\sigma q  = q_O q_{O-1}\cdots q_{M+1} \cdots k_M \cdots k_2 k_1
+\]
+hence, 
+\begin{align*}
+ t - t_a &= 2^O + \sum_{j=1}^{O} 2^{j-1}(q_j-p_j) \\
+ &= 2^O + \sum_{j=M+1}^{O} 2^{j-1}(q_j-q_j)  + \sum_{j=1}^{M} 2^{j-1}(q_j-k_j) \\
+ &= 2^O + \sum_{j=1}^{M} 2^{j-1}(q_j-k_j) \because q_j-q_j = 0.\\
+ &\geq 2^O - 2^{M} + 2 - 1.\\
+ &\geq 2^O - 2^{M} + 1.\\
+\end{align*}
+
+So, for (2)-(4) case then,
+\[
+h^{-1}\sigma q  = q_O q_{O-1}\cdots q_{M+1} \cdots k_1 k_{M-1}\cdots k_2 k_M
+\]
+hence, 
+\begin{align*}
+ t - t_a &= 2^O + \sum_{j=1}^{O} 2^{j-1}(q_j-p_j) \\
+ &= 2^O + \sum_{j=M+1}^{O} 2^{j-1}(q_j-q_j)  + 2^{M-1}(q_M-k_1) + \sum_{j=2}^{M-1} 2^{j-1}(q_j-k_j) + (q_1-k_M)\\
+ &= 2^O  + 2^{M-1}(q_M-k_1) + \sum_{j=2}^{M-1} 2^{j-1}(q_j-k_j) + (q_1-k_M)\because q_j - q_j = 0.\\
+ &\geq 2^O - 2^{M-1} - 2^{M-1} + 2 - 1.\\
+ &\geq 2^O - 2^{M} + 1.\\
+\end{align*}
+
+Results are the same, but both conditions of case (B) became loose than the perivious case (A). 
 \end{document}
