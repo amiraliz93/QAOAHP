@@ -305,7 +305,8 @@ for p in range(Np):
     sinb = np.sin(beta)
     cosb = np.cos(beta)
     l_sinb.append(sinb)
-    l_cosb.append(cosb)
+    l_cosb.append(cosb) 
+    
     l_gamma.append(gamma)
     #f.write(f"-------------------------------------------------------\n")
     #f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
