@@ -7,11 +7,9 @@
 // H is range [-1, 1] -> but its better to be in 64-bits Q3.61
 module gen_costFixedP
   #(
-  parameter P=64, // number of word width
-  parameter Ni=32) // width of additional information
+  parameter P=64) // width of additional information
   (
    input  CLK, // all ports
-   input  RST,
    input  [P-1:0]  gamma, // cos gamma
    input  [P-1:0]   H,
    output signed [P-1:0]  Hr_o, // real part of e^(i gamma H)
@@ -38,7 +36,6 @@ wire signed [2*P-1:0] mul_out; // output of multiplier = gamma*H
 wire signed [P-1:0]  slicer_out; // slicer output to cordic input
 
 
-
 Mul_64_FixedP new_mul(
       .CLK(CLK),
       .a(mul_in1), // H input of multiplier
@@ -53,7 +50,6 @@ mul_slice #(
       .IOUT(3)
 ) slicer (
       .CLK(CLK),
-      .RST(RST),
       .a(mul_out),   // output of multiplier
       .q(slicer_out)   // input of cordic
       );
@@ -63,7 +59,6 @@ mul_slice #(
 // CORDIC outpu is signed 63-bit (1 bit sign, 2 bit int, 61 frac) - [-2, 2) range.
 CORDIC_64_fixedP inst_cordic(
       	.a(cordic_in),  //  input (it is H*gamma) wire width = [63:0] 
-		.areset(RST),    // areset.reset        
 		.c(cordic_cos_out),         // output is 63 bits - [62:0] , cos - 61 frac and 2 int
 		.clk(CLK),       // clk.clk         
 		.s(cordic_sin_out)          //  output is 63 bits [62:0] , sin 61 frac and 2 int

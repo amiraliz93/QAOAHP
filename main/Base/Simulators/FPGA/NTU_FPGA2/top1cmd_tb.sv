@@ -80,7 +80,7 @@ localparam qa_INIT = 16;
 integer fd;
 reg [63:0] fp64;
 reg [63:0] None8;
-reg [63:0] fp64rx = 0;
+reg [63:0] rx64 = 0;
 reg [7:0] recState;
 reg [7:0] recCount;
 reg [7:0] txCount;
@@ -93,7 +93,7 @@ always @(posedge CLK) begin
       if(recState == 1) begin
             if(recCount != 8)begin
                   if(rx_dv) begin
-                        fp64rx[recCount*8+:8] <= rx_data_out;
+                        rx64[recCount*8+:8] <= rx_data_out;
                         recCount <= recCount + 1;
                   end
             end
@@ -170,7 +170,7 @@ initial begin
                               end 
                         end
 
-                        if(fp64rx[7:0] == qa_WAIT) begin
+                        if(rx64[7:0] == qa_WAIT) begin
                               break;
                         end
                         # CMD_WAIT;
@@ -191,7 +191,7 @@ initial begin
                               break;
                         end 
                   end
-                  $fwrite(fd, "%.18f\n", fp64rx);
+                  $fwrite(fd, "0x%016h\n", rx64);
             end
             else begin
                   tx_dv <= 1;
