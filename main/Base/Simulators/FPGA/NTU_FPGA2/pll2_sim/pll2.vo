@@ -229,7 +229,7 @@ module  pll2
 		pll2_altera_pll_altera_pll_i_1098.n_cnt_odd_div_duty_en = "false",
 		pll2_altera_pll_altera_pll_i_1098.number_of_clocks = 2,
 		pll2_altera_pll_altera_pll_i_1098.operation_mode = "direct",
-		pll2_altera_pll_altera_pll_i_1098.output_clock_frequency0 = "200.000000 MHz",
+		pll2_altera_pll_altera_pll_i_1098.output_clock_frequency0 = "320.000000 MHz",
 		pll2_altera_pll_altera_pll_i_1098.output_clock_frequency1 = "2.000000 MHz",
 		pll2_altera_pll_altera_pll_i_1098.output_clock_frequency10 = "0 MHz",
 		pll2_altera_pll_altera_pll_i_1098.output_clock_frequency11 = "0 MHz",

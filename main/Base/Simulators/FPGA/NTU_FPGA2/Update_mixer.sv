@@ -12,7 +12,6 @@ module Update_mixer
 )
 (
     input CLK,
-    input RST,
     input [P-1:0] cos_beta,
     input [P-1:0] sin_beta,
     input [P-1:0] p_r, // we get two time for a and b amplitute
@@ -28,8 +27,8 @@ module Update_mixer
 // latency of multiplier itself is 8 cycle - muls-slice is 1 cycle and adder 1 cycle
 
 //adder 1 cycle
-parameter N1 = 1 + 11 ; // data arrive at prc_N1Pip[1]
-parameter N3 = 1 + 11 + 1 + 2; // suppose  add1_a visible at cycle 13 and add1_res on cycle 14
+parameter N1 = 1 + 10 + 1 ; // data arrive at prc_N1Pip[1]
+parameter N3 = 1 + 10 + 2 + 1 + 1 + 1; // suppose  add1_a visible at cycle 13 and add1_res on cycle 14
 
 
 reg [Ni-1:0] p_info [N3-1:0];
@@ -77,7 +76,6 @@ Mul_64_FixedP mul1(
 mul_slice #(.P(P), .IA(3), .IB(3), .IOUT(3)
 ) slicer1 (
       .CLK(CLK),
-      .RST(RST),
       .a(mul1_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
       .q(n_prc_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
 );
@@ -91,7 +89,6 @@ Mul_64_FixedP mul2(
 mul_slice #(.P(P), .IA(3), .IB(3), .IOUT(3)
 ) slicer2 (
       .CLK(CLK),
-      .RST(RST),
       .a(mul2_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
       .q(n_prs_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
 );
@@ -105,7 +102,6 @@ Mul_64_FixedP mul3(
 mul_slice #(.P(P), .IA(3), .IB(3), .IOUT(3)
 ) slicer3 (
       .CLK(CLK),
-      .RST(RST),
       .a(mul3_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
       .q(n_pic_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
 );
@@ -118,7 +114,6 @@ Mul_64_FixedP mul4( // sinB * p_i  (second input)(p_bi)
 mul_slice #(.P(P), .IA(3), .IB(3), .IOUT(3)
 ) slicer4 (
       .CLK(CLK),
-      .RST(RST),
       .a(mul4_raw), // output of multiplier, format is Q(IA+IB).(FRAC_A + FRAC_B)
       .q(n_pis_N1Pip) // output of slicer, format is Q(IOUT).(FRAC_OUT)
 );
@@ -152,64 +147,64 @@ localparam [63:0] SIGN_MASK = 64'h8000_0000_0000_0000;
 
 always @(posedge CLK) begin
 
-            cos_beta_0Pip <= cos_beta;
-            sin_beta_0Pip <= sin_beta;
-            pr_0Pip <= p_r;
-            pi_0Pip <= p_i;
-            p_info[0] <= info_in;
-            p_switch[0] <= switch_in;
-            prc_N1Pip[0] <= n_prc_N1Pip;
-            prs_N1Pip[0] <= n_prs_N1Pip;
-            pic_N1Pip[0] <= n_pic_N1Pip;
-            pis_N1Pip[0] <= n_pis_N1Pip;
-            for (i = 0; i < 2; i = i + 1) begin
-                  prc_N1Pip[i+1] <= prc_N1Pip[i];
-                  prs_N1Pip[i+1] <= prs_N1Pip[i];
-                  pic_N1Pip[i+1] <= pic_N1Pip[i];
-                  pis_N1Pip[i+1] <= pis_N1Pip[i];
-            end
-            for (i = 0; i <= N3-2; i = i + 1) begin
-                  p_info[i+1]   <= p_info[i];
-                  p_switch[i+1] <= p_switch[i];
-            end
+      cos_beta_0Pip <= cos_beta;
+      sin_beta_0Pip <= sin_beta;
+      pr_0Pip <= p_r;
+      pi_0Pip <= p_i;
+      p_info[0] <= info_in;
+      p_switch[0] <= switch_in;
+      prc_N1Pip[0] <= n_prc_N1Pip;
+      prs_N1Pip[0] <= n_prs_N1Pip;
+      pic_N1Pip[0] <= n_pic_N1Pip;
+      pis_N1Pip[0] <= n_pis_N1Pip;
+      for (i = 0; i < 2; i = i + 1) begin
+            prc_N1Pip[i+1] <= prc_N1Pip[i];
+            prs_N1Pip[i+1] <= prs_N1Pip[i];
+            pic_N1Pip[i+1] <= pic_N1Pip[i];
+            pis_N1Pip[i+1] <= pis_N1Pip[i];
+      end
+      for (i = 0; i <= N3-2; i = i + 1) begin
+            p_info[i+1]   <= p_info[i];
+            p_switch[i+1] <= p_switch[i];
+      end
 
-            case(p_switch[N1])
-                  2'b01: begin
-                        // it is assumed in this case, N1Pip[1] has p_a, and N1Pip[0] has p_b. Generate p'_a.
-                        // adder 1 will performe, pp_r = cosb * p_r - sinb * p_bi
-                        // adder 2 will performe, pp_i = cosb * p_i + sinb * p_br
+      case(p_switch[N1])
+            2'b01: begin
+                  // it is assumed in this case, N1Pip[1] has p_a, and N1Pip[0] has p_b. Generate p'_a.
+                  // adder 1 will performe, pp_r = cosb * p_r - sinb * p_bi
+                  // adder 2 will performe, pp_i = cosb * p_i + sinb * p_br
 
- // 0 means input second  time for amplitute b and 1 measn input first for amplitute a - 
- // prc = real part of amplitute (p_ar) * and cosb
- // prs = real part of amplitute (p_ar) * and sinb
- // pic = imag part of amplitute (p_ai) * and cosb    
+// 0 means input second  time for amplitute b and 1 measn input first for amplitute a - 
+// prc = real part of amplitute (p_ar) * and cosb
+// prs = real part of amplitute (p_ar) * and sinb
+// pic = imag part of amplitute (p_ai) * and cosb    
 // pis = imag part of amplitute (p_ai) * and sinb
-                        add1_a <= prc_N1Pip[1]; // result mul1, which is cosb * p_r
-                        add1_b <= pis_N1Pip[0]; 
-                        add2_a <= pic_N1Pip[1];
-                        add2_b <= -prs_N1Pip[0];
-                  end
-                  2'b10: begin
-                        // it is assumed in this case, N1Pip[2] has p_a, and N1Pip[1] has p_b. Generate p'_b.
-                        // adder 1 will performe, pp_br = - sinb * p_i + cosb * p_br
-                        // adder 2 will performe, pp_bi = sinb * p_r + cosb * p_bi
-                        add1_a <= prc_N1Pip[1];
-                        add1_b <= pis_N1Pip[2]; 
-                        add2_a <= pic_N1Pip[1];
-                        add2_b <= -prs_N1Pip[2];
-                  end
-                  default: begin
-                        // this is for cost function operator
-                        // adder 1 will performe, pp_r = - sinb* p_i + cosb *p_r
-                        // adder 2 will performe, pp_i = sinb *p_r + cosb *p_i
-                        add1_a <= prc_N1Pip[1];
-                        add1_b <= -pis_N1Pip[1]; //^ SIGN_MASK;
-                        add2_a <= pic_N1Pip[1];
-                        add2_b <= prs_N1Pip[1];
-                  end
-            endcase
-            pr_N3Pip <= add1_res;
-            pi_N3Pip <= add2_res;
+                  add1_a <= prc_N1Pip[1]; // result mul1, which is cosb * p_r
+                  add1_b <= pis_N1Pip[0]; 
+                  add2_a <= pic_N1Pip[1];
+                  add2_b <= -prs_N1Pip[0];
+            end
+            2'b10: begin
+                  // it is assumed in this case, N1Pip[2] has p_a, and N1Pip[1] has p_b. Generate p'_b.
+                  // adder 1 will performe, pp_br = - sinb * p_i + cosb * p_br
+                  // adder 2 will performe, pp_bi = sinb * p_r + cosb * p_bi
+                  add1_a <= prc_N1Pip[1];
+                  add1_b <= pis_N1Pip[2]; 
+                  add2_a <= pic_N1Pip[1];
+                  add2_b <= -prs_N1Pip[2];
+            end
+            default: begin
+                  // this is for cost function operator
+                  // adder 1 will performe, pp_r = - sinb* p_i + cosb *p_r
+                  // adder 2 will performe, pp_i = sinb *p_r + cosb *p_i
+                  add1_a <= prc_N1Pip[1];
+                  add1_b <= -pis_N1Pip[1]; //^ SIGN_MASK;
+                  add2_a <= pic_N1Pip[1];
+                  add2_b <= prs_N1Pip[1];
+            end
+      endcase
+      pr_N3Pip <= add1_res;
+      pi_N3Pip <= add2_res;
       
 end
 endmodule

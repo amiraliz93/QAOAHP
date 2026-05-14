@@ -13,34 +13,98 @@ import datetime
 
 import time
 
+P = 64
+N = 61
+
+def float_to_fixed(a):
+    scaled = int(round(a * (1 << N)))
+    
+    min_val = -(1 << (P - 1))
+    max_val = (1 << (P - 1)) - 1
+    
+    if scaled < min_val:
+        scaled = min_val
+    elif scaled > max_val:
+        scaled = max_val
+    
+    return scaled
+
+def fixed_to_hex(b):
+    mask = (1 << P) - 1
+    return hex(b & mask)
+
+def fixed_to_hex0pad(b):
+    mask = (1 << P) - 1
+    width = (P + 3) // 4   # number of hex digits
+    return f"0x{(b & mask):0{width}x}"
+
+def float_to_hex(a):
+    ff = float_to_fixed(a)
+    return fixed_to_hex0pad(ff)
+    
+def complex_to_hex(a):
+    ff = float_to_fixed(a.real)
+    ffi = float_to_fixed(a.imag)
+    return fixed_to_hex0pad(ff), fixed_to_hex0pad(ffi)
+def fixed_to_float(b):
+    return b / float(1 << N)
+
+def hex_to_float(hex_str):
+    # Convert hex string to integer
+    b_unsigned = int(hex_str, 16)
+    
+    # Convert from unsigned to signed (two's complement)
+    if b_unsigned >= (1 << (P - 1)):
+        b_signed = b_unsigned - (1 << P)
+    else:
+        b_signed = b_unsigned
+    
+    # Convert to float
+    return b_signed / float(1 << N)
 
 """
 Main configurable parameter blocks. 
 """
-seed = 0x22a2028e#random.getrandbits(31)
+seed = 0x22a2037#random.getrandbits(31)
 random.seed(seed)
-uart_port = 'COM3'
+uart_port = 'COM6'
 # uart_port = "/dev/ttyUSB0"
 # uart_port = None
 baud_rate = 115200
-l_cosb = []
-l_sinb = []
-l_gamma = []
-NQ = 4
-NS = 2**NQ # number of layers
-Np = 3 # number of p layers.
-L_BRAM_A = 2
-L_BRAM_D = 2
-L_BRAM_R = L_BRAM_A + L_BRAM_D + 2
-L_BRAM_W = L_BRAM_A + L_BRAM_D + 1
+NQ = 5
+Np = 2     # number of p layers.
+F = 320*1e6
+lineend = "" # lineend. It can be configured through command line argument. if not blanck string, this script will add comments into the output file of output_command_sv.
 
-Lc = 223 + 1 + L_BRAM_R # cost gen latency, output H latency, memory and register latency.
-Lm = 52 + L_BRAM_R + 1 + L_BRAM_W + 1 # mixer latency 52 + 2 memory read + 2 write.
-LInit = 18
+LP_BRAM_A = 2
+LP_BRAM_D = 1
+LP_GEN_COST = 2
+LP_MIXER_IN = 1
+LP_MIXER_OUT = 1
+L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
+L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
+
+N1 = 1 + 10 + 1          # data arrive at prc_N1Pip[1]
+N3 = 1 + 10 + 2 + 1 + 1 + 1; # suppose  add1_a visible at cycle 13 and add1_res on cycle 14
+gcN0 = 10;  # latency new test_mul 10 cycles
+gcN1 = 170; # latency of CORDIC
+
+if len(sys.argv) > 1:
+    NQ = int(sys.argv[1])
+if len(sys.argv) > 2:
+    Np = int(sys.argv[2])
+
+
+gcPipe = 1 + gcN0 + 1 + gcN1 + 1
+
+Lc = 1 + gcPipe + 1 +  L_BRAM_R + LP_GEN_COST + LP_GEN_COST# output H latency + cost gen latency,  memory and register latency, address output latency.
+Lm = 1 + N3 + 1 + L_BRAM_R +  L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  #  output latency to mixer + mixer latency + memory read, output of address + write latency + write address latency.
+LInit = 24
 output_command_sv = "all_test_cmd.sv"
 """
 Parameter modification blocks. The following block will modify the parameter if it does not meet the constraint. 
 """
+NS = 2**NQ # number of layers
 LPipe = NS
 tl = Lm + NS//2 + NS%2 
 if tl >= NS:
@@ -67,12 +131,10 @@ if tbGenCost < LInit:
 
 t_Compute = t_Mixer + LPipe*NQ + Lm
 
-lineend = "" # lineend. It can be configured through command line argument. if not blanck string, this script will add comments into the output file of output_command_sv.
 
-if len(sys.argv) != 1:
-    lineend = sys.argv[1]
-    if lineend == "\\n":
-        lineend = "\n"
+l_cosb = []
+l_sinb = []
+l_gamma = []
 
 print("DVTc:", DVTc)
 print("NQ", NQ)
@@ -93,7 +155,7 @@ def fp64b(f):
 def bfp64(b):
     return struct.unpack('<d', b)[0]
 def ib8(i):
-    return i.to_bytes(8, "little")
+    return i.to_bytes(8, "little", signed=True)
 def ib1(i):
     return i.to_bytes(1, "little")
 
@@ -197,7 +259,7 @@ H = []
 costFOP = []
 
 # initialize state vector 
-Lm = 0
+sAmp = 0
 for i in range(NS):
     if i == -1:
         sr = 1
@@ -206,11 +268,11 @@ for i in range(NS):
         sr = random.uniform(1, -1)
         si = random.uniform(1, -1)
     com = complex(sr, si)
-    Lm = Lm + sr*sr + si*si
+    sAmp = sAmp + sr*sr + si*si
     sv.append(com)
 
 for i in range(NS):
-    sv[i] = sv[i]/Lm
+    sv[i] = sv[i]/(sAmp**0.5)
 
 sv0 = sv.copy() # back up the initizal state.
 def swap_bits(i, a, b):
@@ -239,16 +301,15 @@ lcq = list(range(NQ))
 """
 Generate simulated result in this script.
 """
-print("a")
 simpath = f"simulation.txt"
 f = open(simpath, "w")
 f.write(f"-------------------------------------------------------\n")
 f.write(f"Version {random.random()}, {datetime.datetime.now()}\n")
 f.write(f"-------------------------------------------------------\n")
 for i in range(NS):
-    f.write(f"H_{i}, {H[i]}\n")
+    f.write(f"H_{i}, {float_to_hex(H[i])}\n")
 for i in range(NS):
-    f.write(f"p_{i}, {sv[i]}\n")
+    f.write(f"p_{i}, {complex_to_hex(sv[i])}\n")
 
 start1 = time.perf_counter()
 
@@ -259,19 +320,20 @@ for p in range(Np):
     sinb = np.sin(beta)
     cosb = np.cos(beta)
     l_sinb.append(sinb)
-    l_cosb.append(cosb)
+    l_cosb.append(cosb) 
+    
     l_gamma.append(gamma)
     #f.write(f"-------------------------------------------------------\n")
-    #f.write(f"Starting {p}-th layer. Current params: gamma={gamma}, cosb={cosb}, sinb={sinb}\n")
+    #f.write(f"Starting {p}-th layer. Current params: gamma={float_to_hex(gamma)}, cosb={float_to_hex(cosb)}, sinb={float_to_hex(sinb)}\n")
     #f.write(f"-------------------------------------------------------\n")
     
     for i in range(NS):
         gHt = gamma*H[i]
         costFt = math.cos(gHt) + 1j*math.sin(gHt)
-        #f.write(f"F_{i}: {costFt}\n")
+        #f.write(f"F_{i}: {complex_to_hex(costFt)}, {costFt}\n")
         sv[i] = costFt*sv[i]
     #for i in range(NS):
-    #    f.write(f"F_{i}p_{i}: {sv[i]}\n")
+        #f.write(f"F_{i}p_{i}: {complex_to_hex(sv[i])}, {sv[i]}\n")
 
     # apply mixer operator
     for cq in lcq: # counter of qbit.
@@ -291,8 +353,8 @@ for p in range(Np):
             tsb = -1j*sinb * sv[a] + cosb * sv[b]
             sv[a] = tsa
             sv[b] = tsb
-            #f.write(f"p_{a}: {tsa}\n")
-            #f.write(f"p_{b}: {tsb}\n")
+            #f.write(f"p_{a}: {complex_to_hex(tsa)}, {tsa}\n")
+            #f.write(f"p_{b}: {complex_to_hex(tsb)}, {tsb}\n")
 
             # p'_a = cos p_a + i sin p_b
             # p'_b = i sin p_a + cos p_b
@@ -300,17 +362,17 @@ end1 = time.perf_counter()
 
 f.write(f"\n---Results----------------------\n\n")
 for i in range(NS):
-    f.write(f"Re(p_{i}), {sv[i].real}\n")
+    f.write(f"Re(p_{i}), {float_to_hex(sv[i].real)}\n")
 for i in range(NS):
-    f.write(f"Im(p_{i}), {sv[i].imag}\n")
+    f.write(f"Im(p_{i}), {float_to_hex(sv[i].imag)}\n")
 f.close()
 
 path = f"result.txt"
 f = open(path, "w")
 for i in range(NS):
-    f.write(f"{sv[i].real}\n")
+    f.write(f"{float_to_hex(sv[i].real)}\n")
 for i in range(NS):
-    f.write(f"{sv[i].imag}\n")
+    f.write(f"{float_to_hex(sv[i].imag)}\n")
 
 f.close()
 
@@ -395,13 +457,13 @@ for p in range(Np+1):
     sinb = l_sinb[p]
     gamma = l_gamma[p]
     data_array += [
-        OP_SEND8T, fp64b(cosb),
+        OP_SEND8T, ib8(float_to_fixed(cosb)),
         OP_WRITE_T2RAM,
         OP_INC_A,
-        OP_SEND8T, fp64b(sinb),
+        OP_SEND8T, ib8(float_to_fixed(sinb)),
         OP_WRITE_T2RAM,
         OP_INC_A,
-        OP_SEND8T, fp64b(gamma),
+        OP_SEND8T, ib8(float_to_fixed(gamma)),
         OP_WRITE_T2RAM,
         OP_INC_A
       ]
@@ -413,7 +475,7 @@ data_array += [OP_SEND8T, ib8(0x1000_0000_0000_0000), # set the address
     OP_MOV_T2A]
 for i in range(NS): 
     value = sv0[i]
-    data_array += [OP_SEND8T, fp64b(value.real), OP_WRITE_T2RAM, OP_INC_A]
+    data_array += [OP_SEND8T, ib8(float_to_fixed(value.real)), OP_WRITE_T2RAM, OP_INC_A]
 
 # write imaginary part.
 # set the address
@@ -421,7 +483,7 @@ data_array += [OP_SEND8T, ib8(0x2000_0000_0000_0000), # set the address
       OP_MOV_T2A]
 for i in range(NS): 
     value = sv0[i]
-    data_array += [OP_SEND8T, fp64b(value.imag), OP_WRITE_T2RAM, OP_INC_A]
+    data_array += [OP_SEND8T, ib8(float_to_fixed(value.imag)), OP_WRITE_T2RAM, OP_INC_A]
     
 # set the address
 data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # set the address
@@ -429,7 +491,7 @@ data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # set the address
 # send cost function
 for i in range(NS): 
     value = H[i]
-    data_array += [OP_SEND8T, fp64b(value), OP_WRITE_T2RAM, OP_INC_A]
+    data_array += [OP_SEND8T, ib8(float_to_fixed(value)), OP_WRITE_T2RAM, OP_INC_A]
 
 # run the simulation.
 data_array += [
@@ -512,13 +574,14 @@ for i, b in enumerate(data_array):
             f.write(f" // {idop[skey]}{lineend}")
     elif len(b) == 8:
         if lineend != "":
-            f.write(f" // {bfp64(b)}{lineend}")
+            f.write(f" // {ib8(float_to_fixed(b))}{lineend}")
 f.write("};" + lineend)
 f.close()
-f = open("resultpy.txt", "w")
+#quit()
+
+f = open("resultFPGA.txt", "w")
 # send to serial interface, for physical test of the implementation.
-start2 = time.perf_counter()
-end2 = time.perf_counter()
+startTransmission = time.perf_counter()
 ser = serial.Serial(port = uart_port, baudrate = baud_rate, timeout=None)
 for b in data_array:
     if b == HOST_WAIT:
@@ -537,15 +600,17 @@ for b in data_array:
             print("Status:", opecode, ir)
             if dr == qa_WAIT: # check the state is qa_WAIT
                 break 
-            time.sleep(0.01)
+            time.sleep(0.001) # improve, 
         end2 = time.perf_counter()
 
         continue
-
+# increase measurement precision
+# 
     fr = float("inf")
     opecode = ""
     if len(b) == 8:
-        fr = bfp64(b)
+        fr = int.from_bytes(b, "little")
+        fp = fixed_to_float(fr)
     if b.hex() in idop:
         opecode = idop[b.hex()]
 
@@ -553,23 +618,104 @@ for b in data_array:
     ser.write(b); time.sleep(2e-4)  # recommend to wait tiny period of time, to prevent UART buffer overflow.
     if b == OP_FETCH8U:
         dr = ser.read(8)
-        fr = bfp64(dr)
-        print(f"Received {8} bytes: hex={dr.hex()} fp64={fr}, int64={int.from_bytes(dr, "little")}\n")
-        f.write(f"{fr}\n")
+        fr = int.from_bytes(dr, "little")
+        fp = fixed_to_float(fr)
+        print(f"Received {8} bytes: hex={dr.hex()}\n")
+        f.write(f"0x{dr[::-1].hex()}\n")
     elif b == OP_FETCH1U:
         dr = ser.read(1)
-        print(f"Received {1} bytes: hex={dr.hex()} int={int.from_bytes(dr, "little")}\n")
+        print(f"Received {1} bytes: hex={dr.hex()}\n")
+endTransmission = time.perf_counter()
 ser.close()
 f.close()
-f = open(simpath, "a")
+
+f = open("statistics.txt", "a")
 
 f.write(f"\n---------------------------------------\n")    
 f.write(f"  summary of the computation \n")    
 f.write(f"---------------------------------------\n\n")   
 dt1 =  end1 - start1
 dt2 =  end2 - start2
-f.write(f"Python time: {dt1:.6f} s\n")    
-f.write(f"PFGA time: {dt2:.6f} s\n")    
-f.write(f"python/PFGA: {dt1/dt2:.6f}\n")    
+dtT =  endTransmission - startTransmission
+LatencyAddGen = 7
+SClocks = LatencyAddGen + tGenCost + Lc + (t_Mixer + LPipe*NQ)*Np + LPipe
+TTh = SClocks/F
+f.write(f"Python time: {dt1:.8e} s\n")    
+f.write(f"PFGA time: {dt2:.8e} s\n")    
+f.write(f"python/PFGA: {dt1/dt2:.8e} s\n")    
+f.write(f"Transmission: {dtT:.8e} s\n")    
+f.write(f"Theory. FPGA: {TTh:.8e} s\n\n")
+
+print("DVTc:", DVTc, file=f)
+print("NQ:", NQ, file=f)
+print("NS:", NS, file=f)
+print("LPipe:", LPipe, file=f)
+print("Dead clocks/layer:", (LPipe - NS)*NQ + t_Mixer - LPipe, file=f)
+
+print("t_Mixer:", t_Mixer, file=f)
+print("Np:", Np, file=f)
+print("Lc:", Lc, file=f)
+print("Lm:", Lm, file=f)
+# written by copilot, 2026 05 05
+
+
+P = 64   # total bits
+N = 61   # fractional bits
+
+
+# ----- conversion: hex -> float -----
+def hex_to_float_line(line):
+    line = line.strip()
+    if not line:
+        return None
+
+    # remove optional "0x"
+    if line.startswith("0x") or line.startswith("0X"):
+        line = line[2:]
+
+    # hex -> unsigned int
+    val = int(line, 16)
+
+    # convert to signed (two’s complement)
+    if val >= (1 << (P - 1)):
+        val -= (1 << P)
+
+    # fixed-point -> float
+    return val / float(1 << N)
+
+
+# ----- load file -----
+def load_fixed_file(filename):
+    values = []
+    with open(filename, "r") as f:
+        for line in f:
+            v = hex_to_float_line(line)
+            if v is not None:
+                values.append(v)
+    return values
+
+
+# ----- MAE -----
+def mean_absolute_error(a, b):
+    n = min(len(a), len(b))
+    if n == 0:
+        raise ValueError("No comparable data found")
+
+    mae = sum(abs(a[i] - b[i]) for i in range(n)) / n
+    return mae, n
+
+
+result_file = "result.txt"
+#ref_file = "simulation/questa/result_sim1.txt"
+ref_file = "resultFPGA.txt"
+
+result_values = load_fixed_file(result_file)
+ref_values = load_fixed_file(ref_file)
+
+mae, n = mean_absolute_error(result_values, ref_values)
+
+print(f"MAE: {mae}", file=f)
+
 f.close()
+
 

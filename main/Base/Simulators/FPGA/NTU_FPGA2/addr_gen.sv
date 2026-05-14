@@ -50,7 +50,7 @@ module addr_gen#(
 
     output reg [31:0] version,
     output [1:0] mixSwitch_out,
-    output [15:0] en_Inits_out, // notify the system to prepare variables.
+    output [23:0] en_Inits_out, // notify the system to prepare variables.
     output f_L1Computation_out // last 1 clock before the computation ends.
 );
 localparam AG_SET_t_L2Addr   = 0;
@@ -73,7 +73,7 @@ assign bsp1_out = bsp1;
 assign bsp2_out = bsp2;
 logic [N_BIT_SWAP_POINTER-1:0] n_bsp1; // next bit swap pointer 1
 logic [N_BIT_SWAP_POINTER-1:0] n_bsp2; // next bit swap pointer 2
-reg [15:0] en_Inits; // notify the system to prepare variables.
+reg [23:0] en_Inits; // notify the system to prepare variables.
 assign en_Inits_out = en_Inits;
 
 //----------------------------------------------------------------------------
@@ -372,7 +372,7 @@ always_ff @(posedge CLK) begin
     addr_Param <= addr_Param_in;
     Param <= Param_in;
 
-    for(i = 0;i<16;i=i+1) begin
+    for(i = 0;i<24;i=i+1) begin
         en_Inits[i] <= (c_Compute == i) && f_run_Computation;
     end
 end
