@@ -10,7 +10,6 @@ module mul_slice #(
 )
 (
     input CLK,
-    input RST,
     input signed [2*P-1:0] a,  // raw 128 bit of mtest_mul
     output signed[P-1:0] q
 );
@@ -38,11 +37,7 @@ end
 reg signed [P-1:0] qreg; // output
 
 always @(posedge CLK) begin
-    if (RST) begin
-        qreg <= '0;
-    end else begin
-        qreg <= a[HB : LB]; // slice the output of multiplier
-    end
+    qreg <= a[HB : LB]; // slice the output of multiplier
 end
 assign q = qreg;
 

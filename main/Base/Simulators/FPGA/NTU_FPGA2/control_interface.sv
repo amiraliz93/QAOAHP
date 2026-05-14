@@ -13,26 +13,26 @@
 
 //    - interface description (port)
 //    Inputs: CLK, RST, rbram_vd, r_data
-//    Output: w_addr, r_addr, w_data, w_req, r_req
+//    Output: ci_addr, w_data, w_req, r_req
 //===========================================================================
 
 module control_interface#(
     //------------------------------------------------------------------------
     // CONFIGURABLE PARAMETERS
     //------------------------------------------------------------------------
-    parameter MAX_QUBITS = 20,              // Maximum qubits
-    parameter MAX_EDGES = 190,              // Maximum graph edges
-    parameter BRAM_ADDR_WIDTH = 64,         // BRAM address width
-    parameter BRAM_DATA_WIDTH = 64,         // BRAM data width
-    parameter FP_PRECISION = 64,            // FP precision (32 or 64)
-    parameter FIXED_INT_BITS = 40,          // Fixed-point integer bits
-    parameter FIXED_FRAC_BITS = 24,         // Fixed-point fractional bits
-    parameter FP64_ADD_LATENCY = 27,        // FP64 add latency
-    parameter FP64_MUL_LATENCY = 24,        // FP64 mul latency
-    parameter FIX64_ADD_LATENCY = 2,        // Fixed add latency
-    parameter FIX24_MUL_LATENCY = 8,        // Fixed mul latency
-    parameter HOST_DATA_WIDTH = 8,           // DATA width between Host
-	 parameter NM = 32
+      parameter MAX_QUBITS = 20,              // Maximum qubits
+      parameter MAX_EDGES = 190,              // Maximum graph edges
+      parameter BRAM_ADDR_WIDTH = 64,         // BRAM address width
+      parameter BRAM_DATA_WIDTH = 64,         // BRAM data width
+      parameter FP_PRECISION = 64,            // FP precision (32 or 64)
+      parameter FIXED_INT_BITS = 40,          // Fixed-point integer bits
+      parameter FIXED_FRAC_BITS = 24,         // Fixed-point fractional bits
+      parameter FP64_ADD_LATENCY = 27,        // FP64 add latency
+      parameter FP64_MUL_LATENCY = 24,        // FP64 mul latency
+      parameter FIX64_ADD_LATENCY = 2,        // Fixed add latency
+      parameter FIX24_MUL_LATENCY = 8,        // Fixed mul latency
+      parameter HOST_DATA_WIDTH = 8,           // DATA width between Host
+	parameter NM = 32
    )
   (
     //------------------------------------------------------------------------
@@ -52,8 +52,7 @@ module control_interface#(
     //------------------------------------------------------------------------
     // BRAM INTERFACE
     //------------------------------------------------------------------------
-    output reg  [BRAM_ADDR_WIDTH-1:0] w_addr,   // Write address
-    output reg  [BRAM_ADDR_WIDTH-1:0] r_addr,   // Read address
+    output reg  [BRAM_ADDR_WIDTH-1:0] addr_out,   // Read address
     output reg  [BRAM_DATA_WIDTH-1:0] w_data,   // Write data
     input  wire [BRAM_DATA_WIDTH-1:0] r_data,   // Read data
     output wire        w_req,                   // Write request
@@ -69,7 +68,7 @@ module control_interface#(
     //------------------------------------------------------------------------
     // Interface for testing, not core 
     //------------------------------------------------------------------------
-    input wire [63:0] rS, // status of qaoa system.
+    input wire [15:0] rS, // status of qaoa system.
     output reg [23:0] CMD
 );
 
@@ -246,9 +245,8 @@ logic tf_write;               // Write enable
 reg [1:0] tx_dv;              // TX data valid
 
 // -----------------------  BRAM Interface Signals
-logic  [BRAM_ADDR_WIDTH-1:0] n_w_addr;       // Next write address
 logic  [BRAM_DATA_WIDTH-1:0] n_w_data;       // Next read address
-logic  [BRAM_ADDR_WIDTH-1:0] n_r_addr;       // Next write data
+logic  [BRAM_ADDR_WIDTH-1:0] n_ci_addr;       // Next write data
 logic n_r_req;                // next write request
 logic n_w_req;                // next read request
 
@@ -292,8 +290,7 @@ always_comb begin: main_StateBlock
       n_bwriteReg = bwriteReg;            // Keep buffered write op
       n_txMaxPos = txMaxPos;              // Keep TX byte limit
       n_w_req = '0;                       // Default: no BRAM write request
-      n_w_addr = rA;                      // BRAM write address = rA
-      n_r_addr = rA;                      // BRAM read address = rA
+      n_ci_addr = rA;                      // BRAM write address = rA
       n_w_data = rT;                      // BRAM write data = rT
       n_CMD = 'd0;    
       n_rA = rA;                          // Keep register A value
@@ -567,7 +564,8 @@ always_comb begin: main_StateBlock
                         n_rU = r_data;
                   end
                   WRITE_S2U: begin
-                        n_rU = rS;
+                        n_rU[15:0] = rS;
+                        n_rU[64-1:16] = '0;
                   end
                   
                   WRITE_Info2U: begin
@@ -692,8 +690,7 @@ always @(posedge CLK) begin
 
             // BRAM interface
             w_data <= n_w_data;      // Update BRAM write data
-            w_addr <= n_w_addr;      // Update BRAM write address
-            r_addr <= n_r_addr;      // Update BRAM read address
+            addr_out <= n_ci_addr;      // Update BRAM write address
             r_req <= n_r_req;        // Update BRAM read request
 
             
