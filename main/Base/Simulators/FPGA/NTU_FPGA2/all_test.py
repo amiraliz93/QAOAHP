@@ -73,9 +73,9 @@ uart_port = 'COM6'
 baud_rate = 115200
 NQ = 5
 Np = 2     # number of p layers.
-F = 320*1e6
+F = 320*1e6 # Frequency of FPGa
 lineend = "" # lineend. It can be configured through command line argument. if not blanck string, this script will add comments into the output file of output_command_sv.
-
+# additional BRAM latency
 LP_BRAM_A = 2
 LP_BRAM_D = 1
 LP_GEN_COST = 2
@@ -84,27 +84,30 @@ LP_MIXER_OUT = 1
 L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
 L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
 
-N1 = 1 + 10 + 1          # data arrive at prc_N1Pip[1]
-N3 = 1 + 10 + 2 + 1 + 1 + 1; # suppose  add1_a visible at cycle 13 and add1_res on cycle 14
+N1 = 1 + 10 + 1  # related to Mixer        # data arrive at prc_N1Pip[1]
+N3 = 1 + 10 + 2 + 1 + 1 + 1; # its related to mixer latency 
 gcN0 = 10;  # latency new test_mul 10 cycles
 gcN1 = 170; # latency of CORDIC
 
+# 
 if len(sys.argv) > 1:
     NQ = int(sys.argv[1])
 if len(sys.argv) > 2:
     Np = int(sys.argv[2])
 
-
+# piplinig for gen cost, related to the latency of gen cost
 gcPipe = 1 + gcN0 + 1 + gcN1 + 1
 
+# totla latency including memory access (after issue address, till store result in BRAM) )
 Lc = 1 + gcPipe + 1 +  L_BRAM_R + LP_GEN_COST + LP_GEN_COST# output H latency + cost gen latency,  memory and register latency, address output latency.
 Lm = 1 + N3 + 1 + L_BRAM_R +  L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  #  output latency to mixer + mixer latency + memory read, output of address + write latency + write address latency.
-LInit = 24
+LInit = 24 # the time for initilisation for each P layter
 output_command_sv = "all_test_cmd.sv"
 """
 Parameter modification blocks. The following block will modify the parameter if it does not meet the constraint. 
 """
-NS = 2**NQ # number of layers
+NS = 2**NQ # total amplitutes
+# parameter timing for non-stopping
 LPipe = NS
 tl = Lm + NS//2 + NS%2 
 if tl >= NS:
@@ -113,10 +116,11 @@ if tl >= NS:
 else:
     print(f"LPipe = NS = {NS}")
 
-
+# time for start to ge start generate cost function. 
 DVTc = Lc // LPipe + 1; # make sure, pipe*DVTc-Tc-2 > LInit.
 
-tGenCost = DVTc*LPipe - Lc
+# value name with t such as t_compute defining timing
+tGenCost = DVTc*LPipe - Lc # time of the starting gen cost function
 if tGenCost < LInit:
     tGenCost += LPipe
 
@@ -186,7 +190,7 @@ OP_INC_A       = ib1(84) # Send: 0, Res: 0.
 OP_WRITE_T2RAM = ib1(111) # Send: 0, Res: 0.
 OP_READ_RAM2U  = ib1(112) # Send: 0, Res: 0.
 OP_SEND_CMD    = ib1(118) # Send: 0, Res: 0. see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
-OP_WRITE_T2_AG = ib1(119) 
+OP_WRITE_T2_AG = ib1(119)  # additional operation
 HOST_WAIT      = ib1(254) # wait until the qaoa system become the state of qa_wait. Not sent to FPGA. Protocol how to wait must be defined by software productor.
 
 AG_SET_t_L2Addr   = ib1(0)
@@ -253,6 +257,12 @@ for k in dop:
         idop[dop[k].hex()] = []
     idop[dop[k].hex()].append(k)
 
+
+
+
+
+
+# the below part is responsible for generating for exact solution for the simulation
 # generate ideal result
 sv = []
 H = []
@@ -387,6 +397,9 @@ def mask64(a: int) -> int:
     return (1 << a) - 1
     
 
+
+# this below part generate the command sequnece to UART
+# the below block generate two block timing before each operation for timing correct
 t_L2Addr   = NS-2
 t_L2PipeGC = Lc-2
 tb_B2GenCost= tbGenCost-2
@@ -398,10 +411,9 @@ t_B2GenCost  = tGenCost-2
 tb_B2Mixer = t_Mixer -2
 t_L2Compute = t_Compute
 
+
 # configuration of addr_gen.sv
-data_array = [
-      OP_SEND1T,
-      ib1(12), OP_MOV_T2A, OP_MOV_A2U, OP_FETCH1U,
+data_array = [ 
       OP_SEND1T, qa_WAIT,
       OP_SEND_CMD,
       OP_SEND1T, AG_SET_t_L2Addr, # set address to rA
@@ -445,12 +457,13 @@ data_array = [
       OP_SEND8T, ib8(t_L2Compute), # set the data
       OP_WRITE_T2_AG
       ]
-
+# setting address 
+# order to sending  cosb, sinb, gamma, cosb, sinb, gamma, ... for each p layer.
 data_array += [OP_SEND8T, ib8(0x0800_0000_0000_0000),  # write BRAM for cosb, sinb, gamma
       OP_MOV_T2A]
 
-l_cosb = [l_cosb[0]] + l_cosb
-l_sinb = [l_sinb[0]] + l_sinb
+l_cosb = [l_cosb[0]] + l_cosb # redundant cosb 
+l_sinb = [l_sinb[0]] + l_sinb # redundant sinb
 l_gamma.append(-1)
 for p in range(Np+1):
     cosb = l_cosb[p]
@@ -467,10 +480,11 @@ for p in range(Np+1):
         OP_WRITE_T2RAM,
         OP_INC_A
       ]
-
+# send state vectorer
 # send initial value of state vector
 # write real part.
 # set the address
+# 10 it menas 16 here
 data_array += [OP_SEND8T, ib8(0x1000_0000_0000_0000), # set the address
     OP_MOV_T2A]
 for i in range(NS): 
@@ -489,9 +503,14 @@ for i in range(NS):
 data_array += [OP_SEND8T, ib8(0x0400_0000_0000_0000), # set the address
       OP_MOV_T2A]
 # send cost function
+# send hamiltonian
 for i in range(NS): 
     value = H[i]
     data_array += [OP_SEND8T, ib8(float_to_fixed(value)), OP_WRITE_T2RAM, OP_INC_A]
+
+# finish data tranmission
+
+
 
 # run the simulation.
 data_array += [
@@ -503,6 +522,7 @@ data_array += [HOST_WAIT]  # need to wait for the pipeline end the process
 data_array += [OP_SEND1T, qa_WAIT,
       OP_SEND_CMD]
 
+# get the result from BRAM, real part of state vector
 data_array += [OP_SEND8T, ib8(0x1000000000000000), # read address of BRAM, real part of state vector
       OP_MOV_T2A]
 
@@ -539,6 +559,9 @@ for i in range(NS):
 #     OP_FETCH8U,
 #     OP_INC_A # move to the next address.
 #     ]  
+
+
+
 ND = 0
 for i, b in enumerate(data_array):
     ND += len(b)
@@ -578,6 +601,7 @@ for i, b in enumerate(data_array):
 f.write("};" + lineend)
 f.close()
 #quit()
+
 
 f = open("resultFPGA.txt", "w")
 # send to serial interface, for physical test of the implementation.
