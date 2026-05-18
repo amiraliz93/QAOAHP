@@ -3,10 +3,10 @@ import subprocess
 import time
 
 # arguments
-for NQ in range(2, 16):    
+for NQ in range(2, 17):    
     args = ["python", "w.py", str(NQ), "15"]
     print("running...", args)
-    for k in range(8):
+    for k in range(4):
         subprocess.run(args, capture_output=False, text=True)
         time.sleep(2)
     
