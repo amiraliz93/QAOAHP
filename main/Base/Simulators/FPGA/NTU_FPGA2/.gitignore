@@ -5,3 +5,5 @@ output_files
 incremental_db
 greybox_tmp
 
+all_test_cmd.sv
+Golden_TOP_nativelink_simulation.rpt
