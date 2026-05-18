@@ -17,18 +17,17 @@ import time
 """
 Main configurable parameter blocks. 
 """
-seed = 0x22a2039#random.getrandbits(31)
+seed = random.getrandbits(31)
 random.seed(seed)
-uart_port = 'COM3'
+uart_port = 'COM5'
 # uart_port = "/dev/ttyUSB0"
 # uart_port = None
 baud_rate = 115200
 l_cosb = []
 l_sinb = []
 l_gamma = []
-NQ = 5
-NS = 2**NQ # number of layers
-Np = 2 # number of p layers.
+NQ = 9
+Np = 1024 # number of p layers.
 LP_BRAM_A = 2
 LP_BRAM_D = 1
 LP_GEN_COST = 2
@@ -40,6 +39,14 @@ L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
 Lc = 223 + 1 + L_BRAM_R + 1 + LP_GEN_COST + LP_GEN_COST# cost gen latency, output H latency, memory and register latency, address output latency.
 Lm = 52 + 1 + L_BRAM_R + 1 + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  # mixer latency 52, output latency to mixer + memory read, output of address + write latency + write address latency.
 LInit = 24
+
+if len(sys.argv) > 1:
+    NQ = int(sys.argv[1])
+if len(sys.argv) > 2:
+    Np = int(sys.argv[2])
+
+NS = 2**NQ # number of layers
+
 output_command_sv = "all_test_cmd.sv"
 """
 Parameter modification blocks. The following block will modify the parameter if it does not meet the constraint. 
@@ -72,10 +79,6 @@ t_Compute = t_Mixer + LPipe*NQ + Lm
 
 lineend = "" # lineend. It can be configured through command line argument. if not blanck string, this script will add comments into the output file of output_command_sv.
 
-if len(sys.argv) != 1:
-    lineend = sys.argv[1]
-    if lineend == "\\n":
-        lineend = "\n"
 
 print("DVTc:", DVTc)
 print("NQ", NQ)
@@ -200,7 +203,7 @@ H = []
 costFOP = []
 
 # initialize state vector 
-Lm = 0
+sAmp = 0
 for i in range(NS):
     if i == -1:
         sr = 1
@@ -209,11 +212,11 @@ for i in range(NS):
         sr = random.uniform(1, -1)
         si = random.uniform(1, -1)
     com = complex(sr, si)
-    Lm = Lm + sr*sr + si*si
+    sAmp = sAmp + sr*sr + si*si
     sv.append(com)
 
 for i in range(NS):
-    sv[i] = sv[i]/Lm
+    sv[i] = sv[i]/(sAmp**0.5)
 
 sv0 = sv.copy() # back up the initizal state.
 def swap_bits(i, a, b):
@@ -520,8 +523,7 @@ f.write("};" + lineend)
 f.close()
 f = open("resultFPGA.txt", "w")
 # send to serial interface, for physical test of the implementation.
-start2 = time.perf_counter()
-end2 = time.perf_counter()
+startTransmission = time.perf_counter()
 ser = serial.Serial(port = uart_port, baudrate = baud_rate, timeout=None)
 for b in data_array:
     if b == HOST_WAIT:
@@ -540,7 +542,7 @@ for b in data_array:
             print("Status:", opecode, ir)
             if dr == qa_WAIT: # check the state is qa_WAIT
                 break 
-            time.sleep(0.01)
+            time.sleep(0.005)
         end2 = time.perf_counter()
 
         continue
@@ -562,17 +564,67 @@ for b in data_array:
     elif b == OP_FETCH1U:
         dr = ser.read(1)
         print(f"Received {1} bytes: hex={dr.hex()} int={int.from_bytes(dr, "little")}\n")
+endTransmission = time.perf_counter()
 ser.close()
 f.close()
-f = open(simpath, "a")
+f = open("statistics.txt", "a")
 
 f.write(f"\n---------------------------------------\n")    
 f.write(f"  summary of the computation \n")    
 f.write(f"---------------------------------------\n\n")   
 dt1 =  end1 - start1
 dt2 =  end2 - start2
-f.write(f"Python time: {dt1:.6f} s\n")    
-f.write(f"PFGA time: {dt2:.6f} s\n")    
-f.write(f"python/PFGA: {dt1/dt2:.6f}\n")    
+dtT =  endTransmission - startTransmission
+LatencyAddGen = 7
+SClocks = LatencyAddGen + tGenCost + Lc + (t_Mixer + LPipe*NQ)*Np + LPipe
+TTh = SClocks/F
+f.write(f"Python time: {dt1:.8e} s\n")    
+f.write(f"PFGA time: {dt2:.8e} s\n")    
+f.write(f"python/PFGA: {dt1/dt2:.8e} s\n")    
+f.write(f"Transmission: {dtT:.8e} s\n")    
+f.write(f"Theory. FPGA: {TTh:.8e} s\n\n")
+
+print("DVTc:", DVTc, file=f)
+print("NQ:", NQ, file=f)
+print("NS:", NS, file=f)
+print("LPipe:", LPipe, file=f)
+print("Dead clocks/layer:", (LPipe - NS)*NQ + t_Mixer - LPipe, file=f)
+
+print("t_Mixer:", t_Mixer, file=f)
+print("Np:", Np, file=f)
+print("Lc:", Lc, file=f)
+print("Lm:", Lm, file=f)
+# written by copilot, 2026 05 05
+
+def load_floats(filename):
+    values = []
+    with open(filename, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line:  # skip empty lines
+                values.append(float(line))
+    return values
+
+
+def mean_absolute_error(a, b):
+    n = min(len(a), len(b))
+    if n == 0:
+        raise ValueError("No comparable data found")
+
+    mae = sum(abs(a[i] - b[i]) for i in range(n)) / n
+    return mae, n
+
+
+result_file = "result.txt"
+#ref_file = "simulation/questa/result_sim1.txt"
+ref_file = "resultFPGA.txt"
+
+result_values = load_floats(result_file)
+ref_values = load_floats(ref_file)
+
+mae, n = mean_absolute_error(result_values, ref_values)
+
+print(f"MAE: {mae}", file=f)
+
 f.close()
 
