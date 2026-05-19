@@ -47,24 +47,16 @@ def get_maxcut_terms(G: nx.Graph) -> TermsType:
 
 
 
-def get_adjacency_matrix(G: nx.Graph) -> np.ndarray:
+def get_adjacency_matrix(G: nx.Graph, nodelist=None, dtype=float) -> np.ndarray:
     """Get adjacency matrix to be used in maxcut_obj
     Args:
         G (nx.Graph) : graph
     Returns:
         w (numpy.ndarray): adjacency matrix
     """
-    n = G.number_of_nodes()
-    w = np.zeros([n, n])
-
-    for e in G.edges():
-        if nx.is_weighted(G):
-            w[e[0], e[1]] = G[e[0]][e[1]]["weight"]
-            w[e[1], e[0]] = G[e[0]][e[1]]["weight"]
-        else:
-            w[e[0], e[1]] = 1
-            w[e[1], e[0]] = 1
-    return w
+    if nodelist is None:
+        nodelist = list(G.nodes())
+    return nx.to_numpy_array(G, nodelist=nodelist, dtype=dtype)
 
 
 
@@ -134,4 +126,3 @@ def get_qaoa_circuit(G: nx.Graph, gammas: Sequence, betas: Sequence, save_statev
     terms = get_maxcut_terms(G)
     N = G.number_of_nodes()
     return get_qaoa_circuit_from_terms(N=N, terms=terms[:-1], gammas=gammas, betas=betas, save_statevector=save_statevector, qr=qr, cr=cr)
-
