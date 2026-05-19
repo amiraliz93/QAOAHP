@@ -1,13 +1,10 @@
 import numpy as np
 import pandas as pd
 from itertools import product
-# calculate maxcut solution with exact solution Mixed Integer Linear Program (MILP) 
+import warnings
 import pulp
-from .Base.maxcut import get_adjacency_matrix
 
-#new classic solver added here
-# brute_force will be remove from here no need 
-# add new method to calculate value of expected MaxCut value from shot counts
+from .Base.maxcut import get_adjacency_matrix
 
 
 def reverse_array_index_bit_order(arr):
@@ -61,23 +58,20 @@ def precompute_energies(obj_f, nbits: int, *args: object, **kwargs: object):
 
     return np.array([obj_f(x, *args, **kwargs) for x in bit_strings])
 
-#Mixed Integer Linear Program
-# maximize sigma (w_ij(x_i XOR x_j))
+
 def solve_maxcut_pulp(G):
     prob = pulp.LpProblem("MaxCut", pulp.LpMaximize)
     x = {i: pulp.LpVariable(f"x_{i}", cat="Binary") for i in G.nodes}
-    y = {}  # auxiliary variables for edge products
+    y = {}
 
     for i, j in G.edges():
         y[(i, j)] = pulp.LpVariable(f"y_{i}_{j}", cat="Binary")
 
-    # Add constraints for linearization: y_ij = x_i * x_j
     for i, j in G.edges():
         prob += y[(i, j)] <= x[i]
         prob += y[(i, j)] <= x[j]
         prob += y[(i, j)] >= x[i] + x[j] - 1
 
-    # Objective: maximize cut edges
     cut = []
     for i, j in G.edges():
         weight = G[i][j].get("weight", 1)
@@ -89,32 +83,52 @@ def solve_maxcut_pulp(G):
     solution = {i: int(pulp.value(x[i])) for i in G.nodes}
     return cut_value, solution
 
+
 def brute_force(obj_f, num_variables: int, minimize: bool = False, function_takes: str = "spins", *args: object, **kwargs: object):
     """Get the maximum of a function by complete enumeration
     Returns the maximum value and the extremizing bit string
     """
+    if num_variables > 23:
+        warnings.warn(
+            f"Brute force with {num_variables} variables requires evaluating "
+            f"{2**num_variables} configurations. This may take a very long time!"
+        )
+
     if minimize:
-        best_cost_brute = float("inf")
-        compare = lambda x, y: x < y
+        best_value = float("inf")
+        is_better = lambda x, y: x < y
     else:
-        best_cost_brute = float("-inf")
-        compare = lambda x, y: x > y
-    bit_strings = (((np.array(range(2**num_variables))[:, None] & (1 << np.arange(num_variables)))) > 0).astype(int)
-    for x in bit_strings:
+        best_value = float("-inf")
+        is_better = lambda x, y: x > y
+    indices = np.arange(2**num_variables)
+    bit_strings = ((indices[:, None] & (1 << np.arange(num_variables))) > 0).astype(int)
+    best_bitstring = None
+
+    # Evaluate objective for each configuration
+    for bitstring in bit_strings:
         if function_takes == "spins":
-            cost = obj_f(1 - 2 * np.array(x), *args, **kwargs)
+            # Convert 0/1 to -1/+1
+            config = 1 - 2 * bitstring
         elif function_takes == "bits":
-            cost = obj_f(np.array(x), *args, **kwargs)
-        if compare(cost, best_cost_brute):
-            best_cost_brute = cost
-            xbest_brute = x
-    return best_cost_brute, xbest_brute
+            config = bitstring
+        else:
+            raise ValueError(f"function_takes must be 'spins' or 'bits', got '{function_takes}'")
+
+        value = obj_f(config, *args, **kwargs)
+
+        if is_better(value, best_value):
+            best_value = value
+            best_bitstring = bitstring
+
+    return best_value, best_bitstring
+
 
 def invert_counts(counts):
     """Convert from lsb to msb ordering and vice versa, as fast as possible."""
     items = counts.items
-    rev   = slice(None, None, -1)
+    rev = slice(None, None, -1)
     return {k[rev]: v for k, v in items()}
+
 
 def expected_maxcut_from_counts(counts, G):
     """
@@ -123,16 +137,15 @@ def expected_maxcut_from_counts(counts, G):
     Args:
         counts (dict): measurement counts from quantum circuit (bitstring → count)
         w (np.ndarray): adjacency matrix of the graph
-        
+
     Vectorized MaxCut expectation:
       1) extract upper‑triangle edge list + weights,
       2) for each bitstring, build a bit‐mask via np.frombuffer,
       3) use one C‑speed dot( ) per shot.
     """
-    w = get_adjacency_matrix(G)            # your dense adjacency
+    w = get_adjacency_matrix(G)
     n = w.shape[0]
 
-    # get all i<j indices and their weights in one flat array
     iu, ju = np.triu_indices(n, k=1)
     w_triu = w[iu, ju]
 
@@ -140,9 +153,7 @@ def expected_maxcut_from_counts(counts, G):
     total = 0.0
 
     for bitstr, cnt in counts.items():
-        # fast convert '0101…' → array([0,1,0,1,…], dtype=uint8)
         x = np.frombuffer(bitstr.encode("ascii"), dtype=np.uint8) & 1
-        # boolean XOR on two index arrays, dot with weights
         cut_val = (x[iu] ^ x[ju]).dot(w_triu)
         total += cut_val * cnt
 
