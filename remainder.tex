@@ -67,88 +67,113 @@
 \newcommand{\hq}{{\hat{q}}}
 \newcommand{\hy}{{\hat{y}}}
 \newcommand{\hz}{{\hat{z}}}
-\newcommand{\funit}{{\mathbf{1}}}
-\newcommand{\hatj}{{\hat{j}}}
-\newcommand{\hatk}{{\hat{k}}}
-\newcommand{\jbar}{{\MidBar{j}}}
-\newcommand{\hatM}{{\hat{M}}}
+\newcommand{\hk}{{\hat{k}}}
+\newcommand{\hs}{{\hat{s}}}
+\newcommand{\hX}{{\hat{X}}}
+\newcommand{\fum}{{\mathbf{1}_m}}
 \title{Remainder and normalization of QAOA}
 \date{May, 20th, 2026}
 \author{Hiroki Shibata, Amir Alizadeh\\Tokyo Metropolitan University and Nottigham Trent University}
 \begin{document}
 \maketitle
-This document describes how we can get reminder of the division of fractional numbers. In the case divisor is constant, the method here enables us to replace the remainder circuit with multiplication circuit. In QAOA, the division of \(H_i\gamma^p\) by constant number \(2 \pi\) needs to be calculated inside the circuit. Because devisor \(2\pi\) here is constant, we can use multipler circuit instead of remainder cuicuit for this operation. 
+This document describes how we can get reminder of the division of fractional numbers. In QAOA, the division of \(H_i\gamma\) by constant number \(2 \pi\) needs to be calculated inside the circuit. Because divisor \(2\pi\) here is constant, we can use multiplier circuit instead of remainder circuit for this operation. 
 
-Along with the remainder, normalization is also discussed. Normalization introduced in the directory utilize the full rage of fixed point value space.
+Along with the way to omit remainder circuit, scaling (normalization) of \(H_i\) and \(\gamma\) is also discussed. Scaling introduced in the directory utilize the full rage of fixed point value space, but different from the normalization on the cordinate.
 
 \section{Definition of binary coding and theorem}
-Let \(B = \cbr{0, 1}\) be an set of binary values. Let \(n, m\) be a number of total bits, and \(m\) be the number of fraction bits. Let \(N = \cbr{1, 2, ..., n}\) be the index set of each bit, and \(F\subset N\)  be that for fraction parts, and \(I  = [N] - F\)  be that of integer part, where,  
+Let \(B = \cbr{0, 1}\) be a set of binary values. Let \(n\) be a number of total bits, and \(m\) be the number of fraction bits. Let \(N = \cbr{1, 2, ..., n}\) be a set of indexes of each bit of the number coding, and \(F\subset N\) be that of fraction parts, and \(I  = [N] - F\)  be that of integer part. So in summary, these are defined as,
 \begin{equation}
     \label{eIF}
     I = \cbr{m+1, m+2, ..., N}, F = \cbr{1, 2, ...., m}.
 \end{equation}
 
-Let \(x\in B^N\) be an series of bits, and \(\hx\) be its corresponding un-signed integer, then, we have, 
+Let \(x\in B^N\) be a series of bits, and \(\hx\) be its corresponding unsigned integer, then, we define \(\hx\) as, 
 \[
     \hx = \sum_{i\in N} 2^{i-1} x_i.
 \]
 
-We define \(x_I\in B^I, x_F\in B^F\) as a part of serise of \(x\), that means,
+We define \(x_I\in B^I, x_F\in B^F\) as a part of series of \(x\). The document also defines corresponding integer values of those as followings,
 \begin{equation}
     \label{eDefxIxF}
-    \hat{x_I} = \sum_{i\in I}2^{i-1} x_i, \hat{x_F} = \sum_{i\in F}2^{i-1} x_i.
+    \hx_I = \sum_{i\in I}2^{i-1} x_i, \hx_F = \sum_{i\in F}2^{i-1} x_i.
 \end{equation}
-in addition, 
+From this definition, we immediately see the following property,
 \begin{equation}
     \label{ehxSum}
     \hx = \hx_I + \hx_F.
 \end{equation}
+The property \eqref{ehxSum} is important and used in the proof introduced in the later part of the document repeatedly.
 
-This documents describes 2 coding representation, 2-complement and un-signed representation. Let the actual value \(x\in B^N\) represents be \(C(x)\), in 2-complement representation, 
-\[
+This document describes 2 coding representation, 2-complement and unsigned representation. Let the actual value \(x\in B^N\) be \(C(x)\). It is defined as, in 2-complement representation, 
+\begin{equation}
+    \label{eC0}
 C(x) = \hx - x_n 2^n,
-\]
-and in un-signed representation, 
-\[
+\end{equation}
+and in unsigned representation, 
+\begin{equation}
+    \label{eC1}
 C(x) = \hx.
-\]
+\end{equation}
 
-Multiplicatoin is defined. Let \(G = \cbr{1, 2,..., 2n}\) be an index of product space of 2 fractional value. Then, letting \(z\in B^G, x\in B^N, y\in B^N\) and \(z=xy\), it is,
+Multiplication is defined here now. Let \(G = \cbr{1, 2,..., 2n}\) be an index of product space of 2 fractional value. Then, letting \(z\in B^G, x\in B^N, y\in B^N\) and \(z=xy\), it is,
 \[
     \hz = \sum_{i, j\in N} 2^{i+j-2} x_i y_j.
 \]
-\[
-    C(z) =  \br{\hx - x_n 2^{n}} \br{\hy - y_n 2^{n}} = \hz - x_n 2^n \hy - y_n 2^n \hx + x_n y_n 2^{2n}.
-\]
-Mapping \(s: B^G \to B^N\) is defined for \(z'\in B^N, z\in B^{G}\) as,
-\[
-    z' = s(z) \Leftrightarrow z'_i = z_{i + m}.
-\]
-Then using this mapping, the slice of the product bits is extracted as a result of the multiplication.
-
-\textbf{Remainder theorem} letting \(p, d\) be an integer, then integers \(q, r\) satisfy the following relation uniquely exist.
+Also, \(\hz = \hx\hy\) holds, because
 \begin{equation}
+    \label{eMulHom}
+    \hz = \sum_{i, j\in N} 2^{i+j-2} x_i y_j = \sum_{i\in N}\sum_{i\in N} 2^{i -1}2^{j-2} x_i y_j = \sum_{i\in N}2^{i -1} x_i\sum_{i\in N}  2^{j-2}y_j =  \hx \hy.
+\end{equation}
+The multiplication is a little different in 2-complement case. We refer that multiplication of 2-complements as \(*\). Because defining multiplication \(*\) bit-wise is a little not simple here, we define only the integer interpretation of \(x*y\), i.e., \(C(x*y)\) here.
+
+It must be \(C(x*y) = C(x)C(y)\), so,
+\begin{equation}
+    \label{eC}
+    C(x*y) =  \br{\hx - x_n 2^{n}} \br{\hy - y_n 2^{n}} = \hx\hy - x_n 2^n \hy - y_n 2^n \hx + x_n y_n 2^{2n}.
+\end{equation}
+Mapping \(s: B^G \to B^Q, Q = \cbr{1,2,...,2n-m}\) is defined for \(z'\in B^Q, z\in B^{G}\) as,
+\[
+    z' = s(z) \Rightarrow \forall i\in Q\br{z'_i = z_{i + m}}.
+\]
+
+Then using this mapping, the slice of the product bits is extracted as a result of the multiplication. Also define \(\hs\) as, in the unsigned case,
+\begin{equation}
+    \label{ehs}
+    \hs(z) = \sum_{i\in Q} 2^{i-1} z_{i+m}.
+\end{equation}
+
+At the last of this section, two theorems are provided.
+
+\textbf{Division theorem} letting \(p, d\) be an integer, then integers \(q, r\) satisfy the following relation uniquely exist.
+\begin{equation}
+    \label{eRemainder}
     p = qd + r, 0\leq r < d
 \end{equation}
-\textbf{proof} see the text book or web site, because this proof can be available everywhere.
+\textbf{proof} see the text book or web-site, because this proof can be available everywhere. We denote the relation above, as,
+\begin{equation}
+    p\% d = r,
+\end{equation}
+it means the remainder of \(p\) divided by \(d\)  is \(r\). This theorem is called Division theorem or Euclid's division lemma.
 
-\textbf{Theorem of remainder scaling} Let \(x\in B^N\), then the reminder of \(C(x)/(2^{M+1})\) is \(\hx_F\). In addition, for any non-negative integer \(k\), reminder of \(C(x)k /(k2^{M+1})\) is \(k\hx_F\). Note that this proposition holds for both case of \(C(x)\) is 2-complement, and \(C(x)\) is un-signed.
+The next theorem is the main proposition used to omit remainder circuit.
+
+\textbf{Remainder scaling} Let \(x\in B^N\), and \(k\in \sZ\) be a non-negative integer. Then \(\hs(x*k)\% \hk = \hs(x_F * k)\) (equation \eqref{exk2k_Fk}). See around equation \eqref{exk2k_Fk} in the section \ref{sMain} for the proof.
 
 
 \section{Main results}
-In QAOA, the remainder of \(\gamma H_i/(2\pi)\), precesiely, following \(r_i\),
+In QAOA, the remainder of \(\gamma H_i\) divided by \(2\pi)\), precisely, following \(r_i\),
 \[
     \gamma H_i = 2\pi q_i + r_i, 0\leq r_i < 2\pi, q_i\in \sZ,
 \]
-must be calculated. If we code \(2\pi, \gamma, H_i\) using fixed point representation, because all values can be represented as integer, remainder theorem can be applied to the relation above as disscussed in section \ref{sMain}.
+must be calculated. If we code \(2\pi, \gamma, H_i\) using fixed point 2-complement representation, because all values can be represented as integer, division theorem can be applied to the relation above as discussed in section \ref{sMain}.
 
-We consider the values, \(\hat{H}_i =  \frac{H_i}{\sqrt{2\pi}}, \hat{\gamma} = \frac{\gamma}{\sqrt{2\pi}}\). It provides the equation,
+We consider the values, \(H'_i =  H_i,  \gamma' = \frac{\gamma}{2\pi}\). It provides the equation,
 \[
-2\pi \hat{\gamma} \hat{H}_i = \gamma H_i.
+2\pi \gamma' H'_i = \gamma H_i.
 \]
-Now let \(x\in B^N\) be a coding such that \(\hat{\gamma} \hat{H}_i = C(x)\). Then from the result of theorem of remainder, \(s(2 \pi C(x)) \% (2\pi )= s(x_F 2 \pi)\) (see \ref{sMain} for more detail and proof.).
+Now let \(x\in B^N\) be a coding such that \(\gamma' * H'_i = x\). Then from the result of division theorem, \(\hs(\gamma*H_i)\% (2\pi) = \hs(x*2\pi)\% (2\pi) = \hs(x_F * 2\pi)\) (see \ref{sMain} for more detail and proof.). That is, instead of having \(r_i = \hs(\gamma *H_i)\% (2\pi) \), that requires remainder circuit, we can have \(r_i = \hs(x_F * 2\pi)\), where there is no remainder circuit but only multiplication by constant value \(2\pi\) and bits slicing operation \(\hs\).
 
-This section also provide the range normalization to  \(\gamma, H_i\). The main motivation is to decrease the effect of rounding error when we have a product with large number and small number. For example, a multiplication \(1.3\times 10^{-12} \times 2.4 \times 10^{12}\) results in \(3.12\times 10^{0}\). The result is in meaningful range, while the factors of the multiplication has low accuraccy due to the rounding of the least bits. In QAOA, because arguments to multiplications are pre-determined, this problem can be mitigated by scaling the values.
+This section also provide the range normalization to  \(\gamma, H_i\). The main motivation is to decrease the effect of rounding error when we have a product with large number and small number. For example, a multiplication \(1.3\times 10^{-12} \times 2.4 \times 10^{12}\) results in \(3.12\times 10^{0}\). The result is in meaningful range, while the factors of the multiplication has low accuracy due to the rounding of the least bits. In QAOA, because arguments to multiplications are pre-determined, this problem can be mitigated by scaling the values.
 
 The range of these 2 variables are respectively, \(\gamma\in [0, 2\pi), H_i\in [-S, S]\). The ranges for these 2 variables are significantly different. Therefore, it is worth alighning the ranges. This document proposes to use scaled values \(\gamma', H_i'\),
 \begin{equation}
@@ -163,88 +188,121 @@ Note that interval lengh are the same as \(\sqrt{2S}\) for both range above. The
 \[
     2\pi \gamma' H'_i = \gamma H_i.
 \]
-Therefore, as in the case \(\hat{\gamma}, \hat{H}_i\), similarly, we can get the remainder of \(s(\gamma H_i)\% (2\pi)\) as \(s(2\pi \hx_F)\) where \(C(x) = \gamma' H'_i\).
+Therefore, as in the case \(\hat{\gamma}, \hat{H}_i\), similarly, we can get the remainder of \(\hs(\gamma * H_i)\% (2\pi)\) as \(\hs(\hx_F*2\pi)\) where \(x = \gamma' * H'_i\).
  
 \subsection{suggestion to implementation}
 Here is a suggenstion, 
 \begin{itemize}
     \item Prepare scaled \(\gamma', H'\) as in equation \eqref{eNormGM} in CPU.
-    \item Store that scaled \(H'\) and \(gamma'\) in the FPGA's memory, using fixed point number with wider integer bits than that for state vectors.
+    \item Store that scaled \(H'\) and \(\gamma'\) in the FPGA's memory, using fixed point complement fractional number with wider integer bits than that for state vectors.
     \item FPGA's internal:
     \begin{itemize}
         \item Prepare fixed point fraction value of \(2\pi\). Write it as constant value in the circuit. (Constarnt value make the computation fast).
-        \item Calculate signed production \(x = \gamma'H'\).
-        \item Extract fraction bits, i.e.,  \(x_F\). Ignore or all padd zero to integer bits. This is positive value. Even \(x\) was negative in 2-complement expression, use \(x_F\) as it is (for detail, see around equation \eqref{eCXf2}).
-        \item Calculate multiplication \(y = 2\pi x_F\), using the same fraction bits for cordic input. \(2\pi \) is a constant value, pre-caluculated before compilation written in verilog source as hex and so on.
-        \item Supply \(y\) to cordic.
+        \item Calculate 2-complement production \(x = \gamma'* H'\).
+        \item Extract fraction bits, i.e., get \(x_F\). Ignore or all pad zero to integer bits (\(i\not\in F\)). This \(x_F\) is treated as unsigned value, that is, \(C(x_F) = \hx_F\). Even \(x\) was negative when seen as 2-complement expression, use \(x_F\) as it is (for detail, see around equation \eqref{eCXf2}).
+        \item Calculate multiplication \(y = x_F * 2\pi\), using the same fraction bits. \(y\) should be non-negative value.
+        \item Supply \(y\) to CORDIC.
     \end{itemize}
 \end{itemize}
 \section{Reminder of binary coding}
 \label{sMain}
-We now consider to divide \(x\) by \(p\in B^N\), where \(\sZ\) is a set of integer. From the theory of remainder, numbers \(\hq, \hr\in \sZ, 0 \leq \hr < \hp\) uniquely exist such that,
+We now think to divide \(x\) by \(p\in B^N\). From the Division theorem (or Euclid's division theorem), numbers \(\hq, \hr\in \sZ, 0 \leq \hr < \hp\) such that,
 \begin{equation}
     \label{eTheoryofRemainder}
-    \hx = \hq \hp + \hr
+    \hx = \hq \hp + \hr,
 \end{equation}
-Having these numbers, for any number \(\hx k\), numbers \(\hat{Q}, \hat{R}\in \sZ, 0 \leq \hat{R} < \hp k\) uniqely exist such that,
+uniquely exist, where \(\sZ\) is a set of integer. Having these numbers and letting \(k\in B^N\), again from the division theorem numbers \(\hat{W}, \hat{R}\in \sZ, 0 \leq \hat{R} < \hp k\) such that,
 \begin{equation}
     \label{eMultiDiv}
-\hx k= \hat{Q} k + \hat{R}
+\hx \hk= \hat{W} \hk + \hat{R}
 \end{equation}
-But we have another expression of \(k\hx \) from \eqref{eTheoryofRemainder}, that is, 
+uniquely exist. But we have another expression of \(k\hx \) from \eqref{eTheoryofRemainder}, that is, 
 \[
-    k \hx = k\hq \hp + k\hr, 0\leq k \hr < k\hp.
+    \hk \hx = \hk\hq \hp + \hk\hr, 0\leq \hk \hr < \hk\hp.
 \]
-Due the the uniqeness, \(\hq \hp = \hat{Q}, k\hr = \hat{R}\). So, if we have a value \(\hx\), divisor \(\hp\), and remainder \(\hr\), then we can have the remainder \(k \hr \) of the division  \(k \hx\) by \(k\hp\).
+Due the uniqueness, \(\hq \hp = \hat{W}, k\hr = \hat{R}\). So, if we have a value \(\hx\), divisor \(\hp\), and remainder \(\hr\), then we can have the remainder \(\hk \hr \) of the division  \(\hk \hx\) by \(\hk\hp\). We call this is Remainder scaling.
 
-Let \(\hp\) as an ``1'' ¥ of fraction number here, that is,
+Let \(\hp\) as an ``1'' of fraction number here, that is,
 \[
-    \hp = 2^{m+1} = \funit.
+    \hp = 2^{m+1} = \fum.
 \]
-This document refer to such value meaning ``1'' as a fraction number as \(\funit\). In this case, we can write, 
+In this case, we can write, 
 \[
-\hx_I = \sum_{i\in I } 2^{i-1} x_i = \hp X_I, X_I = \sum_{i\in I } 2^{i-1 -m} x_i
+\hx_I = \sum_{i\in I } 2^{i-1} x_i = \fum \hX_I, \hX_I = \sum_{i\in I } 2^{i-1 -m} x_i
 \]
-Because now, \(i \geq m+1\), \(2 ^{i-1-m} \geq 0\). It makes \(X_I\) be an integer, so, we have 2 integers \(\hp\) and \(X_I\) facterize \(\hx_I\). Substituting this result into \eqref{ehxSum}, we have,
+Because now, \(i \geq m+1\), \(2 ^{i-1-m} \geq 0\). It makes \(\hX_I\) be an integer, so, we have 2 integers \(\fum\) and \(\hX_I\) factorizes \(\hx_I\). Substituting this result into \eqref{ehxSum}, we have,
 \[
-    \hx = \hp X_I + \hx_F, 0 \leq \hx_F < \hp.
+    \hx = \fum \hX_I + \hx_F, 0 \leq \hx_F < \fum.
 \]
-The equnality is a reulst from the definition of \eqref{eDefxIxF}. Then the theory of remainder tells us that \(X_I\) and \(\hx_F\) must be a quotinent and remainder of the division of \(\hx\) by \(\hp\).
+The inequality is a result from the definition of \eqref{eDefxIxF}. Then the Division theorem tells us that \(\hX_I\) and \(\hx_F\) must be a quotient and remainder of the division of \(\hx\) by \(\fum\).
 
-Correspondingly, from the result of \eqref{eMultiDiv}, \(X_I\) and \(\hx_F k\) are a quotient and remainder respectively of the division of \(\hx k\) by \(\hp k\), because the following relationship holds.
+Correspondingly, from the result of \eqref{eMultiDiv}, \(\hX_I\) and \(\hx_F k\) are a quotient and remainder respectively of the division of \(\hx k\) by \(\fum k\), because the following relationship holds.
 \[
-    \hx k = \hp k X_I + \hx_F k, 0 \leq \hx_F k < \hp k.
+    \hx \hk = \fum \hk \hX_I + \hx_F \hk, 0 \leq \hx_F \hk < \fum \hk.
 \]
-Letting \(z = x k, y = x_F k, z, y \in B^{G+F}\),  then because,
-\[
-    z = s(z) \hp + \hz_F, y  = s(y) \hp + \hy_F,
-\]
+Letting \(z = x k, y = x_F k, z, y \in B^{G}\), then because,
+\begin{equation}
+    \label{ezyfum}
+    \hz = \hs(z) \fum + \hz_F, \hy  = \hs(y) \fum + \hy_F,
+\end{equation}
 we have,
 \[
-    s(z) \hp + \hz_F = \hp k X_I + s(y) \hp + \hy_F, 0 \leq s(y) \hp < \hp k.
+    \hs(z) \fum + \hz_F = \fum \hk \hX_I + \hs(y) \fum + \hy_F, 0 \leq \hs(y) \fum < \fum \hk.
 \]
 
 \[
-    s(z) \hp = \hp k X_I + s(y) \hp , 0 \leq s(y) \hp < \hp k, \because \hz_F = \hy_F,
+    \hs(z) \fum = \fum \hk \hX_I + \hs(y) \fum , 0 \leq \hs(y) \fum < \fum \hk, \because \hz_F = \hy_F,
 \]
-where \(\hz_F = \hy_F\) holds because the other values is a multiple of \(\hp\), while \(\hz_F, \hy_F\) cannot be a multiple of \(\hp\) due to \(0< \hz_F < \hp, 0< \hy < \hp\)
+where \(\hz_F = \hy_F\) holds because the other values are a multiple of \(\fum\), while \(\hz_F, \hy_F\) cannot be a multiple of \(\fum\) due to \(0< \hz_F < \fum, 0< \hy < \fum\). So we can reduce \(\hz_F\) and \(\hy_F\). After that, we can also reduce \(\fum\) from remaining terms in the equation. As a result, we have,
 \[
-    s(z)  =  k X_I + s(y), 0 \leq s(y)  <  k.
+    \hs(z)  =  \hk \hX_I + \hs(y), 0 \leq \hs(y)  <  \hk.
 \]
-So again, from the theorem of remainder, \(S(x k)\% k = S(x_F k)\).
+So again, from the division theorem, \(\hs(x k)\% \hk = \hs(x_F k)\). 
 
-In the case of \(x\) is a 2-complement values, the value coded by \(x\) is \(\hx - x_n 2^n\). 
-Here we show in both case above, the remainder of \(C(x)/\hp\) is \(\hx_F\).
+Here we also show that, even assuming 2-complement for \(x\), 
+\begin{equation}
+    \label{exk2k_Fk}
+    \hs(x*k) \% \hk = \hs(x_F*k)
+\end{equation} 
+holds, where \(*\) is multiplication of 2-complement. \(k\) is assumed to be non-negative. This is general case of \(\hs(x k)\% \hk = \hs(x_F k)\), because \eqref{exk2k_Fk} holds on both case \(x\) is 2-complement and that is not.
 
-Actually,
-\[
-C(x) = \hx_I + \hx_F - x_n 2^n = 2^{m+1} (X_I - 2^{n-m-1}x_n) + \hx_F, 0\leq \hx_F < 2^{m+1}
-\]
-So, \(\hx_F\) is still the remainder of \(C(x)/\hp\). We also have, 
+Actually, 
+\begin{align}
+    \nonumber
+C(x) &= \hx_I + \hx_F - x_n 2^n = 2^{m+1} (\hX_I - 2^{n-m-1}x_n) + \hx_F\\
+\label{e9}
+&= \fum (\hX_I - 2^{n-m-1}x_n) + \hx_F, 0\leq \hx_F < \fum 
+\end{align}
+
+So, \(\hx_F\) is still a remainder of \(C(x)\) divided by \(\fum\). By multiplying \(C(k)\) in the both sides and applying \(C(x)\hk = C(x*k)\) defined as \eqref{eC} (note \(C(k) \geq 0\)), We also have, 
 \begin{equation}
     \label{eCXf2}
-C(x) k =  k 2^{m+1} (X_I - 2^{n-m-1}x_n) + k\hx_F, 0\leq k\hx_F < k2^{m+1}.
+C(x*k) = C(x)\hk =  \hk\fum (\hX_I - 2^{n-m-1}x_n) + \hk\hx_F, 0\leq C(k)\hx_F < C(k)\fum,
 \end{equation}
-The left of the proof is the same as in the case of un-signed value. Therefore, \(s(kC(x))\% k =  s(x_F k)\). 
+Letting \(z = x*k, y = x_F *k\), and,
+\begin{align*}
+    \label{ezyfum2}
+C(x*k) &=  \hx\hk - x_n 2^n \hk\\
+&=  \hs(z) \fum + \hz_F - x_n 2^n \hk\quad\because \hx\hk = \hz, \eqref{eMulHom}\\
+C(x_F *k) &=  C(x_F)C(k) = \hx_F \hk \quad\because \eqref{e9}\\
+&= \hs(y)\fum + \hy_F\quad\because \eqref{eMulHom}
+\end{align*}
+Line of \(\because \eqref{e9}\) is understood seeing the original definition of \(x_F\) in \eqref{e9}, where it is introduced as an unsigned value to compose \(C(x)\). See also \eqref{eC0} and \eqref{eC1}.
+
+Substituting those equations into \eqref{eCXf2}, 
+\begin{align*}
+\hs(z) \fum + \hz_F - x_n 2^n \hk &=  \hk\fum (\hX_I - 2^{n-m-1}x_n) + \hs(y)\fum + \hy_F, \\
+\Rightarrow \hs(z) \fum + \hz_F  &=  \hk\fum (x_n 2^n  +\hX_I - 2^{n-m-1}x_n) + \hs(y)\fum + \hy_F, \\
+\Rightarrow \hs(z) \fum  &=  \hk\fum (x_n 2^n  + \hX_I - 2^{n-m-1}x_n) + \hs(y)\fum \quad\because \hz_F = \hy_F,\\
+\hs(z)  &=  \hk (x_n 2^n  + \hX_I - 2^{n-m-1}x_n) + \hs(y)\quad \because \fum > 0,\\
+&0 < \hs(y) \leq \hk,\quad \because (*2), (*3),\\
+&\hy < \hk \fum\quad \because y = x_F*k, \hx_F < \fum. (*2),\\
+&\hs(y)\fum < \hy \quad (*3).\\
+\therefore\hs(z)  &=  \hk (x_n 2^n  + \hX_I - 2^{n-m-1}x_n) + \hs(y), 0 < \hs(y) \leq \hk\\
+\therefore  \hs(y) = \hs(z)\% \hk.&
+\end{align*}
+Then we know \(\hs(y)\) is a reminder of \(\hs(z)\) divided by \(\hk\).
+
+Finally, by substituting \(z = x*k, y = x_F *k\) back into the equation, we have \(\hs(x*k)\% \hk = \hs(x_F * k)\).
 
 \end{document}
