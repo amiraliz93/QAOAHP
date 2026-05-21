@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<simPackage>
- <file path="FP2Fix53_sim/FP2Fix53.vo" type="VERILOG" />
- <topLevel name="FP2Fix53" />
- <deviceFamily name="stratixv" />
-</simPackage>
