@@ -97,12 +97,12 @@ Let \(x\in B^N\) be a series of bits, and \(\hx\) be its corresponding unsigned 
 We define \(x_I\in B^I, x_F\in B^F\) as a part of series of \(x\). The document also defines corresponding integer values of those as followings,
 \begin{equation}
     \label{eDefxIxF}
-    \hx_I = \sum_{i\in I}2^{i-1} x_i, \hx_F = \sum_{i\in F}2^{i-1} x_i.
+    \hx_I = \sum_{i\in I}2^{i-1-m} x_i, \hx_F = \sum_{i\in F}2^{i-1} x_i.
 \end{equation}
 From this definition, we immediately see the following property,
 \begin{equation}
     \label{ehxSum}
-    \hx = \hx_I + \hx_F.
+    \hx = \hx_I 2^m + \hx_F.
 \end{equation}
 The property \eqref{ehxSum} is important and used in the proof introduced in the later part of the document repeatedly.
 
@@ -147,7 +147,7 @@ Then using this mapping, the slice of the product bits is extracted as a result 
 For 2-complement values potentially include negative number, \(C_m\) is used instead of \(\hs\). In bit-wise operation manner, \(C_m(x*y)\) is a integer represetation of a value obtained by shifting least \(m\) bits of \(x*y\) out, and removige greatest \(m\)-th bits from \(x*y\). Formally defining \( C_m(x*y)\) is difficult and not worth providing its strict derivation, but for the reader's curiousity, it is derived here. For \(C_m(x)\), it is,
 \begin{equation}
     \label{eCm}
-    C_m(x) = \hx_I - x_{n} 2^{n-m},
+    C_m(x) = \hs(x) - x_{n} 2^{n-m},
 \end{equation} 
 For \(C_m(x*y)\), using the definition \eqref{eC} we see the following,
 \begin{align*}
@@ -251,19 +251,15 @@ Let \(\hp\) as an ``1'' of fraction number here, that is,
 \[
     \hp = 2^m = \fum.
 \]
-In this case, we can write, 
+From \eqref{ehxSum} we have,
 \[
-\hx_I = \sum_{i\in I } 2^{i-1} x_i = \fum \hX_I, \hX_I = \sum_{i\in I} 2^{i-1 -m} x_i
+    \hx = \fum \hx_I + \hx_F, 0 \leq \hx_F < \fum.
 \]
-Because now, \(i \geq m+1\), \(2 ^{i-1-m} > 0\). It makes \(\hX_I\) be an integer, so, we have 2 integers \(\fum\) and \(\hX_I\) factorizes \(\hx_I\). Substituting this result into \eqref{ehxSum}, we have,
-\[
-    \hx = \fum \hX_I + \hx_F, 0 \leq \hx_F < \fum.
-\]
-The inequality is a result from the definition of \eqref{eDefxIxF}. Then the Division theorem tells us that \(\hX_I\) and \(\hx_F\) must be a quotient and remainder of the division of \(\hx\) by \(\fum\).
+The inequality is a result from the definition of \eqref{eDefxIxF}. Then the Division theorem tells us that \(\hx_I\) and \(\hx_F\) must be a quotient and remainder of the division of \(\hx\) by \(\fum\).
 
-Correspondingly, from the result of \eqref{eMultiDiv}, \(\hX_I\) and \(\hx_F k\) are a quotient and remainder respectively of the division of \(\hx k\) by \(\fum k\), because the following relationship holds.
+Correspondingly, from the result of \eqref{eMultiDiv}, \(\hx_I\) and \(\hx_F k\) are a quotient and remainder respectively of the division of \(\hx k\) by \(\fum k\), because the following relationship holds.
 \[
-    \hx \hk = \fum \hk \hX_I + \hx_F \hk, 0 \leq \hx_F \hk < \fum \hk.
+    \hx \hk = \fum \hk \hx_I + \hx_F \hk, 0 \leq \hx_F \hk < \fum \hk.
 \]
 Letting \(z = x k, y = x_F k, z, y \in B^{G}\), then because,
 \begin{equation}
@@ -272,7 +268,7 @@ Letting \(z = x k, y = x_F k, z, y \in B^{G}\), then because,
 \end{equation}
 we have,
 \[
-    \hs(z) \fum + \hz_F = \fum \hk \hX_I + \hs(y) \fum + \hy_F, 0 \leq \hs(y) \fum < \fum \hk.
+    \hs(z) \fum + \hz_F = \fum \hk \hx_I + \hs(y) \fum + \hy_F, 0 \leq \hs(y) \fum < \fum \hk.
 \]
 
 \[
@@ -303,14 +299,12 @@ C(x) &= \hx_I + \hx_F - x_n 2^n = \fum (\hX_I - 2^{n-m}x_n) + \hx_F\\
 So, \(\hx_F\) is still a remainder of \(C(x)\) divided by \(\fum\). By multiplying \(C(k)\) in the both sides and applying \(C(x)\hk = C(x*k)\) defined as \eqref{eC} (note \(C(k) \geq 0\)), We also have, 
 \begin{equation}
     \label{eCXf2}
-C(x*k) = C(x)\hk =  \hk\fum (\hX_I - 2^{n-m-1}x_n) + \hk\hx_F, 0\leq \hk\hx_F < \hk\fum,
+C(x*k) = C(k)\fum (\hX_I - 2^{n-m-1}x_n) + C(k)\hx_F, 0\leq \hk\hx_F < \hk\fum,
 \end{equation}
 Then we introduce slices as,
 \begin{align}
     \label{ezyfum2}
-C(x_F *k) &=  C(x_F)C(k) = \hx_F \hk \quad\because \eqref{e9}\\
-\nonumber
-&= \hs(x_F k)\fum + \hat{\br{x_F k}}_F\quad\because \eqref{eMulHom}\\
+C(x_F *k) &=  C_m(x_F * k)\fum + \hx_F \hk_F\quad\because \eqref{eMulHom}\\
     \label{ezyfum3}
 C(x*k) &=  C_m(x*k) \fum + \hx_F\hk_F
 \end{align}
