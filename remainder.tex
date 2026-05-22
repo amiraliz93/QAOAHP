@@ -72,7 +72,7 @@
 \newcommand{\hX}{{\hat{X}}}
 \newcommand{\fum}{{\mathbf{1}_m}}
 \title{Remainder and normalization of QAOA}
-\date{May, 20th, 2026}
+\date{May, 22th, 2026}
 \author{Hiroki Shibata, Amir Alizadeh\\Tokyo Metropolitan University and Nottigham Trent University}
 \begin{document}
 \maketitle
@@ -143,12 +143,29 @@ Then using this mapping, the slice of the product bits is extracted as a result 
     \label{ehs}
     \hs(z) = \sum_{i\in Q} 2^{i-1} z_{i+m}.
 \end{equation}
-For 2-complement values potentially include negative number, \(C_m\) is used instead of \(\hs\). \(C_m\) is defined using some value \(y\in B^{Q}\), such that,
+
+For 2-complement values potentially include negative number, \(C_m\) is used instead of \(\hs\). In bit-wise operation manner, \(C_m(x*y)\) is a integer represetation of a value obtained by shifting least \(m\) bits of \(x*y\) out, and removige greatest \(m\)-th bits from \(x*y\). Formally defining \( C_m(x*y)\) is difficult and not worth providing its strict derivation, but for the reader's curiousity, it is derived here. For \(C_m(x)\), it is,
 \begin{equation}
     \label{eCm}
-    \forall i\in Q\br{y_i = (x*k)_{i+m}, i \in Q}, C_m(x*k) = C(y).
+    C_m(x) = \hx_I - x_{n} 2^{n-m},
 \end{equation} 
-Such \(y\) uniquely exists. Its functionality is almost the same as of \(\hs\). But it can represent negative value for 2-complement coding. And unlike \(\hs\), that defines its value explicitly, \(C_m\) represents its value with intermediate value \(y\) implicitly, because the definition of the multiplication was not given explicitly for 2-complement values in the document.
+For \(C_m(x*y)\), using the definition \eqref{eC} we see the following,
+\begin{align*}
+    &C(x*y) = \br{\hx - x_n 2^{n}} \br{\hy - y_n 2^{n}}\\
+    &= \hx\hy - x_n 2^n \hy - y_n 2^n \hx + x_n y_n 2^{2n}\\
+    &= \hx\hy - \br{x_n 2^{n-m} \hy - y_n 2^{n-m} \hx + x_n y_n 2^{2n-m}}2^m\\
+    &= \br{\hx_I\hy_I 2^{m} + \hx_F\hy_I + \hx_I\hy_F}2^m  - \br{x_n 2^{n-m} \hy - y_n 2^{n-m} \hx + x_n y_n 2^{2n-m}}2^m + \hx_F\hy_F.
+\end{align*}
+Because the term of multiple of \(2^m\) does not contributes the bits whose index is less than \(m\), therefore, 
+\begin{equation}
+    \label{eCmxy}
+     C_m(x*y) = \hx_I \hy_I 2^{m} + \hx_F\hy_I  + \hx_I\hy_F  - x_n 2^{n-m} \hy - y_n 2^{n-m} \hx + x_n y_n 2^{2n-m}
+\end{equation} 
+Also note that, \(C_m(x*y) \) is used to decompose \(C(x*y)\) as, 
+\begin{equation}
+    \label{eCxy2m}
+    C(x*y) = C_m(x*y)2^m + \hx_F\hy_F.
+\end{equation}
 
 At the last of this section, two theorems are provided.
 
@@ -295,9 +312,9 @@ C(x_F *k) &=  C(x_F)C(k) = \hx_F \hk \quad\because \eqref{e9}\\
 \nonumber
 &= \hs(x_F k)\fum + \hat{\br{x_F k}}_F\quad\because \eqref{eMulHom}\\
     \label{ezyfum3}
-C(x*k) &=  C_m(x*k) \fum + C(x*k)_F\\
+C(x*k) &=  C_m(x*k) \fum + \hx_F\hk_F
 \end{align}
-where \(C_m(x*k)\) is defined in \eqref{eCm}.  
+where \(C_m(x*k)\) is defined in \eqref{eCm}, and the decomposition can be seen \eqref{eCxy2m}.
 
 Substituting, \eqref{ezyfum2} and \eqref{ezyfum3}, with the same manner as when we derived \eqref{eUscaleRem}, we get,
 \[
