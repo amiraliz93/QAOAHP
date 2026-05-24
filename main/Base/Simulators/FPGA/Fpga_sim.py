@@ -4,7 +4,8 @@ import serial # UART communication to FPGA
 import time
 import struct # convert Python numbers into bytes
 from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
-
+from ...precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
+from ....parameter_utils import generate_mixer_sincos_fpga, convert_float_to_fixed
 
 class FpgaDriver:
     """
@@ -31,60 +32,56 @@ class FpgaDriver:
         execute() - Send RUN command to start QAOA computation
         read_result() - Retrieve final statevector from FPGA
     """
-    
- 
+
+    FIX_P = 64    # total bits
+    FIX_N = 61    # fractional bits  -> Q3.61, range [-4, 4)
+
     # Operation codes from NEW_smachine.sv
-    OP_NONE = 0
+    OP_NONE = 0  # 1 bytes
+    OP_NONE8 = 0  # 8 byets
     OP_SEND1T = 1      # Send 1 byte from PC --> rT
-    OP_SEND8T = 2      # Send 8 bytes from PC --> rT
-    OP_MOV_T2A = 3     # Move rT to rA
+    OP_SEND8T = 2      # Send 64-bit address as integer from PC --> rT
+    OP_MOV_T2A = 3     # Move address from temp register (rT) to address
     OP_MOV_T2B = 4     # Move rT to rB
     OP_MOV_A2U = 5     # Move rA to rU (for output)
     OP_MOV_A2B = 6     # Move rA to rB
-    OP_MOV_Info2U = 7  # Move Info to rU (Send firmware version info)
+    OP_MOV_Info2U = 7
+    OP_MOV_S2U = 8  
+    OP_MOV_T2P = 9
     OP_FETCH1U = 60    # Fetch 1 byte from rU --> PC
-    OP_FETCH8U = 61    # Fetch 8 bytes (64-bit) from rU --> PC
+    OP_FETCH8U = 61 
+    OP_ADD_B2A = 80   # rA = rA +rB (64bit fixed, 2cycles)
+    OP_MUL_B2A = 81   # rA = rA * rB (24bit fixed, 8 cycles)
+    OP_ADDFP_B2A = 82 # rA = rA + rB (64bit float, 27 cycles)
+    OP_MULFP_B2A = 83 # rA = rA * rB (64bit float, 24 cycles)
     OP_INC_A = 84      # Increment rA by 1 --> rA = rA +1
     OP_WRITE_T2RAM = 111  # Write rT to BRAM at address rA ---  rT to BRAM[rA]
     OP_READ_RAM2U = 112   # Read BRAM at address rA to rU -- BRAM[rA] → rU 
     OP_SEND_CMD = 118     # see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
+    OP_WRITE_T2_AG = 119
+    HOST_WAIT = 254
 
     # QAOA system commands (from qaoa_system.sv)
     qa_INIT = 16   # Initialize QAOA system
     qa_WAIT = 1   # Wait state
     qa_RUN = 2    # Run QAOA layer
     
-    # Aim: 1- Computing intermediate values on FPGA 2- Preprocessing data before BRAM writes 
-    # These operations allow us to perform arithmetic on the FPGA,
-    #  which can be useful for things like incrementing addresses, 
-    # accumulating sums, or applying parameters without needing to 
-    # send pre-computed values from the PC. This can reduce the amount of data we need to transfer and leverage the FPGA's computational capabilities.
-    OP_ADD_B2A = 80   # rA = rA +rB (64bit fixed, 2cycles)
-    OP_MUL_B2A = 81   # rA = rA * rB (24bit fixed, 8 cycles)
-    OP_ADDFP_B2A = 82 # rA = rA + rB (64bit float, 27 cycles)
-    OP_MULFP_B2A = 83 # rA = rA * rB (64bit float, 24 cycles)
-    
-    # BRAM bank identifiers (from NEW_smachine.sv)
-    BRAM_CONFIG     = 0x4000000000000000  # Config registers (NQ, NS, Np)
-    BRAM_PARAMS = 0x0800000000000000      # Parameters (cos β, sin β, γ)= 
 
-    BRAM_STATE_REAL = 0x1000000000000000      # BRAM[0]: State vector real part
-    BRAM_STATE_IMAG = 0x2000000000000000      # BRAM[1]: State vector imaginary part
-    BRAM_COST_FUNC  = 0x0400000000000000       # BRAM[2]: Cost function
-    BRAM_CONFIG_STEP = 0x0100000000000000      # Address step for config registers
+    # BRAM address
+    #BRAM_CONFIG     = 0x4000000000000000  # Config registers (NQ, NS, Np)
+    BRAM_PARAMS = 0x0800_0000_0000_0000      # Parameters cos(β), sin(β), γ per layer
+                  
+    BRAM_STATE_REAL = 0x1000_0000_0000_0000      # BRAM[0]: Initial state real components 
+    BRAM_STATE_IMAG = 0x2000_0000_0000_0000      # BRAM[1]: Initial state imaginary components (2^n values)
+    BRAM_COST_FUNC  = 0x0400_0000_0000_0000       # BRAM[2]: Diagonal cost values _hc_diag (2^n values)
+    #BRAM_CONFIG_STEP = 0x0100000000000000      # Address step for config registers
 
 
-
-    # Arithmetic operation latencies (used in state machine timing)
-    # Aim: 1)These define how many clock cycles each arithmetic operation takes. -2)Status polling - Knowing when operations complete
-    FP64_ADD_LATENCY = 27 # For example if  choose OP_ADDFP_B2A, must wait 27 cycles before next operation
-    FP64_MUL_LATENCY = 24
-    FIX64_ADD_LATENCY = 2
-    FIX64_MUL_LATENCY = 8
 
 
 # helper function
-    def __init__(self, port="COM3", baudrate=115200, timeout=1):
+    def __init__(self, fpga_config: dict , timeout=1):
+        
         """
         Initialize FPGA driver with serial port settings
         
@@ -93,6 +90,10 @@ class FpgaDriver:
             baudrate: Communication speed (default 115200)
             timeout: Read timeout in seconds
         """
+        port = fpga_config.get("port")
+        baudrate = fpga_config.get("baudrate", 115200) 
+        timeout = fpga_config.get("timeout") 
+
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -105,8 +106,8 @@ class FpgaDriver:
         print(f"Connecting to FPGA on {self.port}...")
         try:
             self.ser = serial.Serial(
-                port=self.port,
-                baudrate=self.baudrate,
+                port= self.port,
+                baudrate= self.baudrate,
                 bytesize=serial.EIGHTBITS,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
@@ -146,6 +147,7 @@ class FpgaDriver:
             print(f"✗ Connection error: {e}")
             self.connected = False
             return False
+        
 # Higher level data formation
     def _send_opcode(self, opcode):
         """Send single opcode byte"""
@@ -155,20 +157,35 @@ class FpgaDriver:
         time.sleep(1e-5)  # Prevent UART buffer overflow
         
         # in order to send pre-formatted bytes 
+
+    def convert_byte(self, scaled, bytes):
+        return scaled.to_bytes(bytes, "little", signed=True)
+
+    def _convert_float_to_fixed(self, a, name="value"):
+   
+        scaled = int(round(a * (1 << self.FIX_N)))
+        min_val = -(1 << (self.FIX_P - 1))      # -2^63  == -4.0
+        max_val =  (1 << (self.FIX_P - 1)) - 1  #  2^63-1 == ~+4.0
+        if scaled < min_val or scaled > max_val:
+                raise ValueError(
+                    f"{name}={a:.6g} outside Q3.61 range [-4, 4); normalize first."
+                )
+        return scaled
     
+    def _send_fixed(self, a, name="value"):
+        """Convert float -> Q3.61 -> 8 bytes two's-complement LE, send over UART."""
+        if not self.connected or self.ser is None:
+            raise RuntimeError("Not connected to FPGA") 
+        sclaed = self._convert_float_to_fixed(a, name)
+        self.ser.write(self.convert_byte(sclaed, 8))
+        time.sleep(1e-5)  # Prevent UART buffer overflow
+
+
     def _send_byte(self, value):
         """Send single byte (64 bit integer in little-endian format)"""
         if not self.connected or self.ser is None:
             raise RuntimeError("Not connected to FPGA")
         self.ser.write(bytes([value]))
-        time.sleep(1e-5)
-
-    def _send_fp64(self, value):
-        """Send 64-bit float in little-endian format"""
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        data = struct.pack('<d', value)
-        self.ser.write(data)
         time.sleep(1e-5)
 
     def _send_int64(self, value):
@@ -189,14 +206,7 @@ class FpgaDriver:
         return struct.unpack('<d', data)[0]
 
     def _write_bram_fp64(self, bram_bank, addr, value):
-        """
-        Write a 64-bit float to BRAM
-        
-        Args:
-            bram_bank: BRAM bank selector (BRAM_STATE_REAL, etc.)
-            addr: Address within BRAM (0 to 2^13-1)
-            value: Float64 value to write
-        """
+
         full_addr = bram_bank | addr
         
         # Set address in rA
@@ -206,7 +216,7 @@ class FpgaDriver:
         
         # Write value
         self._send_opcode(self.OP_SEND8T)
-        self._send_fp64(value)
+        self._send_fixed(value)
         self._send_opcode(self.OP_WRITE_T2RAM)
 
     def _read_bram_fp64(self, bram_bank, addr):
@@ -255,10 +265,9 @@ class FpgaDriver:
                     return True
         return False    
 
-    def load_data(self, diag_hamiltonian, initial_state, gammas, betas):
+    def load_data(self, diag_hamiltonian, sv0_real, sv0_imag, gammas, betas, cosb, sinb):
         """
-        Load QAOA problem data to FPGA
-        
+        Load data to FPGA
         Args:
             diag_hamiltonian: Cost diagonal array (length 2^n_qubits)
             initial_state: Initial quantum state (complex128, length 2^n_qubits)
@@ -269,15 +278,14 @@ class FpgaDriver:
             raise RuntimeError("Not connected to FPGA")
         
         print("Loading data to FPGA...")
-        n_states = len(initial_state)
-        n_layers = len(gammas)
+        n_states = len(diag_hamiltonian)
+        p = len(gammas)
         n_qubits = int(np.log2(n_states))
     
         
         try:
             # 1. Initialize QAOA system
             # --- Phase 1: Reset cycle (from all_test.py lines 177-192) ---
-    
             print("  Phase 1: Reset cycle...")
             self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
             self._send_opcode(self.OP_SEND_CMD)
@@ -289,19 +297,19 @@ class FpgaDriver:
             self._send_opcode(self.OP_SEND_CMD)
             time.sleep(0.01)
 
-        # --- Phase 2: Write config registers (from all_test.py lines 193-215) ---
-        # Addresses: 0x4000... NQ, 0x4100... NQ-1, 0x4200... NS-1, 0x4300... NS-2, 0x4400... Np
+        # --- Phase 2: Write config registers
+        
             print(f"  Writing {n_states} cost values to BRAM[2]...")
             print(f" phase2: wrting config registeraters...")
-            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_CONFIG)
+
             self._send_opcode(self.OP_MOV_T2A)
-            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_CONFIG_STEP)
+
             self._send_opcode(self.OP_MOV_T2B)
 
-            for val in [n_qubits, n_qubits - 1, n_states - 1, n_states - 2, n_layers]:
+            for val in [n_qubits, n_qubits - 1, n_states - 1, n_states - 2, p]:
                 self._send_opcode(self.OP_SEND8T); self._sent_int64_raw(val)
                 self._send_opcode(self.OP_WRITE_T2RAM)
-                if val != n_layers: # No ADD after last
+                if val != p: # No ADD after last
                     self._send_opcode(self.OP_ADD_B2A)
             
             self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_INIT)
@@ -316,15 +324,15 @@ class FpgaDriver:
             # --- Phase 3: Write data ---
         # Write parameters: cosb, sinb, gamma per layer (from all_test.py lines 218-230)
 
-            print(f"  Writing {n_layers} state amplitudes to BRAM[0,1]...")
-            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS)
+            print(f"  Writing {p} state amplitudes to BRAM[0,1]...")
+            self._send_opcode(self.OP_SEND8T); self._send_fixed(self.BRAM_PARAMS)
             self._send_opcode(self.OP_MOV_T2A)
-            for layer in range(n_layers):
-                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(np.cos(betas[layer])))
+            for layer in range(p):
+                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(cosb[layer]))
                 self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(np.sin(betas[layer])))
+                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(sinb[layer]))
                 self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(gammas[layer]))
+                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(gammas[layer]))
                 self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             
                 # Format: [cos(β₀), sin(β₀), γ₀, cos(β₁), sin(β₁), γ₁, ...]
@@ -333,22 +341,22 @@ class FpgaDriver:
             self._send_opcode(self.OP_MOV_T2A)
             
             for i in range(n_states):
-                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(initial_state[i].real))
+                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(sv0_real[i]))
                 self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             
             print(f" Writing {n_states} state imaginary parts")
             self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_STATE_IMAG)
             self._send_opcode(self.OP_MOV_T2A)
             for i in range(n_states):
-                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(initial_state[i].imag))
+                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(sv0_imag[i]))
                 self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
 
             # write cost Hamiltonian
             print(f"  Writing {n_states} cost values")
-            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_COST_FUNC)
+            self._send_opcode(self.OP_SEND8T); self._send_fixed(self.BRAM_COST_FUNC)
             self._send_opcode(self.OP_MOV_T2A)
             for i in range(n_states):
-                self._send_opcode(self.OP_SEND8T); self._send_fp64(float(diag_hamiltonian[i]))
+                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(diag_hamiltonian[i]))
                 self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             
             print("✓ Data loaded successfully")
@@ -358,14 +366,14 @@ class FpgaDriver:
             print(f"✗ Error loading data: {e}")
             return False
 
-    def execute(self, n_layers):
+    def execute(self, p):
         """
         Execute QAOA simulation on FPGA
         """
         if not self.connected:
             raise RuntimeError("Not connected to FPGA")
         
-        print(f"Executing {n_layers} QAOA layers on FPGA...")
+        print(f"Executing {p} QAOA layers on FPGA...")
         
         try:
             # Send RUN command to start QAOA execution
@@ -452,6 +460,7 @@ class FpgaDriver:
                 pass
         self.connected = False
 
+
 class FPGASimulator(Sim_Base):
     """
     FPGA-based QAOA Simulator for NTU Hardware
@@ -480,7 +489,6 @@ class FPGASimulator(Sim_Base):
 
     """
     
-    
     _hc_diag: np.ndarray
 
     def __init__(
@@ -508,52 +516,25 @@ class FPGASimulator(Sim_Base):
         super().__init__(n_qubits=n_qubits, costs=costs, terms=terms)
         
         # FPGA configuration
-        self.fpga_config = fpga_config or {}
-        default_config = {
-            'port': 'COM3',
-            'baudrate': 115200,
-            'max_qubits': 13,  # NTU FPGA supports 2^13 = 8192 states
-        }
-        for key, value in default_config.items():
-            if key not in self.fpga_config:
-                self.fpga_config[key] = value
+        if fpga_config is None:
+            raise ValueError("fpga_config is not provided. Must be a dictionar with port, baudrate, max_qubits")
+        self.fpga_config = fpga_config
         
         # Validate qubit count
         if n_qubits > self.fpga_config['max_qubits']:
-            raise ValueError(
-                f"Number of qubits ({n_qubits}) exceeds FPGA maximum "
-                f"({self.fpga_config['max_qubits']})"
-            )
+            raise ValueError(f"Number of qubits ({n_qubits}) exceeds FPGA maximum {self.fpga_config['max_qubits']} "   )
         
-        # Initialize driver
-        self.fpga = FpgaDriver(
-            port=self.fpga_config['port'],
-            baudrate=self.fpga_config['baudrate']
-        )
+        # Initialize driver - create instance of FPGA Driver
+        self.fpga = FpgaDriver(fpga_config=self.fpga_config)
         self.connected = False
 
     def _diag_from_terms(self, terms: TermsType) -> np.ndarray:
         """
-        Compute the diagonal of the cost Hamiltonian from problem terms.
-        
-        Parameters
-        ----------
-        terms : TermsType
-            List of Hamiltonian terms (coefficient, [qubit_indices])
-            
-        Returns
-        -------
         np.ndarray
             Diagonal elements of the cost Hamiltonian
             """
-        costs = np.zeros(self.n_states)
-        for coeff, qubits in terms:
-            for i in range(self.n_states):
-                binary = [(i >> j) & 1 for j in range(self.n_qubits)]
-                spins = [1 - 2 * binary[j] for j in qubits]
-                costs[i] += coeff * np.prod(spins)
-        return costs
-
+        a = precompute_vectorized_cpu_parallel(terms, 0.0, self.n_qubits)
+        return a
     def _diag_from_costs(self, costs: CostsType) -> np.ndarray:
         """
         Process provided cost array for FPGA computation.
@@ -567,7 +548,6 @@ class FPGASimulator(Sim_Base):
             Processed cost array suitable for FPGA
         """
         return np.array(costs)
-
     def get_cost_diagonal(self) -> np.ndarray:
         """
         Return the diagonal of the cost Hamiltonian as a numpy array.
@@ -578,6 +558,7 @@ class FPGASimulator(Sim_Base):
         return np.array(self._hc_diag)
 
 
+
     def simulate_qaoa(
         self,
         gammas: ParamType,
@@ -585,49 +566,42 @@ class FPGASimulator(Sim_Base):
         sv0: np.ndarray | None = None,
         **kwargs,
     ) -> np.ndarray:
-        """
-        Simulate QAOA on FPGA hardware
+
+#       # chekc len of gamma and beta
+        if len(gammas) != len(betas):
+            raise ValueError(f"Parameter mismatch: {len(gammas)} gammas vs {len(betas)} betas")
         
-        Parameters
-        ----------
-        gammas : ParamType
-            Phase separation parameters
-        betas : ParamType
-            Mixing parameters
-        sv0 : np.ndarray | None
-            Initial state (default: uniform superposition)
-            
-        Returns
-        -------
-        np.ndarray
-            Final statevector
-        """
-        gammas_np = np.asarray(gammas)
-        betas_np = np.asarray(betas)
-        
-        if len(gammas_np) != len(betas_np):
-            raise ValueError(f"Parameter count mismatch: {len(gammas_np)} gammas vs {len(betas_np)} betas")
-        
-        # Initialize state
+        # Initialize state 
+        p = len(gammas)
         if sv0 is None:
             sv0 = np.ones(self.n_states, dtype=np.complex128) / np.sqrt(self.n_states)
-        
-        n_layers = len(gammas_np)
-        
+        assert sv0 is not None, "sv0 must not be None after initialization"
+        sv0_re = []
+        sv0_im = []
+        for i in range(self.n_states):
+            sv0_re.append(sv0[i].real)
+            sv0_im.append(sv0[i].imag)
+
+        sinb_0, cosb_0 = generate_mixer_sincos_fpga(betas, p)
+        #convert data into format suitable for fpga
+        gammas_np = np.asarray(gammas)
+        betas_np = np.asarray(betas)
+
+
+     # sv0 , gamma, beta is avalilable here in list of array format
         try:
             # Connect to FPGA
             if not self.connected:
                 self.connected = self.fpga.connect()
                 if not self.connected:
                     raise RuntimeError("Failed to connect to FPGA")
-            
             # Load data
-            success = self.fpga.load_data(self._hc_diag, sv0, gammas_np, betas_np)
+            success = self.fpga.load_data(self._hc_diag, sv0_re, sv0_im, gammas_np, betas_np, cosb_0, sinb_0)
             if not success:
                 raise RuntimeError("Failed to load data to FPGA")
             
             # Execute
-            success = self.fpga.execute(n_layers)
+            success = self.fpga.execute(p)
             if not success:
                 raise RuntimeError("FPGA execution failed")
             

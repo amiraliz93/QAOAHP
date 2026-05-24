@@ -3,13 +3,14 @@ import numba.cuda
 from .qaoa_simulator_base import Sim_Base
 from .Simulators.python.QAOA_simulator import QAOAFURXSimulator, ParamType, CostsType, TermsType
 from .Simulators.GPU.qaoa_simulatorbase import QAOAFURXSimulatorGPU
+from .Simulators.FPGA.Fpga_sim import FPGASimulator
 
 Simulators = {
     "x": {
        # "c": QAOAFURXSimulatorC,
-        "python": QAOAFURXSimulator,
-         "gpu": QAOAFURXSimulatorGPU,
-         #"FPGA": QAOAFURXSimulatorGPU,
+        "PYTHON": QAOAFURXSimulator,
+         "GPU": QAOAFURXSimulatorGPU,
+         "FPGA": FPGASimulator,
         #"gpumpi": QAOAFURXSimulatorGPUMPI,
     }
 }
@@ -17,19 +18,14 @@ Simulators = {
 
 def choose_simulator(name="auto", mixer_type="x", **kwargs):
     """Choose QAOA simulator implementation.
-    
     Args:
         name: "auto", "python", "gpu", or "fpga"
         mixer_type: Type of mixer (default "x")
-        
-    Returns:
-        Simulator class (not instantiated)
     """
-    
-    
+    name = name.upper()
     if name != "auto":
-        if name not in Simulators[mixer_type]:
-            raise ValueError(f"Unknown simulator: {name}. Available: {list(Simulators[mixer_type].keys())}")
+        if name.upper() not in Simulators[mixer_type]:
+            raise ValueError(f" Unknown simulator: {name}. Available: {list(Simulators[mixer_type].keys())}")
         return Simulators[mixer_type][name]
     
     # Auto-select: check GPU availability

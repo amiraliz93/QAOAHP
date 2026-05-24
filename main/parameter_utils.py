@@ -102,3 +102,31 @@ def convert_to_gamma_beta(*args, parameterization: QAOAParameterization | str):
     else:
         raise ValueError("Invalid parameterization")
     return gamma, beta
+
+def convert_float_to_fixed(a,*, P: int, frac: int,name="value", saturate=False):
+    SCALE = 1 << frac
+    scaled = int(round(a * SCALE))
+    INT_MIN = -(1 << (P-1)) # -2^63
+    INT_MAX = (1 << (P-1)) - 1 # 2^63 -1
+
+    if scaled < INT_MIN or scaled > INT_MAX:
+        if not saturate:
+            raise ValueError(f"{name}={a:.6g} outside Q3.61 range [-4, 4); "
+                f"normalize before conversion.")
+        scaled = max(INT_MIN, min(INT_MAX, scaled))   # explicit saturation
+    return scaled
+
+
+def generate_mixer_sincos_fpga( beta, p):
+    
+    """ generate sin and cos for mixer layer for FPGA """
+
+    if beta is None:
+        raise ValueError("gamma and beta cannot be None")
+    if len(beta) != p: 
+        raise ValueError(f' beta must have length {p}')
+    else:
+        sinb = np.sin(np.asarray(beta, np.float64))
+        cosb = np.cos(np.asarray(beta, np.float64))
+    return sinb, cosb
+    
