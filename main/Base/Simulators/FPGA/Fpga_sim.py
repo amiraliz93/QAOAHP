@@ -59,6 +59,12 @@ class FpgaDriver:
     OP_READ_RAM2U = 112   # Read BRAM at address rA to rU -- BRAM[rA] → rU 
     OP_SEND_CMD = 118     # see qa_INIT, qa_WAIT, qa_RUN in qaoa_system.sv
     OP_WRITE_T2_AG = 119
+    # add gen_register selector
+    AG_SET_t_L2Addr = 0; AG_SET_t_L2PipeGC=1; AG_SET_tb_B2GenCost=2
+    AG_SET_t_L2Pipe=3; AG_SET_nPLayer=4;    AG_SET_L1Qbit=5
+    AG_SET_AddrMask=6; AG_SET_t_B2GenCost=7; AG_SET_tb_B2Mixer=8
+    AG_SET_t_L2Compute=9
+    P_FX = 64; N_FX = 61  # Q-format: 61 fractional bits
     HOST_WAIT = 254
 
     # QAOA system commands (from qaoa_system.sv)
@@ -180,7 +186,18 @@ class FpgaDriver:
         self.ser.write(self.convert_byte(sclaed, 8))
         time.sleep(1e-5)  # Prevent UART buffer overflow
 
+    def _snd_fx64(self, value):
+        if not self.connected or self.ser is None:
+            raise RuntimeError("Not connected to FPGA")
+        self.ser.write(self._convert_float_to_fixed(value).to_bytes(8, "little", signed=True))
 
+    def _fetch_fx64(self):
+        if not self.connected or self.ser is None:
+            raise RuntimeError("Not connected to FPGA")
+        d = self.ser.read(8)
+        v = int.from_bytes(d, "little", signed=True)
+        return v / float(1 << self.FIX_N)
+    
     def _send_byte(self, value):
         """Send single byte (64 bit integer in little-endian format)"""
         if not self.connected or self.ser is None:
@@ -196,14 +213,41 @@ class FpgaDriver:
         self.ser.write(data)
         time.sleep(1e-5)
 
-    def _fetch_fp64(self):
-        """Fetch 64-bit float from FPGA"""
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        data = self.ser.read(8)
-        if len(data) != 8:
-            raise RuntimeError(f"Expected 8 bytes, got {len(data)}")
-        return struct.unpack('<d', data)[0]
+    def _compute_timing(self, NQ, Np):
+        LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
+        LP_MIXER_IN, LP_MIXER_OUT = 1, 1
+        L_BRAM_R = L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
+        N3 = 1+10+2+1+1+1
+        gcN0, gcN1 = 10, 170                       # test_mul / CORDIC latencies — VERIFY vs HDL
+        gcPipe = 1 + gcN0 + 1 + gcN1 + 1
+        Lc = 1 + gcPipe + 1 + L_BRAM_R + 2*LP_GEN_COST
+        Lm = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT
+        LInit = 24
+        NS = 1 << NQ
+        LPipe = max(NS, Lm + NS//2 + NS%2)
+        DVTc = Lc // LPipe + 1
+        tGenCost = DVTc*LPipe - Lc
+        if tGenCost < LInit: tGenCost += LPipe
+        tbGenCost = LPipe*(NQ+1) - Lc
+        t_Mixer = LPipe
+        if tbGenCost < LInit:
+            t_Mixer = LPipe + LInit - tbGenCost; tbGenCost = LInit
+        t_Compute = t_Mixer + LPipe*NQ + Lm
+        mask = (1 << (NQ-1)) - 1 if NQ >= 1 else 0
+        return {
+            self.AG_SET_t_L2Addr:    NS-2,      self.AG_SET_t_L2Pipe:   LPipe-2,
+            self.AG_SET_t_L2PipeGC:  Lc-2,      self.AG_SET_tb_B2GenCost: tbGenCost-2,
+            self.AG_SET_t_B2GenCost: tGenCost-2, self.AG_SET_nPLayer:    Np,
+            self.AG_SET_L1Qbit:      NQ-1,      self.AG_SET_AddrMask:   mask,
+            self.AG_SET_tb_B2Mixer:  t_Mixer-2, self.AG_SET_t_L2Compute: t_Compute,
+        }
+
+    def _program_addr_gen(self, NQ, Np):
+        for sel, val in self._compute_timing(NQ, Np).items():
+            self._send_opcode(self.OP_SEND1T); self._send_byte(sel)
+            self._send_opcode(self.OP_MOV_T2A)
+            self._send_opcode(self.OP_SEND8T); self._sent_int64_raw(val & ((1<<64)-1))
+            self._send_opcode(self.OP_WRITE_T2_AG)
 
     def _write_bram_fp64(self, bram_bank, addr, value):
 
@@ -241,7 +285,7 @@ class FpgaDriver:
         self._send_opcode(self.OP_READ_RAM2U)
         self._send_opcode(self.OP_FETCH8U)
         
-        return self._fetch_fp64()
+        return self._fetch_fx64()
 
     def _sent_int64_raw(self, value):
 
@@ -250,20 +294,6 @@ class FpgaDriver:
         data = int(value).to_bytes(8, byteorder='little', signed = False)
         self.ser.write(data)
         time.sleep(1e-5)
-
-    def _wait_for_fpga(self, timeout=1000):
-        STATUS_ADDR = 0x0100000000000000
-        for _ in range(timeout):
-            time.sleep(0.001) # wait 1ms
-            self._send_opcode(self.OP_SEND8T) # send command OP_SEND8T
-            self._send_int64(STATUS_ADDR) #send memory address
-            self._send_opcode(self.OP_MOV_T2A) #  Move -> rA = T
-            self._send_opcode(self.OP_READ_RAM2U) # Read BRAM[rA] to rU
-            self._send_opcode(self.OP_FETCH8U) # Fetch rU to PC
-            dr = self.ser.read(8)
-            if len(dr) == 8 and dr[0] == self.qa_WAIT:
-                    return True
-        return False    
 
     def load_data(self, diag_hamiltonian, sv0_real, sv0_imag, gammas, betas, cosb, sinb):
         """
@@ -423,7 +453,7 @@ class FpgaDriver:
             for i in range(n_states):
                 self._send_opcode(self.OP_READ_RAM2U)
                 self._send_opcode(self.OP_FETCH8U)
-                result[i] = self._fetch_fp64()  # real part only for now
+                result[i] = self._fetch_fx64()  # real part only for now
                 self._send_opcode(self.OP_INC_A)
             
             # Read imaginary parts sequentially
@@ -433,7 +463,7 @@ class FpgaDriver:
             for i in range(n_states):
                 self._send_opcode(self.OP_READ_RAM2U)
                 self._send_opcode(self.OP_FETCH8U)
-                imag_part = self._fetch_fp64()
+                imag_part = self._fetch_fx64()
                 result[i] = complex(result[i].real, imag_part)
                 self._send_opcode(self.OP_INC_A)
             
@@ -460,6 +490,17 @@ class FpgaDriver:
                 pass
         self.connected = False
 
+    def _wait_for_fpga(self, timeout=1000):
+        if self.ser is None:
+            raise RuntimeError("Serial connection not established")
+        for _ in range(timeout):
+            self._send_opcode(self.OP_MOV_S2U)
+            self._send_opcode(self.OP_FETCH1U)
+            
+            dr = self.ser.read(1)
+            if dr == bytes([self.qa_WAIT]): return True
+            time.sleep(0.001)
+        return False
 
 class FPGASimulator(Sim_Base):
     """
