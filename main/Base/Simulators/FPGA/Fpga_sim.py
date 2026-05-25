@@ -5,8 +5,9 @@ import time
 import struct # convert Python numbers into bytes
 from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
 from ...precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
-from ....parameter_utils import generate_mixer_sincos_fpga, convert_float_to_fixed
+from ....parameter_utils import generate_mixer_sincos_fpga
 
+# the format of the data into the FPGa must match as: signed int64 little-endian Q3.61 fixed-point
 class FpgaDriver:
     """
     Purpose: Low-level UART serial interface to NTU FPGA hardware
@@ -64,7 +65,6 @@ class FpgaDriver:
     AG_SET_t_L2Pipe=3; AG_SET_nPLayer=4;    AG_SET_L1Qbit=5
     AG_SET_AddrMask=6; AG_SET_t_B2GenCost=7; AG_SET_tb_B2Mixer=8
     AG_SET_t_L2Compute=9
-    P_FX = 64; N_FX = 61  # Q-format: 61 fractional bits
     HOST_WAIT = 254
 
     # QAOA system commands (from qaoa_system.sv)
@@ -98,7 +98,7 @@ class FpgaDriver:
         """
         port = fpga_config.get("port")
         baudrate = fpga_config.get("baudrate", 115200) 
-        timeout = fpga_config.get("timeout") 
+        timeout = fpga_config.get("timeout", 1) 
 
         self.port = port
         self.baudrate = baudrate
@@ -155,63 +155,43 @@ class FpgaDriver:
             return False
         
 # Higher level data formation
-    def _send_opcode(self, opcode):
-        """Send single opcode byte"""
+    def _write_bytes(self, data: bytes):
+        """Write raw bytes to UART with the shared connection check."""
         if not self.connected or self.ser is None:
             raise RuntimeError("Not connected to FPGA")
-        self.ser.write(bytes([opcode]))
-        time.sleep(1e-5)  # Prevent UART buffer overflow
+        self.ser.write(data)
+        time.sleep(2e-4)
+
+    def _send_opcode(self, opcode):
+        """Send single opcode byte"""
+        self._write_bytes(bytes([opcode]))
         
         # in order to send pre-formatted bytes 
-
-    def convert_byte(self, scaled, bytes):
-        return scaled.to_bytes(bytes, "little", signed=True)
+                       
+    def _convert_byte(self, scaled, bytes, signed=True):
+        return scaled.to_bytes(bytes, "little", signed=signed)
 
     def _convert_float_to_fixed(self, a, name="value"):
-   
         scaled = int(round(a * (1 << self.FIX_N)))
         min_val = -(1 << (self.FIX_P - 1))      # -2^63  == -4.0
         max_val =  (1 << (self.FIX_P - 1)) - 1  #  2^63-1 == ~+4.0
         if scaled < min_val or scaled > max_val:
-                raise ValueError(
-                    f"{name}={a:.6g} outside Q3.61 range [-4, 4); normalize first."
-                )
+                raise ValueError(f"{name}={a:.6g} outside Q3.61 range [-4, 4); normalize first.")
         return scaled
-    
-    def _send_fixed(self, a, name="value"):
-        """Convert float -> Q3.61 -> 8 bytes two's-complement LE, send over UART."""
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA") 
-        sclaed = self._convert_float_to_fixed(a, name)
-        self.ser.write(self.convert_byte(sclaed, 8))
-        time.sleep(1e-5)  # Prevent UART buffer overflow
 
-    def _snd_fx64(self, value):
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        self.ser.write(self._convert_float_to_fixed(value).to_bytes(8, "little", signed=True))
-
-    def _fetch_fx64(self):
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        d = self.ser.read(8)
-        v = int.from_bytes(d, "little", signed=True)
-        return v / float(1 << self.FIX_N)
-    
     def _send_byte(self, value):
         """Send single byte (64 bit integer in little-endian format)"""
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        self.ser.write(bytes([value]))
-        time.sleep(1e-5)
+        self._write_bytes(bytes([value]))
 
     def _send_int64(self, value):
         """Send 64-bit integer in little-endian format"""
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        data = value.to_bytes(8, byteorder='little', signed=False)
-        self.ser.write(data)
-        time.sleep(1e-5)
+        data = int(value).to_bytes(8, byteorder='little', signed=False)
+        self._write_bytes(data)
+
+    def _send_fixed(self, v, name="value", sign=True):
+        """Convert float -> Q3.61 -> 8 bytes two's-complement LE, send over UART."""
+        sclaed = self._convert_float_to_fixed(v, name)
+        self._write_bytes(self._convert_byte(sclaed, 8, signed=sign))
 
     def _compute_timing(self, NQ, Np):
         LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
@@ -246,56 +226,32 @@ class FpgaDriver:
         for sel, val in self._compute_timing(NQ, Np).items():
             self._send_opcode(self.OP_SEND1T); self._send_byte(sel)
             self._send_opcode(self.OP_MOV_T2A)
-            self._send_opcode(self.OP_SEND8T); self._sent_int64_raw(val & ((1<<64)-1))
+            self._send_opcode(self.OP_SEND8T); self._send_int64(val & ((1<<64)-1))
             self._send_opcode(self.OP_WRITE_T2_AG)
 
-    def _write_bram_fp64(self, bram_bank, addr, value):
 
-        full_addr = bram_bank | addr
-        
-        # Set address in rA
-        self._send_opcode(self.OP_SEND8T)
-        self._send_int64(full_addr)
-        self._send_opcode(self.OP_MOV_T2A)
-        
-        # Write value
-        self._send_opcode(self.OP_SEND8T)
-        self._send_fixed(value)
-        self._send_opcode(self.OP_WRITE_T2RAM)
-
-    def _read_bram_fp64(self, bram_bank, addr):
-        """
-        Read a 64-bit float from BRAM
-        
-        Args:
-            bram_bank: BRAM bank selector
-            addr: Address within BRAM
-            
-        Returns:
-            Float64 value
-        """
-        full_addr = bram_bank | addr
-        
-        # Set address in rA
-        self._send_opcode(self.OP_SEND8T)
-        self._send_int64(full_addr)
-        self._send_opcode(self.OP_MOV_T2A)
-        
-        # Read to rU and fetch
-        self._send_opcode(self.OP_READ_RAM2U)
-        self._send_opcode(self.OP_FETCH8U)
-        
-        return self._fetch_fx64()
-
-    def _sent_int64_raw(self, value):
-
+    def _fetch_fx64(self):
         if not self.connected or self.ser is None:
             raise RuntimeError("Not connected to FPGA")
-        data = int(value).to_bytes(8, byteorder='little', signed = False)
-        self.ser.write(data)
-        time.sleep(1e-5)
+        d = self.ser.read(8)
+        if len(d) != 8:
+            raise RuntimeError(f"Expected 8 bytes from FPGA, got {len(d)}")
+        v = int.from_bytes(d, "little", signed=True)
+        return v / float(1 << self.FIX_N) # the two's-complement adjustment for signed Q3.61
+    
+    def _wait_for_fpga(self, timeout=1000):
+        if self.ser is None:
+            raise RuntimeError("Serial connection not established")
+        for _ in range(timeout):
+            self._send_opcode(self.OP_MOV_S2U)
+            self._send_opcode(self.OP_FETCH1U)
+            
+            dr = self.ser.read(1)
+            if dr == bytes([self.qa_WAIT]): return True
+            time.sleep(0.001)
+        return False
 
-    def load_data(self, diag_hamiltonian, sv0_real, sv0_imag, gammas, betas, cosb, sinb):
+    def load_data(self, diag_hamiltonian, sv0_real, sv0_imag, gammas, cosb, sinb):
         """
         Load data to FPGA
         Args:
@@ -305,128 +261,75 @@ class FpgaDriver:
             betas: Beta parameters for each layer
         """
         if not self.connected:
-            raise RuntimeError("Not connected to FPGA")
-        
+            raise RuntimeError("Not connected to FPGA")        
         print("Loading data to FPGA...")
         n_states = len(diag_hamiltonian)
         p = len(gammas)
-        n_qubits = int(np.log2(n_states))
-    
-        
+        n_qubits = int(np.log2(n_states)) # numbert of qubits
+
+        if len(sv0_real) != n_states:
+            raise ValueError("sv0_real length does not match diag_hamiltonian")
+        if len(sv0_imag) != n_states:
+            raise ValueError("sv0_real length does not match diag_hamiltonian")
+        if len(cosb) != p or len(sinb) != p:
+            raise ValueError("cosb/sinb length must match number of gamma layers")
         try:
             # 1. Initialize QAOA system
-            # --- Phase 1: Reset cycle (from all_test.py lines 177-192) ---
+            # --- Phase 1: Reset cycle 
             print("  Phase 1: Reset cycle...")
             self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
             self._send_opcode(self.OP_SEND_CMD)
-            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_INIT)
-            self._send_opcode(self.OP_SEND_CMD)
-            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
-            self._send_opcode(self.OP_SEND_CMD)
-            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
-            self._send_opcode(self.OP_SEND_CMD)
-            time.sleep(0.01)
 
-        # --- Phase 2: Write config registers
-        
-            print(f"  Writing {n_states} cost values to BRAM[2]...")
-            print(f" phase2: wrting config registeraters...")
+            # 2) Program addr_gen timing registers
+            self._program_addr_gen(n_qubits, p)
 
+        # 3) Params: p+1 triples, redundant first cos/sin, trailing gamma=-1
+            print("  Phase 3: Load parameters...")
+            cosb_w = [float(cosb[0])] + [float(c) for c in cosb]
+            sinb_w = [float(sinb[0])] + [float(s) for s in sinb]
+            gam_w  = [float(g) for g in gammas] + [-1.0]
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS) # send address for parameter block
             self._send_opcode(self.OP_MOV_T2A)
+            for p_L in range (p +1): # send actual parameters
+                for value in (cosb_w[p_L], sinb_w[p_L], gam_w[p_L]):
+                    self._send_opcode(self.OP_SEND8T); self._send_fixed(value)
+                    self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
 
-            self._send_opcode(self.OP_MOV_T2B)
-
-            for val in [n_qubits, n_qubits - 1, n_states - 1, n_states - 2, p]:
-                self._send_opcode(self.OP_SEND8T); self._sent_int64_raw(val)
-                self._send_opcode(self.OP_WRITE_T2RAM)
-                if val != p: # No ADD after last
-                    self._send_opcode(self.OP_ADD_B2A)
-            
-            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_INIT)
-            self._send_opcode(self.OP_SEND_CMD)
-            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
-            self._send_opcode(self.OP_SEND_CMD)
-            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
-            self._send_opcode(self.OP_SEND_CMD)
-            time.sleep(0.01)
-
-            
-            # --- Phase 3: Write data ---
-        # Write parameters: cosb, sinb, gamma per layer (from all_test.py lines 218-230)
-
-            print(f"  Writing {p} state amplitudes to BRAM[0,1]...")
-            self._send_opcode(self.OP_SEND8T); self._send_fixed(self.BRAM_PARAMS)
-            self._send_opcode(self.OP_MOV_T2A)
-            for layer in range(p):
-                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(cosb[layer]))
-                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(sinb[layer]))
-                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(gammas[layer]))
-                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-            
-                # Format: [cos(β₀), sin(β₀), γ₀, cos(β₁), sin(β₁), γ₁, ...]
-            print(f"  Writing {n_states} layer parameters ...")
-            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_STATE_REAL)   
-            self._send_opcode(self.OP_MOV_T2A)
-            
-            for i in range(n_states):
-                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(sv0_real[i]))
-                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-            
-            print(f" Writing {n_states} state imaginary parts")
-            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_STATE_IMAG)
-            self._send_opcode(self.OP_MOV_T2A)
-            for i in range(n_states):
-                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(sv0_imag[i]))
-                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-
-            # write cost Hamiltonian
-            print(f"  Writing {n_states} cost values")
-            self._send_opcode(self.OP_SEND8T); self._send_fixed(self.BRAM_COST_FUNC)
-            self._send_opcode(self.OP_MOV_T2A)
-            for i in range(n_states):
-                self._send_opcode(self.OP_SEND8T); self._send_fixed(float(diag_hamiltonian[i]))
-                self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
-            
-            print("✓ Data loaded successfully")
+          # 4) State real / 5) State imag / 6) Cost values
+            print("  Phase 4: Load state and cost data...")
+            for address, value in ((self.BRAM_STATE_REAL, sv0_real), 
+                                   (self.BRAM_STATE_IMAG, sv0_imag),
+                                   (self.BRAM_COST_FUNC,  diag_hamiltonian)):
+                self._send_opcode(self.OP_SEND8T); self._send_int64(address)
+                self._send_opcode(self.OP_MOV_T2A)
+                for i in range(n_states):
+                    self._send_opcode(self.OP_SEND8T); self._send_fixed(float(value[i]))
+                    self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+            print("✓ Data loaded to FPGA")
             return True
-            
+        
         except Exception as e:
             print(f"✗ Error loading data: {e}")
             return False
-
+        
     def execute(self, p):
-        """
-        Execute QAOA simulation on FPGA
-        """
-        if not self.connected:
-            raise RuntimeError("Not connected to FPGA")
-        
-        print(f"Executing {p} QAOA layers on FPGA...")
-        
-        try:
-            # Send RUN command to start QAOA execution
-            self._send_opcode(self.OP_SEND1T);self._send_byte(self.qa_INIT)
-            self._send_opcode(self.OP_SEND_CMD) 
-            self._send_opcode(self.OP_SEND1T) ;self._send_byte(self.qa_RUN)
-            self._send_opcode(self.OP_SEND_CMD)
-            
-            # HOST_WAIT: poll until FPGA returns qa_WAIT
-            print("  Waiting for FPGA to complete...")
-            done = self._wait_for_fpga(timeout=1000) # Wait up to 100 seconds
-            if not done:
-                print(" warning: FPGA did not signal")
-            
-                    # Send WAIT command to stop FPGA
-            self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
-            self._send_opcode(self.OP_SEND_CMD)
-            print("✓ QAOA execution complete")
-            return True
-            
-        except Exception as e:
-            print(f"✗ Execution error: {e}")
-            return False
+            if not self.connected:
+                raise RuntimeError("Not connected to FPGA")
+            try:
+                self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
+                self._send_opcode(self.OP_SEND_CMD)
+                done = self._wait_for_fpga(timeout=1000)
+
+                if not done:
+                    print("✗ FPGA did not signal completion")
+                    return False
+                
+                self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
+                self._send_opcode(self.OP_SEND_CMD)
+                return True
+            except Exception as e:
+                print(f"✗ Execution error: {e}")
+                return False
 
     def read_result(self, n_states):
         """
@@ -490,17 +393,7 @@ class FpgaDriver:
                 pass
         self.connected = False
 
-    def _wait_for_fpga(self, timeout=1000):
-        if self.ser is None:
-            raise RuntimeError("Serial connection not established")
-        for _ in range(timeout):
-            self._send_opcode(self.OP_MOV_S2U)
-            self._send_opcode(self.OP_FETCH1U)
-            
-            dr = self.ser.read(1)
-            if dr == bytes([self.qa_WAIT]): return True
-            time.sleep(0.001)
-        return False
+
 
 class FPGASimulator(Sim_Base):
     """
@@ -597,8 +490,18 @@ class FPGASimulator(Sim_Base):
             Diagonal elements of the cost Hamiltonian
         """
         return np.array(self._hc_diag)
+    
+    def _scale_H_gamma(self, H, gammas):
+        H = np.asarray(H, dtype=np.float64)
+        gammas = np.asarray(gammas, dtype=np.float64)
 
+        S = np.max(np.abs(H))
+        if S == 0:
+            return H.copy(), gammas.copy(), 1.0
+        H_scaled = H / np.sqrt(2.0 * S)
+        gamma_scaled = gammas * np.sqrt(S) / (np.pi * np.sqrt(2.0))
 
+        return H_scaled, gamma_scaled, S
 
     def simulate_qaoa(
         self,
@@ -612,7 +515,8 @@ class FPGASimulator(Sim_Base):
         if len(gammas) != len(betas):
             raise ValueError(f"Parameter mismatch: {len(gammas)} gammas vs {len(betas)} betas")
         
-        # Initialize state 
+        # Initialize state - 
+        # Important Note: all data format for FPGA must be in the range of fixed64 sign Q3.61 [-4, 4)
         p = len(gammas)
         if sv0 is None:
             sv0 = np.ones(self.n_states, dtype=np.complex128) / np.sqrt(self.n_states)
@@ -623,13 +527,13 @@ class FPGASimulator(Sim_Base):
             sv0_re.append(sv0[i].real)
             sv0_im.append(sv0[i].imag)
 
-        sinb_0, cosb_0 = generate_mixer_sincos_fpga(betas, p)
-        #convert data into format suitable for fpga
-        gammas_np = np.asarray(gammas)
-        betas_np = np.asarray(betas)
+        cosb_0, sinb_0 = generate_mixer_sincos_fpga(betas, p)
+        assert len(cosb_0) == p and len(sinb_0) == p, "cosb and sinb must have length p"
 
+        # normalise _hc_diag to fit sign Q3.61 range [-4, 4)]
+        H_sclae , gamma_scaled, S = self._scale_H_gamma(self._hc_diag, gammas) # H_send in [-1,1]
 
-     # sv0 , gamma, beta is avalilable here in list of array format
+     # sv0 , gamma, bet, and hc_diag are avalilable here in list of array format
         try:
             # Connect to FPGA
             if not self.connected:
@@ -637,20 +541,16 @@ class FPGASimulator(Sim_Base):
                 if not self.connected:
                     raise RuntimeError("Failed to connect to FPGA")
             # Load data
-            success = self.fpga.load_data(self._hc_diag, sv0_re, sv0_im, gammas_np, betas_np, cosb_0, sinb_0)
+            success = self.fpga.load_data(self._hc_diag, sv0_re, sv0_im, gammas, cosb_0, sinb_0)
             if not success:
-                raise RuntimeError("Failed to load data to FPGA")
-            
+                raise RuntimeError("Failed to load data to FPGA")            
             # Execute
             success = self.fpga.execute(p)
             if not success:
                 raise RuntimeError("FPGA execution failed")
-            
             # Read result
-            result = self.fpga.read_result(self.n_states)
-            
-            return result
-            
+            result = self.fpga.read_result(self.n_states)  
+            return result 
         except Exception as e:
             raise RuntimeError(f"FPGA simulation error: {str(e)}")
         
