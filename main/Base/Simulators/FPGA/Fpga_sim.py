@@ -170,14 +170,15 @@ class FpgaDriver:
                        
     def _convert_byte(self, scaled, bytes, signed=True):
         return scaled.to_bytes(bytes, "little", signed=signed)
-
-    def _convert_float_to_fixed(self, a, name="value"):
-        scaled = int(round(a * (1 << self.FIX_N)))
-        min_val = -(1 << (self.FIX_P - 1))      # -2^63  == -4.0
-        max_val =  (1 << (self.FIX_P - 1)) - 1  #  2^63-1 == ~+4.0
-        if scaled < min_val or scaled > max_val:
-                raise ValueError(f"{name}={a:.6g} outside Q3.61 range [-4, 4); normalize first.")
-        return scaled
+    
+    def _float_to_fixed(self, v , f_bit):
+        v = np.rint(np.asarray(v, dtype=np.float64) * (1 << f_bit)).astype(object)
+        min_val = -(1 << (self.FIX_P -1))
+        max_val =  (1 <<(self.FIX_P - 1))
+        if v < min_val | v > max_val:
+            raise ValueError("fixed-point overflow")
+        return [int(x) for x in v]
+    
 
     def _send_byte(self, value):
         """Send single byte (64 bit integer in little-endian format)"""
@@ -190,8 +191,7 @@ class FpgaDriver:
 
     def _send_fixed(self, v, name="value", sign=True):
         """Convert float -> Q3.61 -> 8 bytes two's-complement LE, send over UART."""
-        sclaed = self._convert_float_to_fixed(v, name)
-        self._write_bytes(self._convert_byte(sclaed, 8, signed=sign))
+        self._write_bytes(self._convert_byte(v, 8, signed=sign))
 
     def _compute_timing(self, NQ, Np):
         LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
@@ -199,7 +199,8 @@ class FpgaDriver:
         L_BRAM_R = L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
         N3 = 1+10+2+1+1+1
         gcN0, gcN1 = 10, 170                       # test_mul / CORDIC latencies — VERIFY vs HDL
-        gcPipe = 1 + gcN0 + 1 + gcN1 + 1
+        # I update this based on new method need to check again 
+        gcPipe = 1 + gcN0 + 1 + gcN0 + 1 + 1 + gcN1 + 1   # in, mul1, fx, mul2, slicer, cordic_in, cordic, out
         Lc = 1 + gcPipe + 1 + L_BRAM_R + 2*LP_GEN_COST
         Lm = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT
         LInit = 24
@@ -288,22 +289,30 @@ class FpgaDriver:
             cosb_w = [float(cosb[0])] + [float(c) for c in cosb]
             sinb_w = [float(sinb[0])] + [float(s) for s in sinb]
             gam_w  = [float(g) for g in gammas] + [-1.0]
+            # convert into fixed point
+            fix_gamma_w = self._float_to_fixed(gam_w, f_bit=58) # Q6.58
+            fix_cosb_w = self._float_to_fixed(cosb_w, f_bit=61) # Q3.61
+            fix_sinb_w = self._float_to_fixed(sinb_w, f_bit=61) # Q3.61
+            fix_sv0_r =  self._float_to_fixed(sv0_real, f_bit=61) # Q3.61
+            fix_sv0_i = self._float_to_fixed(sv0_imag, f_bit=61) # Q3.61
+            fix_H = self._float_to_fixed(diag_hamiltonian, f_bit=59) # Q5.59
+
             self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS) # send address for parameter block
             self._send_opcode(self.OP_MOV_T2A)
             for p_L in range (p +1): # send actual parameters
-                for value in (cosb_w[p_L], sinb_w[p_L], gam_w[p_L]):
+                for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
                     self._send_opcode(self.OP_SEND8T); self._send_fixed(value)
                     self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
 
           # 4) State real / 5) State imag / 6) Cost values
             print("  Phase 4: Load state and cost data...")
-            for address, value in ((self.BRAM_STATE_REAL, sv0_real), 
-                                   (self.BRAM_STATE_IMAG, sv0_imag),
-                                   (self.BRAM_COST_FUNC,  diag_hamiltonian)):
+            for address, value in ((self.BRAM_STATE_REAL, fix_sv0_r), 
+                                   (self.BRAM_STATE_IMAG, fix_sv0_i),
+                                   (self.BRAM_COST_FUNC,  fix_H)):
                 self._send_opcode(self.OP_SEND8T); self._send_int64(address)
                 self._send_opcode(self.OP_MOV_T2A)
                 for i in range(n_states):
-                    self._send_opcode(self.OP_SEND8T); self._send_fixed(float(value[i]))
+                    self._send_opcode(self.OP_SEND8T); self._send_fixed(int(value[i]))
                     self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             print("✓ Data loaded to FPGA")
             return True
@@ -492,7 +501,7 @@ class FPGASimulator(Sim_Base):
         return np.array(self._hc_diag)
     
     def _scale_H_gamma(self, H, gammas):
-        H = np.asarray(H, dtype=np.float64)
+        H = np.asarray(H, dtype=np.float64) # H in range ±10
         gammas = np.asarray(gammas, dtype=np.float64)
 
         S = np.max(np.abs(H))
@@ -502,7 +511,8 @@ class FPGASimulator(Sim_Base):
         gamma_scaled = gammas * np.sqrt(S) / (np.pi * np.sqrt(2.0))
 
         return H_scaled, gamma_scaled, S
-
+ 
+    
     def simulate_qaoa(
         self,
         gammas: ParamType,
@@ -516,7 +526,7 @@ class FPGASimulator(Sim_Base):
             raise ValueError(f"Parameter mismatch: {len(gammas)} gammas vs {len(betas)} betas")
         
         # Initialize state - 
-        # Important Note: all data format for FPGA must be in the range of fixed64 sign Q3.61 [-4, 4)
+        # Important Note: new gamma must be in format fixed signed Q6.58 and new_H must be Q5.59 . scaled by 2⁵⁸ and 2⁵⁹ respectively to send in FPGA. 
         p = len(gammas)
         if sv0 is None:
             sv0 = np.ones(self.n_states, dtype=np.complex128) / np.sqrt(self.n_states)
@@ -530,8 +540,8 @@ class FPGASimulator(Sim_Base):
         cosb_0, sinb_0 = generate_mixer_sincos_fpga(betas, p)
         assert len(cosb_0) == p and len(sinb_0) == p, "cosb and sinb must have length p"
 
-        # normalise _hc_diag to fit sign Q3.61 range [-4, 4)]
-        H_sclae , gamma_scaled, S = self._scale_H_gamma(self._hc_diag, gammas) # H_send in [-1,1]
+        # normalise _hc_diag to fit sign Q5.59 and  new_gamma is in Q6.58]
+        H_scaled , gamma_scaled, S = self._scale_H_gamma(self._hc_diag, gammas) # H_send in [-1,1]
 
      # sv0 , gamma, bet, and hc_diag are avalilable here in list of array format
         try:
@@ -541,7 +551,7 @@ class FPGASimulator(Sim_Base):
                 if not self.connected:
                     raise RuntimeError("Failed to connect to FPGA")
             # Load data
-            success = self.fpga.load_data(self._hc_diag, sv0_re, sv0_im, gammas, cosb_0, sinb_0)
+            success = self.fpga.load_data(H_scaled, sv0_re, sv0_im, gamma_scaled, cosb_0, sinb_0)
             if not success:
                 raise RuntimeError("Failed to load data to FPGA")            
             # Execute
