@@ -299,7 +299,7 @@ class FpgaDriver:
 
             self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS) # send address for parameter block
             self._send_opcode(self.OP_MOV_T2A)
-            for p_L in range (p +1): # send actual parameters
+            for p_L in range (p + 1): # send actual parameters
                 for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
                     self._send_opcode(self.OP_SEND8T); self._send_fixed(value)
                     self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
@@ -432,7 +432,7 @@ class FPGASimulator(Sim_Base):
 
     """
     
-    _hc_diag: np.ndarray
+    _hc_diag: np.ndarray # cost hamiltonian
 
     def __init__(
         self,
@@ -504,11 +504,11 @@ class FPGASimulator(Sim_Base):
         H = np.asarray(H, dtype=np.float64) # H in range ±10
         gammas = np.asarray(gammas, dtype=np.float64)
 
-        S = np.max(np.abs(H))
+        S = np.max(np.abs(H)) # Show s can be large ? nodes: n and max_edges: n (n-1)/2 - n/2  - n =20 -> S= 190
         if S == 0:
             return H.copy(), gammas.copy(), 1.0
         H_scaled = H / np.sqrt(2.0 * S)
-        gamma_scaled = gammas * np.sqrt(S) / (np.pi * np.sqrt(2.0))
+        gamma_scaled = gammas * np.sqrt(S) / (np.pi * np.sqrt(2.0)) # (20) / sqrt(2) <= 30 -> Q6.58 
 
         return H_scaled, gamma_scaled, S
  
