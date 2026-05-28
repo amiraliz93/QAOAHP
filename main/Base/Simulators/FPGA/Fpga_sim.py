@@ -2,6 +2,8 @@ import typing
 import numpy as np
 import serial # UART communication to FPGA
 import time
+import random
+import datetime
 import struct # convert Python numbers into bytes
 from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
 from ...precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
@@ -193,6 +195,58 @@ class FpgaDriver:
         """Convert float -> Q3.61 -> 8 bytes two's-complement LE, send over UART."""
         self._write_bytes(self._convert_byte(v, 8, signed=sign))
 
+    def _write_all_test_cmd(self, data_array, t_params, filename="all_test_cmd.sv", lineend=""):
+            # build idop for single-byte opcode comments
+            opcode_names = [
+                "OP_NONE","OP_NONE8","OP_SEND1T","OP_SEND8T","OP_MOV_T2A","OP_MOV_T2B",
+                "OP_MOV_A2U","OP_MOV_A2B","OP_MOV_Info2U","OP_MOV_S2U","OP_MOV_T2P",
+                "OP_FETCH1U","OP_FETCH8U","OP_ADD_B2A","OP_MUL_B2A","OP_ADDFP_B2A",
+                "OP_MULFP_B2A","OP_INC_A","OP_WRITE_T2RAM","OP_READ_RAM2U",
+                "OP_SEND_CMD","OP_WRITE_T2_AG","HOST_WAIT",
+                "AG_SET_t_L2Addr","AG_SET_t_L2PipeGC","AG_SET_tb_B2GenCost","AG_SET_t_L2Pipe",
+                "AG_SET_nPLayer","AG_SET_L1Qbit","AG_SET_AddrMask","AG_SET_t_B2GenCost",
+                "AG_SET_tb_B2Mixer","AG_SET_t_L2Compute","qa_WAIT","qa_RUN","qa_MIXER","qa_COST","qa_INIT"
+            ]
+            idop = {}
+            for name in opcode_names:
+                v = getattr(self, name, None)
+                if isinstance(v, int):
+                    idop[bytes([v]).hex()] = name
+
+            ND = sum(len(b) for b in data_array)
+            with open(filename, "w") as f:
+                f.write(f"integer t_L2Addr   = {t_params.get('t_L2Addr',0)};\n")
+                f.write(f"integer t_L2PipeGC = {t_params.get('t_L2PipeGC',0)};\n")
+                f.write(f"integer tb_B2GenCost= {t_params.get('tb_B2GenCost',0)};\n")
+                f.write(f"integer t_L2Pipe  = {t_params.get('t_L2Pipe',0)};\n")
+                f.write(f"integer nPLayer   = {t_params.get('nPLayer',0)};\n")
+                f.write(f"integer L1Qbit    = {t_params.get('L1Qbit',0)};\n")
+                f.write(f"integer AddrMask  = {t_params.get('AddrMask',0)};\n")
+                f.write(f"integer t_B2GenCost  = {t_params.get('t_B2GenCost',0)};\n")
+                f.write(f"integer tb_B2Mixer  = {t_params.get('tb_B2Mixer',0)};\n")
+                f.write(f"integer t_L2Compute  = {t_params.get('t_L2Compute',0)};\n")
+                f.write(f"integer seed = {t_params.get('seed',0)};\n")
+                f.write(f"// Version {random.random()}, {datetime.datetime.now()}\n")
+                f.write(f"localparam ND={ND};\n")
+                f.write(f"logic [7: 0] data_array [{ND}] = {{{lineend}\n")
+                for i, b in enumerate(data_array):
+                    # ensure b is bytes
+                    if isinstance(b, int):
+                        bb = bytes([b])
+                    else:
+                        bb = b
+                    for j in range(len(bb)):
+                        f.write(f"8'h{bb[j]:02x}")
+                        if j != len(bb)-1:
+                            f.write(", ")
+                    if i != len(data_array) - 1:
+                        f.write(",")
+                    skey = bb.hex()
+                    if skey in idop and lineend != "":
+                        f.write(f" // {idop[skey]}{lineend}")
+                    f.write("\n")
+                f.write("};" + lineend + "\n")
+                
     def _compute_timing(self, NQ, Np):
         LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
         LP_MIXER_IN, LP_MIXER_OUT = 1, 1
