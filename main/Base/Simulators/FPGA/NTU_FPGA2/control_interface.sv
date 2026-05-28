@@ -20,6 +20,7 @@ module control_interface#(
     //------------------------------------------------------------------------
     // CONFIGURABLE PARAMETERS
     //------------------------------------------------------------------------
+      parameter P = 64,   
       parameter MAX_QUBITS = 20,              // Maximum qubits
       parameter MAX_EDGES = 190,              // Maximum graph edges
       parameter BRAM_ADDR_WIDTH = 64,         // BRAM address width
@@ -27,10 +28,7 @@ module control_interface#(
       parameter FP_PRECISION = 64,            // FP precision (32 or 64)
       parameter FIXED_INT_BITS = 40,          // Fixed-point integer bits
       parameter FIXED_FRAC_BITS = 24,         // Fixed-point fractional bits
-      parameter FP64_ADD_LATENCY = 27,        // FP64 add latency
-      parameter FP64_MUL_LATENCY = 24,        // FP64 mul latency
       parameter FIX64_ADD_LATENCY = 2,        // Fixed add latency
-      parameter FIX24_MUL_LATENCY = 8,        // Fixed mul latency
       parameter HOST_DATA_WIDTH = 8,           // DATA width between Host
 	parameter NM = 32
    )
@@ -144,9 +142,6 @@ localparam WRITE_T2B         = 5'd2;   // rB = rT
 localparam WRITE_A2B         = 5'd3;   // rB = rA
 localparam WRITE_A2U         = 5'd4;   // rU = rA
 localparam WRITE_B2A         = 5'd5;   // rA = rB
-localparam WRITE_mulFP64_rA  = 5'd6;   // rA = res_mulFP64 (FP multiply result)
-localparam WRITE_addFP64_rA  = 5'd7;   // rA = res_addFP64 (FP add result)
-localparam WRITE_mul_rA      = 5'd8;   // rA = res_mulAB (fixed multiply result)
 localparam WRITE_add_rA      = 5'd9;   // rA = res_addAB (fixed add result)
 localparam WRITE_rA1         = 5'd10;  // rA = rA + 1
 localparam WRITE_rB1         = 5'd11;  // rB = rB + 1
@@ -201,12 +196,12 @@ logic [4:0] n_writeReg;       // Next write operation
 logic [4:0] n_bwriteReg;      // Next buffered write
 
 // ------------- Data Path Registers (64bit)
-reg [63:0] rA;                // Register A (general purpose)
-reg [63:0] rB;                // Register B
-reg [63:0] rT;                // Temporary Register (RX data)
-reg [63:0] rU;                // Address register (TX data)
+reg [P-1:0] rA;                // Register A (general purpose)
+reg [P-1:0] rB;                // Register B
+reg [P-1:0] rT;                // Temporary Register (RX data)
+reg [P-1:0] rU;                // Address register (TX data)
 
-logic [63:0] n_rA, n_rB, n_rT, n_rU;      //Next values
+logic [P-1:0] n_rA, n_rB, n_rT, n_rU;      //Next values
 
 logic [23:0] n_CMD;
 
@@ -214,10 +209,8 @@ logic [23:0] n_CMD;
 
 // Fixed-point units
 // These perform integer/fixed-point operations with shorter latency
-reg [23:0] mulA, mulB;        // Multiplier inputs
-reg [63:0] addA, addB;        // Adder inputs
-reg [47:0] res_mulAB;         // Multiply result
-reg [63:0] res_addAB;         // Add result
+reg [P-1:0] addA, addB;        // Adder inputs
+reg [P-1:0] res_addAB;         // Add result
 
 //------------------  Wait Counter (for arithmetic latency)
 reg [7:0] c_wait;             // Current wait cycles
@@ -261,8 +254,8 @@ assign ag_Param_out = ag_Param;
 assign ag_wen_out = ag_wen;
 
 //---------------------- Helper Wires
-wire [63:0] rAinc = rA + 1;
-wire [63:0] rBinc = rB + 1;
+wire [P-1:0] rAinc = rA + 1;
+wire [P-1:0] rBinc = rB + 1;
 reg RSTlv1A;          // buffer register of reset signal.
 
 //---------- Conditional states (wait if FIFO full/empty)
@@ -425,13 +418,6 @@ always_comb begin: main_StateBlock
                   n_state = s_WAIT_COMP;
                   n_bwriteReg = WRITE_add_rA;
             end
-            // OP_MUL_B2A: Fixed-point multiplication (rA = rA * rB)
-            OP_MUL_B2A: begin
-                  n_opa_c_wait = 'd8;           // Wait 8 cycles (mulfix8 latency)
-                  n_state = s_WAIT_COMP;
-                  n_bwriteReg = WRITE_mul_rA;
-            end
-            
             //--------------------------------------------------------------------
             // DATA RETRIEVAL OPERATIONS
             //--------------------------------------------------------------------
@@ -539,11 +525,6 @@ always_comb begin: main_StateBlock
                   WRITE_A2U: begin
                         n_rU = rA;
                   end
-                  // WRITE_mul_rA: rA = fixed multiply result
-                  WRITE_mul_rA: begin
-                        n_rA = res_mulAB;
-                  end
-                  
                   // WRITE_add_rA: rA = fixed add result
                   WRITE_add_rA: begin
                         n_rA = res_addAB;
@@ -755,39 +736,19 @@ fifo1	fifoW_inst (
 //----------------------------------------------------------------------------
 // These perform integer/fixed-point operations with shorter latency
 
+reg [P-1: 0] rAx2;
+reg [P-1: 0] rBx2;
+reg [P-1: 0] rRx2;
 // Pipeline inputs to match ALU timing
 always @(posedge CLK) begin
       RSTlv1A <= RST;
-      mulA <= rA[23:0];    // Extract lower 24 bits of rA
-      mulB <= rB[23:0];    // Extract lower 24 bits of rB
       addA <= rA;          // Full 64-bit value
       addB <= rB;          // Full 64-bit value
+      rAx2 <= addA;
+      rBx2 <= addB;
+      rRx2 <= rAx2 + rBx2;
+      res_addAB <= rRx2;
 end
-
-//----------------------------------------------------------------------------
-// FIXED-POINT MULTIPLIER
-//----------------------------------------------------------------------------
-// Performs: res_mulAB = mulA * mulB (24-bit x 24-bit = 48-bit)
-// Latency: 8 clock cycles
-mulfix8 mulfix8_inst (
-      .clock(CLK),
-      .dataa(mulA),
-      .datab(mulB),
-      .result(res_mulAB)   // 48-bit result
-);
-
-//----------------------------------------------------------------------------
-// FIXED-POINT ADDER
-//----------------------------------------------------------------------------
-// Performs: res_addAB = addA + addB (64-bit + 64-bit = 64-bit)
-// Latency: 2 clock cycles
-addfix8 addix8_inst (
-      .clock(CLK),
-      .dataa(addA),
-      .datab(addB),
-      .result(res_addAB)   // 64-bit result
-);
-
 
 
 endmodule
