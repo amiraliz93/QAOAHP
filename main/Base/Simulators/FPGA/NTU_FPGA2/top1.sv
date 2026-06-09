@@ -81,7 +81,7 @@ always @(posedge CLK) begin
    RSTqs <= RST;
 end
 
-control_interface #(.NM(NM))CI 
+control_interface #(.P(P), .NM(NM)) CI 
 (
    .CLK(CLK),        // Connect to your system clock wire
    .RST(RSTci),        // Connect to your system reset wire
