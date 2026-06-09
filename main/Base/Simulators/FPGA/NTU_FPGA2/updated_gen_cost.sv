@@ -1,11 +1,12 @@
 `timescale 1ns / 1ns
 // Amir Alizadeh - Hiroki Shibata, NTU and Tokyo Metropollitan University, created at Nottingham Trent University.
 
+// Total local cycle is 192 - each mul (10) - frac(1) - cordic (170) - some registe (11)- (1+9+1+9+1+170+1) - total 192 cycles.
 
 // data input registe -> mul1 (X=γ×H) → frac_extra (XF) + mul2(XF* np.pi) -> slicer → CORDIC input
 // new_gamma must be in format Q6.58 and new_H must be Q5.59 format (for slicer) 
-// H is range [-1, 1] -> but its better to be in 64-bits Q3.61
-module gen_costFixedP
+
+module updated_gen_cost
   #(
   parameter P=64) // width of additional information
   (
@@ -26,7 +27,7 @@ localparam int IH  = 5; // it means h in fomat Q5.59
 localparam int FRAC_G = P - IG;            // 58 for Q6.58
 localparam int FRAC_H = P - IH;            // 59 for Q5.59
 localparam int BP     = FRAC_G + FRAC_H;   // 117  (binary point of prod1)
-localparam signed [P-1:0] PI_Q361 =  64'sd7244019458077122560;    // == round(pi * 2^61)
+localparam signed [P-1:0] PI_Q361 = 64'sd7244019458077122842 //PI_Q361 =  64'sd7244019458077122560;    // == round(pi * 2^61)
 
 // new product for reminder 
 wire signed [2*P-1:0] prod1;   // γ0 * H0   (turns; value = prod1 * 2^-117)
@@ -72,7 +73,7 @@ Mul_64_FixedP mul2 (
     .CLK(CLK),
     .a(frac_q),
     .b(PI_Q361),
-    .q(prod2_130)
+    .q(prod2)
 );
 
 
@@ -92,6 +93,7 @@ mul_slice #(
 // CORDIC outpu is signed 63-bit (1 bit sign, 2 bit int, 61 frac) - [-2, 2) range.
 CORDIC_64_fixedP inst_cordic(
       	.a(cordic_in),  //  input (it is H*gamma) wire width = [63:0] 
+            .areset(1'b0),
 		.c(cordic_cos_out),         // output is 63 bits - [62:0] , cos - 61 frac and 2 int
 		.clk(CLK),       // clk.clk         
 		.s(cordic_sin_out)          //  output is 63 bits [62:0] , sin 61 frac and 2 int

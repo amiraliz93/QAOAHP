@@ -248,13 +248,16 @@ class FpgaDriver:
                 f.write("};" + lineend + "\n")
                 
     def _compute_timing(self, NQ, Np):
+        #Total cycle for cos_gen layer is 192 (each mul (10) - frac(1) - cordic (170) - some registe (11) - total 192 cycles)
+
         LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
         LP_MIXER_IN, LP_MIXER_OUT = 1, 1
         L_BRAM_R = L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
         N3 = 1+10+2+1+1+1
         gcN0, gcN1 = 10, 170                       # test_mul / CORDIC latencies — VERIFY vs HDL
         # I update this based on new method need to check again 
-        gcPipe = 1 + gcN0 + 1 + gcN0 + 1 + 1 + gcN1 + 1   # in, mul1, fx, mul2, slicer, cordic_in, cordic, out
+        #gcPipe = 1 + gcN0 + 1 + gcN0 + 1 + 1 + gcN1 + 1   # in, mul1, fx, mul2, slicer, cordic_in, cordic, out
+        gcPipe = 1 + 9 + 1 + 9 + 1 + gcN1 + 1   # = 1+9+1+9+1+170+1 = 192
         Lc = 1 + gcPipe + 1 + L_BRAM_R + 2*LP_GEN_COST
         Lm = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT
         LInit = 24
