@@ -146,7 +146,6 @@ localparam WRITE_A2U         = 5'd4;   // rU = rA
 localparam WRITE_B2A         = 5'd5;   // rA = rB
 localparam WRITE_mulFP64_rA  = 5'd6;   // rA = res_mulFP64 (FP multiply result)
 localparam WRITE_addFP64_rA  = 5'd7;   // rA = res_addFP64 (FP add result)
-localparam WRITE_mul_rA      = 5'd8;   // rA = res_mulAB (fixed multiply result)
 localparam WRITE_add_rA      = 5'd9;   // rA = res_addAB (fixed add result)
 localparam WRITE_rA1         = 5'd10;  // rA = rA + 1
 localparam WRITE_rB1         = 5'd11;  // rB = rB + 1
@@ -214,9 +213,7 @@ logic [23:0] n_CMD;
 
 // Fixed-point units
 // These perform integer/fixed-point operations with shorter latency
-reg [23:0] mulA, mulB;        // Multiplier inputs
 reg [63:0] addA, addB;        // Adder inputs
-reg [47:0] res_mulAB;         // Multiply result
 reg [63:0] res_addAB;         // Add result
 
 //------------------  Wait Counter (for arithmetic latency)
@@ -539,10 +536,6 @@ always_comb begin: main_StateBlock
                   WRITE_A2U: begin
                         n_rU = rA;
                   end
-                  // WRITE_mul_rA: rA = fixed multiply result
-                  WRITE_mul_rA: begin
-                        n_rA = res_mulAB;
-                  end
                   
                   // WRITE_add_rA: rA = fixed add result
                   WRITE_add_rA: begin
@@ -755,39 +748,23 @@ fifo1	fifoW_inst (
 //----------------------------------------------------------------------------
 // These perform integer/fixed-point operations with shorter latency
 
-// Pipeline inputs to match ALU timing
-always @(posedge CLK) begin
-      RSTlv1A <= RST;
-      mulA <= rA[23:0];    // Extract lower 24 bits of rA
-      mulB <= rB[23:0];    // Extract lower 24 bits of rB
-      addA <= rA;          // Full 64-bit value
-      addB <= rB;          // Full 64-bit value
-end
-
-//----------------------------------------------------------------------------
-// FIXED-POINT MULTIPLIER
-//----------------------------------------------------------------------------
-// Performs: res_mulAB = mulA * mulB (24-bit x 24-bit = 48-bit)
-// Latency: 8 clock cycles
-mulfix8 mulfix8_inst (
-      .clock(CLK),
-      .dataa(mulA),
-      .datab(mulB),
-      .result(res_mulAB)   // 48-bit result
-);
 
 //----------------------------------------------------------------------------
 // FIXED-POINT ADDER
 //----------------------------------------------------------------------------
 // Performs: res_addAB = addA + addB (64-bit + 64-bit = 64-bit)
 // Latency: 2 clock cycles
-addfix8 addix8_inst (
-      .clock(CLK),
-      .dataa(addA),
-      .datab(addB),
-      .result(res_addAB)   // 64-bit result
-);
-
+reg [63:0] rAX2;
+reg [63:0] rBX2;
+reg [63:0] rRX2;
+always @(posedge CLK) begin
+      addA <= rA;          // Full 64-bit value
+      addB <= rB;          // Full 64-bit value
+      rAX2 <= addA;
+      rBX2 <= addB;
+      rRX2 <= rAX2 + rBX2;
+      res_addAB <= rRX2;
+end
 
 
 endmodule
