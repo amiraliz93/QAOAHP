@@ -17,9 +17,9 @@ module updated_gen_cost
    output signed [P-1:0]  Hi_o // Img part of e^(i gamma H)
 );
 
-localparam N0 = 10; // latency new test_mul 10 cycles
+localparam N0 = 8; // latency new test_mul 10 cycles
 localparam N1 = 170; // latency of CORDIC
-localparam Pipe = 1+9+1+9+1+N1+1;
+localparam Pipe = 1+7+1+7+1+N1+1;
 
 // parameter for slcier updated for new gamma nad H
 localparam int IG = 6; // int of new_gamma format Q6.58
@@ -27,16 +27,14 @@ localparam int IH  = 5; // it means h in fomat Q5.59
 localparam int FRAC_G = P - IG;            // 58 for Q6.58
 localparam int FRAC_H = P - IH;            // 59 for Q5.59
 localparam int BP     = FRAC_G + FRAC_H;   // 117  (binary point of prod1)
-localparam signed [P-1:0] PI_Q361 = 64'sd7244019458077122842 //PI_Q361 =  64'sd7244019458077122560;    // == round(pi * 2^61)
+localparam signed [P-1:0] PI_Q361 = 64'sd7244019458077122842; //PI_Q361 =  64'sd7244019458077122560;    // == round(pi * 2^61)
 
 // new product for reminder 
 wire signed [2*P-1:0] prod1;   // γ0 * H0   (turns; value = prod1 * 2^-117)
 wire signed [P-1:0]   frac_q;  // centred signed fraction as Q1.63
 wire signed [2*P-1:0] prod2;   // frac_w * π
 
-
 wire signed [P-1:0]   angle;   // Q3.61 in [-π, π)
-
 
 reg signed [2*P-1:0] frac_in;
 reg signed [P-1:0] mul1_in;
