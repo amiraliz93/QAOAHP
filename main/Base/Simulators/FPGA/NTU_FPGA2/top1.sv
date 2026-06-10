@@ -81,7 +81,7 @@ always @(posedge CLK) begin
    RSTqs <= RST;
 end
 
-control_interface #(.NM(NM))CI 
+control_interface #(.P(P), .NM(NM)) CI 
 (
    .CLK(CLK),        // Connect to your system clock wire
    .RST(RSTci),        // Connect to your system reset wire
@@ -226,7 +226,17 @@ regPipeline  #(.W_INFO($bits({gamma, HGC, Hr_o, Hi_o})), .NPipe(LP_GEN_COST)) in
    .info_out({gammaP, HGCP, Hr_oP, Hi_oP})
 );
 
-gen_costFixedP  #(.P(P)) inst_gencostFixedP
+
+// gen_costFixedP  #(.P(P)) inst_gencostFixedP
+//   (
+//    .CLK(CLK), // input
+//    .gamma(gammaP), //  gamma, input
+//    .H(HGCP), // input
+//    .Hr_o(Hr_o),
+//    .Hi_o(Hi_o)
+// );
+
+updated_gen_cost #(.P(P)) inst_updated_gencost
   (
    .CLK(CLK), // input
    .gamma(gammaP), //  gamma, input

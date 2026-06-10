@@ -1,10 +1,12 @@
 import typing
 import numpy as np
+import random
 import serial # UART communication to FPGA
 import time
-import random
 import datetime
-import struct # convert Python numbers into bytes
+import struct
+
+#from main.Base.Simulators.FPGA.NTU_FPGA2.res.all_test import LP_MIXER_OUT, NS, Lm # convert Python numbers into bytes
 from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
 from ...precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
 from ....parameter_utils import generate_mixer_sincos_fpga
@@ -38,6 +40,10 @@ class FpgaDriver:
 
     FIX_P = 64    # total bits
     FIX_N = 61    # fractional bits  -> Q3.61, range [-4, 4)
+    FRAC_Q361=61
+    FRAC_G = 58 # for gamma Q6.58, range [-64, 64)
+    FRAC_H=59 # for H Q5.59, range [-32, 32)
+
 
     # Operation codes from NEW_smachine.sv
     OP_NONE = 0  # 1 bytes
@@ -90,14 +96,6 @@ class FpgaDriver:
 # helper function
     def __init__(self, fpga_config: dict , timeout=1):
         
-        """
-        Initialize FPGA driver with serial port settings
-        
-        Args:
-            port: Serial port (e.g., 'COM3' on Windows, '/dev/ttyUSB0' on Linux)
-            baudrate: Communication speed (default 115200)
-            timeout: Read timeout in seconds
-        """
         port = fpga_config.get("port")
         baudrate = fpga_config.get("baudrate", 115200) 
         timeout = fpga_config.get("timeout", 1) 
@@ -125,17 +123,17 @@ class FpgaDriver:
             # Clear buffers
             self.ser.reset_input_buffer()
             self.ser.reset_output_buffer()
-            time.sleep(0.1)
+            time.sleep(0.05)
             
             # Check version
             self.ser.write(bytes([self.OP_MOV_Info2U, self.OP_FETCH8U]))
-            time.sleep(0.01)
+            time.sleep(0.05)
 
             version_bytes = self.ser.read(8)
             if len(version_bytes) == 8:
                 self.version = version_bytes.decode('ascii', errors='ignore').strip('\x00')
             
-                if "NTUSMv" in self.version:
+                if "NTUSMv" in self.version or "Hello" in self.version:
                     self.connected = True
                     print(f"✓ FPGA connected: {self.version}")
                     return True
@@ -177,10 +175,35 @@ class FpgaDriver:
         v = np.rint(np.asarray(v, dtype=np.float64) * (1 << f_bit)).astype(object)
         min_val = -(1 << (self.FIX_P -1))
         max_val =  (1 <<(self.FIX_P - 1))
-        if v < min_val | v > max_val:
+        if np.any(v < min_val) or np.any(v > max_val):
             raise ValueError("fixed-point overflow")
         return [int(x) for x in v]
     
+    def _float_to_fixed_q559(self, v: float) -> int:
+        scaled = int(round(float(v) * (1 << self.FRAC_H)))
+        lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
+        if scaled < lo or scaled > hi:
+            raise ValueError(
+                f"Q5.59 overflow: H_scaled={v:.6f} scaled={scaled}. "
+                f"Check scale_H_gamma: max|H_scaled| must be < 16.")
+        return scaled
+    def _float_to_fixed_q658(self, v: float) -> int:
+
+        scaled = int(round(float(v) * (1 << self.FRAC_G)))
+        lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
+        if scaled < lo or scaled > hi:
+            raise ValueError(
+                f"Q6.58 overflow: gamma_scaled={v:.6f} scaled={scaled}. "
+                f"Check scale_H_gamma: max|gamma_scaled| must be < 32.")
+        return scaled
+    
+    def _float_to_fixed_q361(self, v: float) -> int:
+
+        scaled = int(round(float(v) * (1 << self.FRAC_Q361)))
+        lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
+        if scaled < lo or scaled > hi:
+            raise ValueError(f"Q3.61 overflow: value={v:.6f} scaled={scaled}")
+        return scaled
 
     def _send_byte(self, value):
         """Send single byte (64 bit integer in little-endian format)"""
@@ -196,98 +219,133 @@ class FpgaDriver:
         self._write_bytes(self._convert_byte(v, 8, signed=sign))
 
     def _write_all_test_cmd(self, data_array, t_params, filename="all_test_cmd.sv", lineend=""):
-            # build idop for single-byte opcode comments
-            opcode_names = [
-                "OP_NONE","OP_NONE8","OP_SEND1T","OP_SEND8T","OP_MOV_T2A","OP_MOV_T2B",
-                "OP_MOV_A2U","OP_MOV_A2B","OP_MOV_Info2U","OP_MOV_S2U","OP_MOV_T2P",
-                "OP_FETCH1U","OP_FETCH8U","OP_ADD_B2A","OP_MUL_B2A","OP_ADDFP_B2A",
-                "OP_MULFP_B2A","OP_INC_A","OP_WRITE_T2RAM","OP_READ_RAM2U",
-                "OP_SEND_CMD","OP_WRITE_T2_AG","HOST_WAIT",
-                "AG_SET_t_L2Addr","AG_SET_t_L2PipeGC","AG_SET_tb_B2GenCost","AG_SET_t_L2Pipe",
-                "AG_SET_nPLayer","AG_SET_L1Qbit","AG_SET_AddrMask","AG_SET_t_B2GenCost",
-                "AG_SET_tb_B2Mixer","AG_SET_t_L2Compute","qa_WAIT","qa_RUN","qa_MIXER","qa_COST","qa_INIT"
-            ]
-            idop = {}
-            for name in opcode_names:
-                v = getattr(self, name, None)
-                if isinstance(v, int):
-                    idop[bytes([v]).hex()] = name
+        # build idop for single-byte opcode comments
+        opcode_names = [
+            "OP_NONE","OP_NONE8","OP_SEND1T","OP_SEND8T","OP_MOV_T2A","OP_MOV_T2B",
+            "OP_MOV_A2U","OP_MOV_A2B","OP_MOV_Info2U","OP_MOV_S2U","OP_MOV_T2P",
+            "OP_FETCH1U","OP_FETCH8U","OP_ADD_B2A","OP_MUL_B2A","OP_ADDFP_B2A",
+            "OP_MULFP_B2A","OP_INC_A","OP_WRITE_T2RAM","OP_READ_RAM2U",
+            "OP_SEND_CMD","OP_WRITE_T2_AG","HOST_WAIT",
+            "AG_SET_t_L2Addr","AG_SET_t_L2PipeGC","AG_SET_tb_B2GenCost","AG_SET_t_L2Pipe",
+            "AG_SET_nPLayer","AG_SET_L1Qbit","AG_SET_AddrMask","AG_SET_t_B2GenCost",
+            "AG_SET_tb_B2Mixer","AG_SET_t_L2Compute","qa_WAIT","qa_RUN","qa_MIXER","qa_COST","qa_INIT"
+        ]
+        idop = {}
+        for name in opcode_names:
+            v = getattr(self, name, None)
+            if isinstance(v, int):
+                idop[bytes([v]).hex()] = name
 
-            ND = sum(len(b) for b in data_array)
-            with open(filename, "w") as f:
-                f.write(f"integer t_L2Addr   = {t_params.get('t_L2Addr',0)};\n")
-                f.write(f"integer t_L2PipeGC = {t_params.get('t_L2PipeGC',0)};\n")
-                f.write(f"integer tb_B2GenCost= {t_params.get('tb_B2GenCost',0)};\n")
-                f.write(f"integer t_L2Pipe  = {t_params.get('t_L2Pipe',0)};\n")
-                f.write(f"integer nPLayer   = {t_params.get('nPLayer',0)};\n")
-                f.write(f"integer L1Qbit    = {t_params.get('L1Qbit',0)};\n")
-                f.write(f"integer AddrMask  = {t_params.get('AddrMask',0)};\n")
-                f.write(f"integer t_B2GenCost  = {t_params.get('t_B2GenCost',0)};\n")
-                f.write(f"integer tb_B2Mixer  = {t_params.get('tb_B2Mixer',0)};\n")
-                f.write(f"integer t_L2Compute  = {t_params.get('t_L2Compute',0)};\n")
-                f.write(f"integer seed = {t_params.get('seed',0)};\n")
-                f.write(f"// Version {random.random()}, {datetime.datetime.now()}\n")
-                f.write(f"localparam ND={ND};\n")
-                f.write(f"logic [7: 0] data_array [{ND}] = {{{lineend}\n")
-                for i, b in enumerate(data_array):
-                    # ensure b is bytes
-                    if isinstance(b, int):
-                        bb = bytes([b])
-                    else:
-                        bb = b
-                    for j in range(len(bb)):
-                        f.write(f"8'h{bb[j]:02x}")
-                        if j != len(bb)-1:
-                            f.write(", ")
-                    if i != len(data_array) - 1:
-                        f.write(",")
-                    skey = bb.hex()
-                    if skey in idop and lineend != "":
-                        f.write(f" // {idop[skey]}{lineend}")
-                    f.write("\n")
-                f.write("};" + lineend + "\n")
-                
+        ND = sum(len(b) for b in data_array)
+        with open(filename, "w") as f:
+            f.write(f"integer t_L2Addr   = {t_params.get('t_L2Addr',0)};\n")
+            f.write(f"integer t_L2PipeGC = {t_params.get('t_L2PipeGC',0)};\n")
+            f.write(f"integer tb_B2GenCost= {t_params.get('tb_B2GenCost',0)};\n")
+            f.write(f"integer t_L2Pipe  = {t_params.get('t_L2Pipe',0)};\n")
+            f.write(f"integer nPLayer   = {t_params.get('nPLayer',0)};\n")
+            f.write(f"integer L1Qbit    = {t_params.get('L1Qbit',0)};\n")
+            f.write(f"integer AddrMask  = {t_params.get('AddrMask',0)};\n")
+            f.write(f"integer t_B2GenCost  = {t_params.get('t_B2GenCost',0)};\n")
+            f.write(f"integer tb_B2Mixer  = {t_params.get('tb_B2Mixer',0)};\n")
+            f.write(f"integer t_L2Compute  = {t_params.get('t_L2Compute',0)};\n")
+            f.write(f"integer seed = {t_params.get('seed',0)};\n")
+            f.write(f"// Version {random.random()}, {datetime.datetime.now()}\n")
+            f.write(f"localparam ND={ND};\n")
+            f.write(f"logic [7: 0] data_array [{ND}] = {{{lineend}\n")
+            for i, b in enumerate(data_array):
+                # ensure b is bytes
+                if isinstance(b, int):
+                    bb = bytes([b])
+                else:
+                    bb = b
+                for j in range(len(bb)):
+                    f.write(f"8'h{bb[j]:02x}")
+                    if j != len(bb)-1:
+                        f.write(", ")
+                if i != len(data_array) - 1:
+                    f.write(",")
+                skey = bb.hex()
+                if skey in idop and lineend != "":
+                    f.write(f" // {idop[skey]}{lineend}")
+                f.write("\n")
+            f.write("};" + lineend + "\n")
+            
     def _compute_timing(self, NQ, Np):
         #Total cycle for cos_gen layer is 192 (each mul (10) - frac(1) - cordic (170) - some registe (11) - total 192 cycles)
 
         LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
         LP_MIXER_IN, LP_MIXER_OUT = 1, 1
-        L_BRAM_R = L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
-        N3 = 1+10+2+1+1+1
+        L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
+        L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
+        N3 = 1+10+2+1+1+1 # 16
         gcN0, gcN1 = 10, 170                       # test_mul / CORDIC latencies — VERIFY vs HDL
         # I update this based on new method need to check again 
-        #gcPipe = 1 + gcN0 + 1 + gcN0 + 1 + 1 + gcN1 + 1   # in, mul1, fx, mul2, slicer, cordic_in, cordic, out
-        gcPipe = 1 + 9 + 1 + 9 + 1 + gcN1 + 1   # = 1+9+1+9+1+170+1 = 192
-        Lc = 1 + gcPipe + 1 + L_BRAM_R + 2*LP_GEN_COST
-        Lm = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT
+        gcPipe = 1 + gcN0  + 1 + gcN1 + 1   # in, mul1, fx, mul2, slicer, cordic_in, cordic, out
+        #gcPipe = 1 + gcN0 + 1 + gcN0 + 1 + gcN1 + 1   # = 1+10+1+10+1+170+1 = 194
+        
+        NS    = 1 << NQ
+        Lc    = 1 + gcPipe + 1 + L_BRAM_R + LP_GEN_COST + LP_GEN_COST   # 194
+        Lm    = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  # 31
         LInit = 24
-        NS = 1 << NQ
-        LPipe = max(NS, Lm + NS//2 + NS%2)
+
+        LPipe = NS
+        tl    = Lm + NS // 2 + NS % 2
+        if tl >= NS:
+            LPipe = tl
+
         DVTc = Lc // LPipe + 1
         tGenCost = DVTc*LPipe - Lc
-        if tGenCost < LInit: tGenCost += LPipe
+        if tGenCost < LInit:
+                tGenCost += LPipe
+
         tbGenCost = LPipe*(NQ+1) - Lc
         t_Mixer = LPipe
         if tbGenCost < LInit:
             t_Mixer = LPipe + LInit - tbGenCost; tbGenCost = LInit
         t_Compute = t_Mixer + LPipe*NQ + Lm
-        mask = (1 << (NQ-1)) - 1 if NQ >= 1 else 0
-        return {
-            self.AG_SET_t_L2Addr:    NS-2,      self.AG_SET_t_L2Pipe:   LPipe-2,
-            self.AG_SET_t_L2PipeGC:  Lc-2,      self.AG_SET_tb_B2GenCost: tbGenCost-2,
-            self.AG_SET_t_B2GenCost: tGenCost-2, self.AG_SET_nPLayer:    Np,
-            self.AG_SET_L1Qbit:      NQ-1,      self.AG_SET_AddrMask:   mask,
-            self.AG_SET_tb_B2Mixer:  t_Mixer-2, self.AG_SET_t_L2Compute: t_Compute,
-        }
+        def mask64(a):
+            if a <= 0:  return 0
+            if a >= 64: return (1 << 64) - 1
+            return (1 << a) - 1
 
+        return dict(
+            t_L2Addr    = NS       - 2,
+            t_L2PipeGC  = Lc       - 2,
+            tb_B2GenCost= tbGenCost - 2,
+            t_L2Pipe    = LPipe    - 2,
+            nPLayer     = Np,
+            L1Qbit      = NQ       - 1,
+            AddrMask    = mask64(NQ - 1),
+            t_B2GenCost = tGenCost - 2,
+            tb_B2Mixer  = t_Mixer  - 2,
+            t_L2Compute = t_Compute,
+            # informational
+            _LPipe=LPipe, _Lc=Lc, _Lm=Lm, _NS=NS,
+        )
+    
     def _program_addr_gen(self, NQ, Np):
-        for sel, val in self._compute_timing(NQ, Np).items():
-            self._send_opcode(self.OP_SEND1T); self._send_byte(sel)
+        print("  Phase 2: addr_gen timing config...")
+        t = self._compute_timing(NQ, Np)
+        ag_map = [
+            (self.AG_SET_t_L2Addr,     t['t_L2Addr']),
+            (self.AG_SET_t_L2Pipe,     t['t_L2Pipe']),
+            (self.AG_SET_t_L2PipeGC,   t['t_L2PipeGC']),
+            (self.AG_SET_tb_B2GenCost, t['tb_B2GenCost']),
+            (self.AG_SET_t_B2GenCost,  t['t_B2GenCost']),
+            (self.AG_SET_nPLayer,      t['nPLayer']),
+            (self.AG_SET_L1Qbit,       t['L1Qbit']),
+            (self.AG_SET_AddrMask,     t['AddrMask']),
+            (self.AG_SET_tb_B2Mixer,   t['tb_B2Mixer']),
+            (self.AG_SET_t_L2Compute,  t['t_L2Compute']),
+        ]
+        for ag_addr, ag_val in ag_map:
+            self._send_opcode(self.OP_SEND1T)
+            self._send_byte(ag_addr)                          # integer ✓
             self._send_opcode(self.OP_MOV_T2A)
-            self._send_opcode(self.OP_SEND8T); self._send_int64(val & ((1<<64)-1))
+            self._send_opcode(self.OP_SEND8T)
+            self._send_int64(ag_val & ((1 << 64) - 1))
             self._send_opcode(self.OP_WRITE_T2_AG)
-
-
+    
     def _fetch_fx64(self):
         if not self.connected or self.ser is None:
             raise RuntimeError("Not connected to FPGA")
@@ -318,6 +376,8 @@ class FpgaDriver:
             gammas: Gamma parameters for each layer
             betas: Beta parameters for each layer
         """
+        # addr_gen register addresses (from w.py)
+
         if not self.connected:
             raise RuntimeError("Not connected to FPGA")        
         print("Loading data to FPGA...")
@@ -356,7 +416,7 @@ class FpgaDriver:
 
             self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS) # send address for parameter block
             self._send_opcode(self.OP_MOV_T2A)
-            for p_L in range (p + 1): # send actual parameters
+            for p_L in range (p +1): # send actual parameters
                 for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
                     self._send_opcode(self.OP_SEND8T); self._send_fixed(value)
                     self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
@@ -375,6 +435,8 @@ class FpgaDriver:
             return True
         
         except Exception as e:
+            import traceback
+            traceback.print_exc()          # show full stack trace
             print(f"✗ Error loading data: {e}")
             return False
         
@@ -489,7 +551,7 @@ class FPGASimulator(Sim_Base):
 
     """
     
-    _hc_diag: np.ndarray # cost hamiltonian
+    _hc_diag: np.ndarray
 
     def __init__(
         self,
@@ -549,26 +611,22 @@ class FPGASimulator(Sim_Base):
         """
         return np.array(costs)
     def get_cost_diagonal(self) -> np.ndarray:
-        """
-        Return the diagonal of the cost Hamiltonian as a numpy array.
-        Returns
-        np.ndarray
-            Diagonal elements of the cost Hamiltonian
-        """
+
         return np.array(self._hc_diag)
     
     def _scale_H_gamma(self, H, gammas):
-        H = np.asarray(H, dtype=np.float64) # H in range ±10
+        H = np.asarray(H, dtype=np.float64) # H in range [-S, S]
         gammas = np.asarray(gammas, dtype=np.float64)
 
-        S = np.max(np.abs(H)) # Show s can be large ? nodes: n and max_edges: n (n-1)/2 - n/2  - n =20 -> S= 190
+        S = np.max(np.abs(H))
         if S == 0:
             return H.copy(), gammas.copy(), 1.0
-        H_scaled = H / np.sqrt(2.0 * S)
-        gamma_scaled = gammas * np.sqrt(S) / (np.pi * np.sqrt(2.0)) # (20) / sqrt(2) <= 30 -> Q6.58 
+        H_scaled = H / np.sqrt(2.0 * S) # scale to fit in Q5.59 range [-10, 10] max to 20 Qubits 
+        gamma_scaled = gammas * np.sqrt(S) / (np.pi * np.sqrt(2.0)) # scale to fit in Q6.58 range [-32, 32] (cover max 20 values with margin) max to 20 Qubits
 
         return H_scaled, gamma_scaled, S
- 
+    
+
     
     def simulate_qaoa(
         self,
@@ -609,6 +667,8 @@ class FPGASimulator(Sim_Base):
                     raise RuntimeError("Failed to connect to FPGA")
             # Load data
             success = self.fpga.load_data(H_scaled, sv0_re, sv0_im, gamma_scaled, cosb_0, sinb_0)
+            #tempo
+            #success = self.fpga.load_data(self._hc_diag, sv0_re, sv0_im, np.asarray(gammas), cosb_0, sinb_0)
             if not success:
                 raise RuntimeError("Failed to load data to FPGA")            
             # Execute
