@@ -139,6 +139,7 @@ def get_qaoa_objective(
     initial_state: np.ndarray | None = None,
     n_trotters: int = 1,
     optimization_type="min",
+    fpga_config: dict | None = None,
     ) -> typing.Callable:
 
     """Return QAOA objective to be minimized
@@ -188,12 +189,11 @@ def get_qaoa_objective(
     
     if N is None: 
         raise ValueError("N must be specified if G is not provided")
-    
+    simulator = simulator.upper()
     # 2. QISKIT SIMULATOR
 # ============================================
-
 #  Qiskit edge case
-    if simulator == "qiskit":
+    if simulator == "QISKIT":
         """
         if precomputed_costs is None:
             precomputed_costs = precomputed_diagonal_hamiltonian
@@ -225,7 +225,7 @@ def get_qaoa_objective(
 # 3. REGULAR SIMULATOR (CPU/GPU/FPGA)
 # ============================================
     if mixer == "x": # for x mixer 
-        sim = choose_simulator(name= simulator)(N, terms=terms, costs=precomputed_diagonal_hamiltonian)
+        sim = choose_simulator(name= simulator)(N, terms=terms, costs=precomputed_diagonal_hamiltonian, fpga_config=fpga_config)
     else:
         raise ValueError(f"Unknown mixer type passed to get_qaoa_objective: {mixer}, allowed ['x', 'xy']")
     
