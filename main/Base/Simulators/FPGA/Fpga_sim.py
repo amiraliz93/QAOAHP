@@ -179,7 +179,7 @@ class FpgaDriver:
             raise ValueError("fixed-point overflow")
         return [int(x) for x in v]
     
-    def _float_to_fixed_q559(self, v: float) -> int:
+    def _float_to_fixed_q559(self, v: float) -> int: # Q5.59 - Hamiltonian-  18 qubits random graphs 
         scaled = int(round(float(v) * (1 << self.FRAC_H)))
         lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
         if scaled < lo or scaled > hi:
@@ -187,7 +187,8 @@ class FpgaDriver:
                 f"Q5.59 overflow: H_scaled={v:.6f} scaled={scaled}. "
                 f"Check scale_H_gamma: max|H_scaled| must be < 16.")
         return scaled
-    def _float_to_fixed_q658(self, v: float) -> int:
+    
+    def _float_to_fixed_q658(self, v: float) -> int: # Q6.58 new_gamma
 
         scaled = int(round(float(v) * (1 << self.FRAC_G)))
         lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
@@ -197,7 +198,7 @@ class FpgaDriver:
                 f"Check scale_H_gamma: max|gamma_scaled| must be < 32.")
         return scaled
     
-    def _float_to_fixed_q361(self, v: float) -> int:
+    def _float_to_fixed_q361(self, v: float) -> int: # Q3.61 state 
 
         scaled = int(round(float(v) * (1 << self.FRAC_Q361)))
         lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
@@ -280,11 +281,11 @@ class FpgaDriver:
         N3 = 1+10+2+1+1+1 # 16
         gcN0, gcN1 = 10, 170                       # test_mul / CORDIC latencies — VERIFY vs HDL
         # I update this based on new method need to check again 
-        gcPipe = 1 + gcN0  + 1 + gcN1 + 1   # in, mul1, fx, mul2, slicer, cordic_in, cordic, out
+        gcPipe = 1 + gcN0  + 1 +gcN0 + 1 + gcN1 + 1   # should be 194, 193 in, mul1, fx, mul2, slicer, cordic_in, cordic, out
         #gcPipe = 1 + gcN0 + 1 + gcN0 + 1 + gcN1 + 1   # = 1+10+1+10+1+170+1 = 194
         
         NS    = 1 << NQ
-        Lc    = 1 + gcPipe + 1 + L_BRAM_R + LP_GEN_COST + LP_GEN_COST   # 194
+        Lc    = 1 + gcPipe + 1 + L_BRAM_R + LP_GEN_COST + LP_GEN_COST   
         Lm    = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  # 31
         LInit = 24
 
@@ -297,6 +298,7 @@ class FpgaDriver:
         tGenCost = DVTc*LPipe - Lc
         if tGenCost < LInit:
                 tGenCost += LPipe
+                print(f"tGenCost = {tGenCost} greater than LInit = {LInit}.")
 
         tbGenCost = LPipe*(NQ+1) - Lc
         t_Mixer = LPipe
@@ -355,6 +357,85 @@ class FpgaDriver:
         v = int.from_bytes(d, "little", signed=True)
         return v / float(1 << self.FIX_N) # the two's-complement adjustment for signed Q3.61
     
+    def write_test_cmd(self, diag_hamiltonian, sv0_real, sv0_imag,
+                   gammas, cosb, sinb, filename="new_test_cmd.sv"):
+        """
+        Generate all_test_cmd.sv equivalent without sending to FPGA.
+        Call after connect(), with the same arguments as load_data().
+        """
+        n_states = len(diag_hamiltonian)
+        p        = len(gammas)
+        n_qubits = int(np.log2(n_states))
+        t        = self._compute_timing(n_qubits, p)
+
+        data_array = []
+        def wb(b): data_array.append(b)
+
+        # Phase 0
+        wb(bytes([self.OP_SEND1T])); wb(bytes([self.qa_WAIT])); wb(bytes([self.OP_SEND_CMD]))
+
+        # Phase 1: addr_gen
+        ag_map = [
+            (self.AG_SET_t_L2Addr,     t['t_L2Addr']),
+            (self.AG_SET_t_L2Pipe,     t['t_L2Pipe']),
+            (self.AG_SET_t_L2PipeGC,   t['t_L2PipeGC']),
+            (self.AG_SET_tb_B2GenCost, t['tb_B2GenCost']),
+            (self.AG_SET_t_B2GenCost,  t['t_B2GenCost']),
+            (self.AG_SET_nPLayer,      t['nPLayer']),
+            (self.AG_SET_L1Qbit,       t['L1Qbit']),
+            (self.AG_SET_AddrMask,     t['AddrMask']),
+            (self.AG_SET_tb_B2Mixer,   t['tb_B2Mixer']),
+            (self.AG_SET_t_L2Compute,  t['t_L2Compute']),
+        ]
+        for ag_addr, ag_val in ag_map:
+            wb(bytes([self.OP_SEND1T])); wb(bytes([ag_addr]))
+            wb(bytes([self.OP_MOV_T2A]))
+            wb(bytes([self.OP_SEND8T]))
+            wb((ag_val & ((1<<64)-1)).to_bytes(8,'little'))
+            wb(bytes([self.OP_WRITE_T2_AG]))
+
+        # Phase 2: params
+        cosb_w = [float(cosb[0])] + [float(c) for c in cosb]
+        sinb_w = [float(sinb[0])] + [float(s) for s in sinb]
+        gam_w  = [float(g) for g in gammas] + [-1.0]
+        fix_gamma_w = self._float_to_fixed(gam_w,           f_bit=58)
+        fix_cosb_w  = self._float_to_fixed(cosb_w,          f_bit=61)
+        fix_sinb_w  = self._float_to_fixed(sinb_w,          f_bit=61)
+        fix_sv0_r   = self._float_to_fixed(list(sv0_real),  f_bit=61)
+        fix_sv0_i   = self._float_to_fixed(list(sv0_imag),  f_bit=61)
+        fix_H       = self._float_to_fixed(list(diag_hamiltonian), f_bit=59)
+
+        wb(bytes([self.OP_SEND8T]))
+        wb((self.BRAM_PARAMS & ((1<<64)-1)).to_bytes(8,'little'))
+        wb(bytes([self.OP_MOV_T2A]))
+        for p_L in range(p + 1):
+            for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
+                wb(bytes([self.OP_SEND8T]))
+                wb(int(value).to_bytes(8,'little',signed=True))
+                wb(bytes([self.OP_WRITE_T2RAM]))
+                wb(bytes([self.OP_INC_A]))
+
+        # Phase 3-5: sv_real, sv_imag, H
+        for address, values in [
+            (self.BRAM_STATE_REAL, fix_sv0_r),
+            (self.BRAM_STATE_IMAG, fix_sv0_i),
+            (self.BRAM_COST_FUNC,  fix_H),
+        ]:
+            wb(bytes([self.OP_SEND8T]))
+            wb((address & ((1<<64)-1)).to_bytes(8,'little'))
+            wb(bytes([self.OP_MOV_T2A]))
+            for v in values:
+                wb(bytes([self.OP_SEND8T]))
+                wb(int(v).to_bytes(8,'little',signed=True))
+                wb(bytes([self.OP_WRITE_T2RAM]))
+                wb(bytes([self.OP_INC_A]))
+
+        # Phase 6: run
+        wb(bytes([self.OP_SEND1T])); wb(bytes([self.qa_RUN])); wb(bytes([self.OP_SEND_CMD]))
+
+        self._write_all_test_cmd(data_array, t, filename=filename)
+        print(f"✓ Written {filename}  ({sum(len(b) for b in data_array)} bytes)")
+
     def _wait_for_fpga(self, timeout=1000):
         if self.ser is None:
             raise RuntimeError("Serial connection not established")
@@ -432,6 +513,7 @@ class FpgaDriver:
                     self._send_opcode(self.OP_SEND8T); self._send_fixed(int(value[i]))
                     self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             print("✓ Data loaded to FPGA")
+
             return True
         
         except Exception as e:
@@ -451,7 +533,8 @@ class FpgaDriver:
                 if not done:
                     print("✗ FPGA did not signal completion")
                     return False
-                
+                # only work with simulation , for actual remove below 
+                self._send_opcode(self.HOST_WAIT)
                 self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
                 self._send_opcode(self.OP_SEND_CMD)
                 return True
@@ -670,7 +753,9 @@ class FPGASimulator(Sim_Base):
             #tempo
             #success = self.fpga.load_data(self._hc_diag, sv0_re, sv0_im, np.asarray(gammas), cosb_0, sinb_0)
             if not success:
-                raise RuntimeError("Failed to load data to FPGA")            
+                raise RuntimeError("Failed to load data to FPGA")  
+            print("write write_test_cmd file" )
+            self.fpga.write_test_cmd(H_scaled, sv0_re, sv0_im, gamma_scaled, cosb_0, sinb_0 )          
             # Execute
             success = self.fpga.execute(p)
             if not success:

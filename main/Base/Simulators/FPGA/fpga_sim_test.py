@@ -6,7 +6,7 @@ Standalone test for the updated Fpga_sim.py (FpgaDriver + FPGASimulator).
 Three test levels — run them in order:
  
   Level 0  (no hardware)  Unit-test every helper method offline
-  Level 1  (no hardware)   build the full byte sequence, compare
+  Level 1  (no hardware)  Dry-run: build the full byte sequence, compare
                           byte-count and timing params against all_test_cmd.sv
   Level 2  (hardware)     Connect to real FPGA, run NQ=5 Np=2, compare
                           FPGA output against Python reference with MAE
@@ -19,6 +19,8 @@ Usage:
  
 import sys, math, random, struct, time
 import numpy as np
+
+import Fpga_sim
  
 # ── Inline the classes from Fpga_sim.py so this file is self-contained ──────
 # In your real project, replace these two lines with:
@@ -294,7 +296,7 @@ def level1_dry_run():
  
  
 # ═══════════════════════════════════════════════════════════════════════════
-#  LEVEL 2 — real hardware test
+#  LEVEL 2 — real hardware test 
 # ═══════════════════════════════════════════════════════════════════════════
  
 def level2_hardware(port, NQ=5, Np=2):
@@ -306,7 +308,7 @@ def level2_hardware(port, NQ=5, Np=2):
     # Adjust this import to match your package layout
     try:
                 import sys, os
-                sys.path.insert(0, r"C:\altera\actual_fpga")
+                sys.path.insert(0, r"C:\\altera\\Actual_Fpga")
                 from main.Base.Simulators.FPGA.Fpga_sim import FPGASimulator
     except ImportError as e:
                 print(f"  Import failed: {e}")
@@ -318,11 +320,15 @@ def level2_hardware(port, NQ=5, Np=2):
     NS = 1 << NQ
     seed = 0x22a2037
     random.seed(seed); np.random.seed(seed)
-    H_raw = np.array([random.uniform(-1, 1) for _ in range(NS)])
+    H_raw = np.array([random.uniform(-190, 190) for _ in range(NS)])
     gammas = np.array([random.uniform(-math.pi, math.pi) for _ in range(Np)])
     betas  = np.array([random.uniform(-math.pi, math.pi) for _ in range(Np)])
     sv0_raw = np.array([complex(random.uniform(-1,1), random.uniform(-1,1)) for _ in range(NS)])
     sv0 = sv0_raw / np.linalg.norm(sv0_raw)
+
+    # test 2
+    H_large = np.array([random.uniform(-190, 190) for _ in range(NS)])
+    gammas_large = np.array([random.uniform(-math.pi, math.pi) for _ in range(Np)])
  
     # ── Python reference simulation ───────────────────────────────────────
     def swap_bits(i, a, b):
@@ -349,6 +355,9 @@ def level2_hardware(port, NQ=5, Np=2):
     sv_fpga = sim.simulate_qaoa(gammas, betas, sv0=sv0.copy())
     dt = time.perf_counter() - t0
     print(f"  FPGA wall time: {dt:.4f} s")
+
+    # with large value of H 
+    sim2 = FPGASimulator(n_qubits=NQ, costs=H_large, fpga_config=fpga_config)
  
     # ── MAE ───────────────────────────────────────────────────────────────
     mae_r = sum(abs(sv_fpga[i].real - sv_ref[i].real) for i in range(NS)) / NS
@@ -378,7 +387,7 @@ def level2_hardware(port, NQ=5, Np=2):
  
 if __name__ == "__main__":
     port = None
-    NQ, Np = 5, 2
+    NQ, Np = 6, 2
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) >= 1: port = args[0]
     if len(args) >= 2: NQ   = int(args[1])

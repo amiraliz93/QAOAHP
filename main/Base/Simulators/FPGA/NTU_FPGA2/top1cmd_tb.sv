@@ -48,8 +48,8 @@ begin
       CLK <= ~CLK; // clock generation, half period
 end
 
-`include "all_test_cmd.sv"  // The contents of the file will be expanded here.
-
+//`include "all_test_cmd.sv"  // The contents of the file will be expanded here.
+`include "new_test_cmd.sv"
 localparam OP_NONE = 0; // Send: 1, Res: 0.
 localparam OP_SEND1T = 1; // Send: 0, Res: 1.
 localparam OP_SEND8T = 2; // Send: 0, Res: 1.
