@@ -288,8 +288,19 @@ def level1_dry_run():
     print(f"\n  OP_WRITE_T2_AG count : {n_ag}  (expected 10)  {'✓' if ok else '✗'}")
     if not ok: PASS = False
  
- 
     print(f"\n  Level 1: {'ALL PASS ✓' if PASS else 'FAILURES DETECTED ✗'}")
+
+    # Write byte sequence to all_test_tb.sv
+    path2sequence = "all_test_tb.sv"
+    f = open(path2sequence, "w")
+    for k, v in got_timing.items():
+        f.write(f"localparam {k} = {v};\n" )
+    f.write("\ndata = {")
+    for b in buf:
+        # print(b, b.to_bytes().hex())
+        f.write("8'h" + b.to_bytes().hex() + ",")
+    f.write("};\n")
+    f.close()
     return PASS
  
  
