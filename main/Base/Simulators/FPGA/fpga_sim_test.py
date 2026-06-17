@@ -399,6 +399,21 @@ def level2_hardware(port, NQ=5, Np=2):
 if __name__ == "__main__":
     port = None
     NQ, Np = 6, 2
+    head = ""
+    dic = {
+        "--Np": 2,
+        "--NQ": 6,
+        "--port": ""
+    }
+    for i in range(1, len(sys.argv)):
+        v = sys.argv[i]
+        if head != "":
+            dic[head] = type(dic[v])(v)
+            head = ""
+        if v in dic:
+            head = v 
+    print(dic)
+    quit()
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) >= 1: port = args[0]
     if len(args) >= 2: NQ   = int(args[1])
@@ -410,8 +425,8 @@ if __name__ == "__main__":
     if port:
         p2 = level2_hardware(port, NQ, Np)
     else:
-        print("\n  Level 2 skipped (no port given). Pass port as first argument to test hardware.")
-        p2 = True
+        print("\n  Level 2 generating for RTL.")
+        p2 = level2_hardware(None, NQ, Np)
  
     print("\n" + "="*60)
     print(f"  SUMMARY: L0={'PASS' if p0 else 'FAIL'}  "

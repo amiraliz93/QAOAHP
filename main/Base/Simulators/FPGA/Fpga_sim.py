@@ -5,7 +5,12 @@ import serial # UART communication to FPGA
 import time
 import datetime
 import struct
+import os
+import sys
 
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
 #from main.Base.Simulators.FPGA.NTU_FPGA2.res.all_test import LP_MIXER_OUT, NS, Lm # convert Python numbers into bytes
 from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
 from ...precomputation.numpy_vectorized import precompute_vectorized_cpu_parallel
@@ -99,6 +104,8 @@ class FpgaDriver:
         port = fpga_config.get("port")
         baudrate = fpga_config.get("baudrate", 115200) 
         timeout = fpga_config.get("timeout", 1) 
+        RTL_file_path = fpga_config.get("RTL_file_path", "all_test_cmd.sv") 
+
 
         self.port = port
         self.baudrate = baudrate
@@ -106,29 +113,58 @@ class FpgaDriver:
         self.ser = None
         self.connected = False
         self.version = None
+        self.RTL_file_path = RTL_file_path
+        self.RTL_buff = [] 
 
     def connect(self):
         """Connect to FPGA via UART and verify version"""
         print(f"Connecting to FPGA on {self.port}...")
-        try:
-            self.ser = serial.Serial(
-                port= self.port,
-                baudrate= self.baudrate,
-                bytesize=serial.EIGHTBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                timeout=self.timeout
-            )
-            
-            # Clear buffers
-            self.ser.reset_input_buffer()
-            self.ser.reset_output_buffer()
-            time.sleep(0.05)
-            
-            # Check version
-            self.ser.write(bytes([self.OP_MOV_Info2U, self.OP_FETCH8U]))
-            time.sleep(0.05)
 
+        # Check wheter, it is RTL simulation mode or not. 
+        # If it is RTL  simulation mode, read_data will return dummy output. 
+        if self.port == "": # try to work as RTL mode
+            RTL_buff = []
+            print("this module trying to work as RTL file output mode because self.port is set as None.\n")
+            try:
+                # just testing wheter the givin file path is avaiable as an output
+                f = open(RTL_file_path, "w")
+                f.write("// beginning RTL mode simulation\\")
+                f.write(f"// Date: {datetime.datetime.now()}\\")
+                f.close()
+                self.connected = True
+            except Exception as e:
+                print(f"Cannot open the file at the path FpgaDriver.RTL_file_path = {self.RTL_file_path}\n")
+                return False
+        else:
+            try:
+                self.ser = serial.Serial(
+                    port= self.port, 
+                    baudrate= self.baudrate, 
+                    bytesize=serial.EIGHTBITS,  
+                    parity=serial.PARITY_NONE, 
+                    stopbits=serial.STOPBITS_ONE, 
+                    timeout=self.timeout
+                )
+                
+                # Clear buffers
+                self.ser.reset_input_buffer()
+                self.ser.reset_output_buffer()
+                time.sleep(0.05)
+                
+            except serial.SerialException as e:
+                print(f" serial error: {e}")
+                self.connected = False
+                return False
+            except Exception as e:
+                print(f"✗ Connection error: {e}")
+                self.connected = False
+                return False
+
+        # Check version
+        _send_opcode(self.OP_MOV_Info2U)
+        _send_opcode(self.OP_FETCH8U)
+
+        if self.port != "":
             version_bytes = self.ser.read(8)
             if len(version_bytes) == 8:
                 self.version = version_bytes.decode('ascii', errors='ignore').strip('\x00')
@@ -136,7 +172,6 @@ class FpgaDriver:
                 if "NTUSMv" in self.version or "Hello" in self.version:
                     self.connected = True
                     print(f"✓ FPGA connected: {self.version}")
-                    return True
                 else:
                     print(f"✗ FPGA version check failed: {self.version}")
                     self.ser.close()
@@ -145,22 +180,23 @@ class FpgaDriver:
                 print(f"✗ FPGA version read failed, got {len(version_bytes)} bytes")
                 self.ser.close()
                 return False
-        except serial.SerialException as e:
-            print(f" serial error: {e}")
-            self.connected = False
-            return False
-        except Exception as e:
-            print(f"✗ Connection error: {e}")
-            self.connected = False
-            return False
-        
-# Higher level data formation
+        return True
+
+    # Higher level data formation
     def _write_bytes(self, data: bytes):
         """Write raw bytes to UART with the shared connection check."""
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        self.ser.write(data)
-        time.sleep(2e-4)
+        if not self.connected:
+            print("working")
+            raise RuntimeError("Not connected to FPGA or RTL's output file")
+        if self.port == "":
+            # Record in buffer to output all the sequence later.
+            RTL_buff.append(data)
+        else:
+            if not self.connected:
+                print("working")
+                raise RuntimeError("Not connected to FPGA")
+            self.ser.write(data)
+            time.sleep(2e-4)
 
     def _send_opcode(self, opcode):
         """Send single opcode byte"""
@@ -349,103 +385,127 @@ class FpgaDriver:
             self._send_opcode(self.OP_WRITE_T2_AG)
     
     def _fetch_fx64(self):
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        d = self.ser.read(8)
+        if not self.connected: # Shibata removed ser condition
+            raise RuntimeError("Not connected to any backend")
+        if self.port == "":
+            # generate a dummy output
+            v = _float_to_fixed_q361(0.0)
+            d = self._convert_byte(v, 8, signed=sign)
+        else:
+            d = self.ser.read(8)
         if len(d) != 8:
             raise RuntimeError(f"Expected 8 bytes from FPGA, got {len(d)}")
         v = int.from_bytes(d, "little", signed=True)
         return v / float(1 << self.FIX_N) # the two's-complement adjustment for signed Q3.61
     
-    def write_test_cmd(self, diag_hamiltonian, sv0_real, sv0_imag,
-                   gammas, cosb, sinb, filename="new_test_cmd.sv"):
-        """
-        Generate all_test_cmd.sv equivalent without sending to FPGA.
-        Call after connect(), with the same arguments as load_data().
-        """
-        n_states = len(diag_hamiltonian)
-        p        = len(gammas)
-        n_qubits = int(np.log2(n_states))
-        t        = self._compute_timing(n_qubits, p)
+    def _fetch_8Bytes(self):
+        if not self.connected: # Shibata removed ser condition
+            raise RuntimeError("Not connected to any backend")
+        if self.port == "":
+            # generate a dummy output
+            d = bytes([0,0,0,0,0,0,0,0])
+        else:
+            d = self.ser.read(8)
 
-        data_array = []
-        def wb(b): data_array.append(b)
+        if len(d) != 8:
+            raise RuntimeError(f"Expected 8 bytes from FPGA, got {len(d)}")
+        return d
 
-        # Phase 0
-        wb(bytes([self.OP_SEND1T])); wb(bytes([self.qa_WAIT])); wb(bytes([self.OP_SEND_CMD]))
+    # never used
+    # def write_test_cmd(self, diag_hamiltonian, sv0_real, sv0_imag,
+    #                gammas, cosb, sinb, filename="new_test_cmd.sv"):
+    #     """
+    #     Generate all_test_cmd.sv equivalent without sending to FPGA.
+    #     Call after connect(), with the same arguments as load_data().
+    #     """
+    #     n_states = len(diag_hamiltonian)
+    #     p        = len(gammas)
+    #     n_qubits = int(np.log2(n_states))
+    #     t        = self._compute_timing(n_qubits, p)
 
-        # Phase 1: addr_gen
-        ag_map = [
-            (self.AG_SET_t_L2Addr,     t['t_L2Addr']),
-            (self.AG_SET_t_L2Pipe,     t['t_L2Pipe']),
-            (self.AG_SET_t_L2PipeGC,   t['t_L2PipeGC']),
-            (self.AG_SET_tb_B2GenCost, t['tb_B2GenCost']),
-            (self.AG_SET_t_B2GenCost,  t['t_B2GenCost']),
-            (self.AG_SET_nPLayer,      t['nPLayer']),
-            (self.AG_SET_L1Qbit,       t['L1Qbit']),
-            (self.AG_SET_AddrMask,     t['AddrMask']),
-            (self.AG_SET_tb_B2Mixer,   t['tb_B2Mixer']),
-            (self.AG_SET_t_L2Compute,  t['t_L2Compute']),
-        ]
-        for ag_addr, ag_val in ag_map:
-            wb(bytes([self.OP_SEND1T])); wb(bytes([ag_addr]))
-            wb(bytes([self.OP_MOV_T2A]))
-            wb(bytes([self.OP_SEND8T]))
-            wb((ag_val & ((1<<64)-1)).to_bytes(8,'little'))
-            wb(bytes([self.OP_WRITE_T2_AG]))
+    #     data_array = []
+    #     def wb(b): data_array.append(b)
 
-        # Phase 2: params
-        cosb_w = [float(cosb[0])] + [float(c) for c in cosb]
-        sinb_w = [float(sinb[0])] + [float(s) for s in sinb]
-        gam_w  = [float(g) for g in gammas] + [-1.0]
-        fix_gamma_w = self._float_to_fixed(gam_w,           f_bit=58)
-        fix_cosb_w  = self._float_to_fixed(cosb_w,          f_bit=61)
-        fix_sinb_w  = self._float_to_fixed(sinb_w,          f_bit=61)
-        fix_sv0_r   = self._float_to_fixed(list(sv0_real),  f_bit=61)
-        fix_sv0_i   = self._float_to_fixed(list(sv0_imag),  f_bit=61)
-        fix_H       = self._float_to_fixed(list(diag_hamiltonian), f_bit=59)
+    #     # Phase 0
+    #     wb(bytes([self.OP_SEND1T])); wb(bytes([self.qa_WAIT])); wb(bytes([self.OP_SEND_CMD]))
 
-        wb(bytes([self.OP_SEND8T]))
-        wb((self.BRAM_PARAMS & ((1<<64)-1)).to_bytes(8,'little'))
-        wb(bytes([self.OP_MOV_T2A]))
-        for p_L in range(p + 1):
-            for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
-                wb(bytes([self.OP_SEND8T]))
-                wb(int(value).to_bytes(8,'little',signed=True))
-                wb(bytes([self.OP_WRITE_T2RAM]))
-                wb(bytes([self.OP_INC_A]))
+    #     # Phase 1: addr_gen
+    #     ag_map = [
+    #         (self.AG_SET_t_L2Addr,     t['t_L2Addr']),
+    #         (self.AG_SET_t_L2Pipe,     t['t_L2Pipe']),
+    #         (self.AG_SET_t_L2PipeGC,   t['t_L2PipeGC']),
+    #         (self.AG_SET_tb_B2GenCost, t['tb_B2GenCost']),
+    #         (self.AG_SET_t_B2GenCost,  t['t_B2GenCost']),
+    #         (self.AG_SET_nPLayer,      t['nPLayer']),
+    #         (self.AG_SET_L1Qbit,       t['L1Qbit']),
+    #         (self.AG_SET_AddrMask,     t['AddrMask']),
+    #         (self.AG_SET_tb_B2Mixer,   t['tb_B2Mixer']),
+    #         (self.AG_SET_t_L2Compute,  t['t_L2Compute']),
+    #     ]
+    #     for ag_addr, ag_val in ag_map:
+    #         wb(bytes([self.OP_SEND1T])); wb(bytes([ag_addr]))
+    #         wb(bytes([self.OP_MOV_T2A]))
+    #         wb(bytes([self.OP_SEND8T]))
+    #         wb((ag_val & ((1<<64)-1)).to_bytes(8,'little'))
+    #         wb(bytes([self.OP_WRITE_T2_AG]))
 
-        # Phase 3-5: sv_real, sv_imag, H
-        for address, values in [
-            (self.BRAM_STATE_REAL, fix_sv0_r),
-            (self.BRAM_STATE_IMAG, fix_sv0_i),
-            (self.BRAM_COST_FUNC,  fix_H),
-        ]:
-            wb(bytes([self.OP_SEND8T]))
-            wb((address & ((1<<64)-1)).to_bytes(8,'little'))
-            wb(bytes([self.OP_MOV_T2A]))
-            for v in values:
-                wb(bytes([self.OP_SEND8T]))
-                wb(int(v).to_bytes(8,'little',signed=True))
-                wb(bytes([self.OP_WRITE_T2RAM]))
-                wb(bytes([self.OP_INC_A]))
+    #     # Phase 2: params
+    #     cosb_w = [float(cosb[0])] + [float(c) for c in cosb]
+    #     sinb_w = [float(sinb[0])] + [float(s) for s in sinb]
+    #     gam_w  = [float(g) for g in gammas] + [-1.0]
+    #     fix_gamma_w = self._float_to_fixed(gam_w,           f_bit=58)
+    #     fix_cosb_w  = self._float_to_fixed(cosb_w,          f_bit=61)
+    #     fix_sinb_w  = self._float_to_fixed(sinb_w,          f_bit=61)
+    #     fix_sv0_r   = self._float_to_fixed(list(sv0_real),  f_bit=61)
+    #     fix_sv0_i   = self._float_to_fixed(list(sv0_imag),  f_bit=61)
+    #     fix_H       = self._float_to_fixed(list(diag_hamiltonian), f_bit=59)
 
-        # Phase 6: run
-        wb(bytes([self.OP_SEND1T])); wb(bytes([self.qa_RUN])); wb(bytes([self.OP_SEND_CMD]))
+    #     wb(bytes([self.OP_SEND8T]))
+    #     wb((self.BRAM_PARAMS & ((1<<64)-1)).to_bytes(8,'little'))
+    #     wb(bytes([self.OP_MOV_T2A]))
+    #     for p_L in range(p + 1):
+    #         for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
+    #             wb(bytes([self.OP_SEND8T]))
+    #             wb(int(value).to_bytes(8,'little',signed=True))
+    #             wb(bytes([self.OP_WRITE_T2RAM]))
+    #             wb(bytes([self.OP_INC_A]))
 
-        self._write_all_test_cmd(data_array, t, filename=filename)
-        print(f"✓ Written {filename}  ({sum(len(b) for b in data_array)} bytes)")
+    #     # Phase 3-5: sv_real, sv_imag, H
+    #     for address, values in [
+    #         (self.BRAM_STATE_REAL, fix_sv0_r),
+    #         (self.BRAM_STATE_IMAG, fix_sv0_i),
+    #         (self.BRAM_COST_FUNC,  fix_H),
+    #     ]:
+    #         wb(bytes([self.OP_SEND8T]))
+    #         wb((address & ((1<<64)-1)).to_bytes(8,'little'))
+    #         wb(bytes([self.OP_MOV_T2A]))
+    #         for v in values:
+    #             wb(bytes([self.OP_SEND8T]))
+    #             wb(int(v).to_bytes(8,'little',signed=True))
+    #             wb(bytes([self.OP_WRITE_T2RAM]))
+    #             wb(bytes([self.OP_INC_A]))
+
+    #     # Phase 6: run
+    #     wb(bytes([self.OP_SEND1T])); wb(bytes([self.qa_RUN])); wb(bytes([self.OP_SEND_CMD]))
+
+    #     self._write_all_test_cmd(data_array, t, filename=filename)
+    #     print(f"✓ Written {filename}  ({sum(len(b) for b in data_array)} bytes)")
 
     def _wait_for_fpga(self, timeout=1000):
-        if self.ser is None:
+        if not self.connected:
             raise RuntimeError("Serial connection not established")
-        for _ in range(timeout):
-            self._send_opcode(self.OP_MOV_S2U)
-            self._send_opcode(self.OP_FETCH1U)
-            
-            dr = self.ser.read(1)
-            if dr == bytes([self.qa_WAIT]): return True
-            time.sleep(0.001)
+        else:
+            if self.port == "":
+                self._send_opcode(self.HOST_WAIT) # dummy command only for RTL simulation
+                return True
+            else:
+                for _ in range(timeout):
+                    self._send_opcode(self.OP_MOV_S2U)
+                    self._send_opcode(self.OP_FETCH1U)
+                    
+                    dr = self.ser.read(1)
+                    if dr == bytes([self.qa_WAIT]): return True
+                    time.sleep(0.001)
         return False
 
     def load_data(self, diag_hamiltonian, sv0_real, sv0_imag, gammas, cosb, sinb):
@@ -529,12 +589,10 @@ class FpgaDriver:
                 self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
                 self._send_opcode(self.OP_SEND_CMD)
                 done = self._wait_for_fpga(timeout=1000)
-
                 if not done:
                     print("✗ FPGA did not signal completion")
                     return False
-                # only work with simulation , for actual remove below 
-                self._send_opcode(self.HOST_WAIT)
+
                 self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
                 self._send_opcode(self.OP_SEND_CMD)
                 return True
@@ -590,19 +648,23 @@ class FpgaDriver:
 
     def disconnect(self):
         """Disconnect from FPGA"""
-        if self.connected and self.ser:
+        if self.connected:
             print("Disconnecting from FPGA...")
-            try:
-                # Send WAIT command before closing
-                self._send_opcode(self.OP_SEND1T)
-                self._send_byte(self.qa_WAIT)
-                self._send_opcode(self.OP_SEND_CMD)
-                time.sleep(0.01)
-                self.ser.close()
-                print("✓ Disconnected")
-            except:
-                pass
+            if self.port == "":
+                self._write_all_test_cmd(self.RTL_buff, t, filename=self.RTL_file_path)
+            else:
+                try:
+                    # Send WAIT command before closing
+                    self._send_opcode(self.OP_SEND1T)
+                    self._send_byte(self.qa_WAIT)
+                    self._send_opcode(self.OP_SEND_CMD)
+                    time.sleep(0.01)
+                    self.ser.close()
+                    print("✓ Disconnected")
+                except:
+                    pass
         self.connected = False
+        # flush the file for all_test_cmd.sv
 
 
 
