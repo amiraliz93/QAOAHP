@@ -17,11 +17,11 @@ Usage:
   python test_fpga_sim.py /dev/ttyUSB0
 """
  
-import sys, math, random, struct, time
+import sys, os, math, random, struct, time, datetime
 import numpy as np
 
-import Fpga_sim
- 
+# import Fpga_sim
+from main.Base.Simulators.FPGA import Fpga_sim
 # ── Inline the classes from Fpga_sim.py so this file is self-contained ──────
 # In your real project, replace these two lines with:
 #   from <your.package.path> import FpgaDriver, FPGASimulator
@@ -332,26 +332,74 @@ def level2_hardware(port, NQ=5, Np=2):
     seed = 0x22a2037
     random.seed(seed); np.random.seed(seed)
     H_raw = np.array([random.uniform(-190, 190) for _ in range(NS)])
+    #H_raw = np.array([1/(2.0) for _ in range(NS)])
     gammas = np.array([random.uniform(-math.pi, math.pi) for _ in range(Np)])
+    #gammas = np.array([2*np.pi for _ in range(Np)])
+    # gammas = np.pi/H_raw
     betas  = np.array([random.uniform(-math.pi, math.pi) for _ in range(Np)])
     sv0_raw = np.array([complex(random.uniform(-1,1), random.uniform(-1,1)) for _ in range(NS)])
     sv0 = sv0_raw / np.linalg.norm(sv0_raw)
 
     # test 2
-    H_large = np.array([random.uniform(-190, 190) for _ in range(NS)])
-    gammas_large = np.array([random.uniform(-math.pi, math.pi) for _ in range(Np)])
- 
+    
+    def _scale_H_gamma(H, gammas):
+        H = np.asarray(H, dtype=np.float64) # H in range [-S, S]
+        gammas = np.asarray(gammas, dtype=np.float64)
+
+        S = np.max(np.abs(H))
+        if S == 0:
+            return H.copy(), gammas.copy(), 1.0
+        H_scaled = H / np.sqrt(2.0 * S) # scale to fit in Q5.59 range [-10, 10] max to 20 Qubits 
+        gamma_scaled = gammas * np.sqrt(S) / (np.pi * np.sqrt(2.0)) # scale to fit in Q6.58 range [-32, 32] (cover max 20 values with margin) max to 20 Qubits
+
+        return H_scaled, gamma_scaled, S
+
+    H_scaled, gamma_scaled, S = _scale_H_gamma(H_raw, gammas)
+    
+    print("gammma scaled", gamma_scaled, S)
+    print("H scaled", H_scaled)
+    FRAC_Q361=61; FRAC_G=58; FRAC_H=59
+    cosb = np.cos(betas)
+    sinb = np.sin(betas)
+    cosb_w = [float(cosb[0])] + [float(c) for c in cosb]
+    sinb_w = [float(sinb[0])] + [float(s) for s in sinb]
+    gam_w  = [float(g) for g in gamma_scaled] + [-1.0]
+    def float_to_hex(value):
+        return f"0x{(int(round(value*(1<<FRAC_Q361)))&0xFFFFFFFFFFFFFFFF):016x}"
+    def float_to_hexG(value):
+        return f"0x{(int(round(value*(1<<FRAC_G)))&0xFFFFFFFFFFFFFFFF):016x}"
+    def float_to_hexH(value):
+        return f"0x{(int(round(value*(1<<FRAC_H)))&0xFFFFFFFFFFFFFFFF):016x}"
+    def complex_to_hex(value):
+        return f"({float_to_hex(value.real)}, {float_to_hex(value.imag)})" 
     # ── Python reference simulation ───────────────────────────────────────
     def swap_bits(i, a, b):
         ba=(i>>a)&1; bb=(i>>b)&1
         if ba!=bb: i^=(1<<a)|(1<<b)
         return i
- 
+    fs = open("simulation.txt", "w")
+    
+    fs.write(f"-------------------------------------------------------\n")
+    fs.write(f"Version {random.random()}, {datetime.datetime.now()}\n")
+    fs.write(f"Pi = {float_to_hex(np.pi)}\n")
+    fs.write(f"-------------------------------------------------------\n")
     sv_ref = list(sv0.copy())
+    for i in range(NS):
+        fs.write(f"H_{i}, {float_to_hexH(H_scaled[i])}\n")
+    for i in range(NS):
+        fs.write(f"p_{i}, {complex_to_hex(sv_ref[i])}\n")
     for p in range(Np):
-        g = gammas[p]; cb = math.cos(betas[p]); sb = math.sin(betas[p])
+        gs = gam_w[p]; cb = cosb_w[p+1]; sb = sinb_w[p+1]
+        fs.write(f"\n# Starting {p}-th layer. Current params: gamma={float_to_hexG(gs)}, cosb={float_to_hex(cb)}, sinb={float_to_hex(sb)}\n\n")
+        print(f"\nwriting {p} th layer, {gs}, {cb}, {sb}\n")
+            
         for i in range(NS):
-            sv_ref[i] *= math.cos(g*H_raw[i]) + 1j*math.sin(g*H_raw[i])
+            ang = gs*H_scaled[i]*2*np.pi
+            costFt =  math.cos(ang) + 1j*math.sin(ang)
+            fs.write(f"F_{i}: {complex_to_hex(costFt)}, {costFt}\n")
+            sv_ref[i] *= costFt
+        for i in range(NS):
+            fs.write(f"F_{i}p_{i}: {complex_to_hex(sv_ref[i])}, {sv_ref[i]}\n")
         for cq in range(NQ):
             for id2 in range(NS//2):
                 a = swap_bits(id2*2,   cq, 0)
@@ -359,7 +407,20 @@ def level2_hardware(port, NQ=5, Np=2):
                 tsa =  cb*sv_ref[a] - 1j*sb*sv_ref[b]
                 tsb = -1j*sb*sv_ref[a] + cb*sv_ref[b]
                 sv_ref[a]=tsa; sv_ref[b]=tsb
- 
+                
+                fs.write(f"p_{a}: {complex_to_hex(tsa)}, {tsa}\n")
+                fs.write(f"p_{b}: {complex_to_hex(tsb)}, {tsb}\n")
+    p = Np    
+    gs = gam_w[p]; cb = cosb_w[p]; sb = sinb_w[p]
+    fs.write("\n")
+    fs.write(f"# Starting {p}-th layer. Current params: gamma={float_to_hexG(gs)}, cosb={float_to_hex(cb)}, sinb={float_to_hex(sb)}\n")
+    fs.write("\n")
+    fs.write(f"\n---Results----------------------\n\n")
+    for i in range(NS):
+        fs.write(f"Re(p_{i}), {float_to_hex(sv_ref[i].real)}\n")
+    for i in range(NS):
+        fs.write(f"Im(p_{i}), {float_to_hex(sv_ref[i].imag)}\n")
+    fs.close()
     # ── Run on FPGA ───────────────────────────────────────────────────────
     sim = FPGASimulator(n_qubits=NQ, costs=H_raw, fpga_config=fpga_config)
     t0 = time.perf_counter()
@@ -367,8 +428,6 @@ def level2_hardware(port, NQ=5, Np=2):
     dt = time.perf_counter() - t0
     print(f"  FPGA wall time: {dt:.4f} s")
 
-    # with large value of H 
-    sim2 = FPGASimulator(n_qubits=NQ, costs=H_large, fpga_config=fpga_config)
  
     # ── MAE ───────────────────────────────────────────────────────────────
     mae_r = sum(abs(sv_fpga[i].real - sv_ref[i].real) for i in range(NS)) / NS
@@ -386,8 +445,8 @@ def level2_hardware(port, NQ=5, Np=2):
         for i in range(NS): f.write(f"0x{(int(round(sv_fpga[i].real*(1<<61)))&0xFFFFFFFFFFFFFFFF):016x}\n")
         for i in range(NS): f.write(f"0x{(int(round(sv_fpga[i].imag*(1<<61)))&0xFFFFFFFFFFFFFFFF):016x}\n")
     with open("result.txt","w") as f:
-        for i in range(NS): f.write(f"0x{(int(round(sv_ref[i].real*(1<<61)))&0xFFFFFFFFFFFFFFFF):016x}\n")
-        for i in range(NS): f.write(f"0x{(int(round(sv_ref[i].imag*(1<<61)))&0xFFFFFFFFFFFFFFFF):016x}\n")
+        for i in range(NS): f.write(float_to_hex(sv_ref[i].real) + "\n")
+        for i in range(NS): f.write(float_to_hex(sv_ref[i].imag) + "\n")
     print("  Saved resultFPGA.txt and result.txt")
     return ok
  
@@ -413,20 +472,17 @@ if __name__ == "__main__":
         if v in dic:
             head = v 
     print(dic)
-    quit()
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if len(args) >= 1: port = args[0]
-    if len(args) >= 2: NQ   = int(args[1])
-    if len(args) >= 3: Np   = int(args[2])
+    NQ = dic["--NQ"]
+    Np = dic["--Np"]
+    port = dic["--port"]
  
     p0 = level0_unit_tests()
     p1 = level1_dry_run()
- 
-    if port:
-        p2 = level2_hardware(port, NQ, Np)
-    else:
+    
+    if port == "":
         print("\n  Level 2 generating for RTL.")
-        p2 = level2_hardware(None, NQ, Np)
+ 
+    p2 = level2_hardware(port, NQ, Np)
  
     print("\n" + "="*60)
     print(f"  SUMMARY: L0={'PASS' if p0 else 'FAIL'}  "

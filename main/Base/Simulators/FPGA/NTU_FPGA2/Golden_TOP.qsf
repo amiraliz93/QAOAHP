@@ -1909,7 +1909,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE gen_costOldFP.sv
 set_global_assignment -name SYSTEMVERILOG_FILE Mul_64_FixedP.sv
 set_global_assignment -name SYSTEMVERILOG_FILE mul_slice_tb.sv
 set_global_assignment -name SYSTEMVERILOG_FILE mul_slice.sv
-set_global_assignment -name SIP_FILE cordicR/simulation/cordicR.sip
 set_global_assignment -name SYSTEMVERILOG_FILE bit_swap.sv
 set_global_assignment -name SYSTEMVERILOG_FILE control_interface.sv
 set_global_assignment -name SYSTEMVERILOG_FILE barrel_shifter.sv
@@ -1930,11 +1929,5 @@ set_global_assignment -name SOURCE_FILE db/Golden_TOP.cmp.rdb
 set_global_assignment -name QIP_FILE fifo1.qip
 set_global_assignment -name QIP_FILE pll2.qip
 set_global_assignment -name SIP_FILE pll2.sip
-set_global_assignment -name QIP_FILE addfix8.qip
-set_global_assignment -name SIP_FILE mulFPF64.sip
-set_global_assignment -name QIP_FILE mulfix8.qip
-set_global_assignment -name SIP_FILE addFPF64.sip
 set_global_assignment -name QIP_FILE ram.qip
-set_global_assignment -name SIP_FILE FP2Fix53.sip
-set_global_assignment -name SIP_FILE Fix53toFP64.sip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
