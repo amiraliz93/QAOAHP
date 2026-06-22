@@ -95,13 +95,13 @@ def level0_unit_tests():
  
     # ── T0-5: _compute_timing against all_test_cmd.sv (NQ=5, Np=2) ──────
     def compute_timing(NQ, Np):
-        LP_BRAM_A=2; LP_BRAM_D=1; LP_GEN_COST=2; LP_MIXER_IN=1; LP_MIXER_OUT=1
+        LP_BRAM_A = 1; LP_BRAM_D=1; LP_GEN_COST=0; LP_MIXER_IN=0; LP_MIXER_OUT=0
         L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
         L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
         N3=16; gcN0=10; gcN1=170; LInit=24
-        gcPipe = 1 + gcN0 + 1 + gcN1 + 1          # 183  ← CORRECT formula
+        gcPipe = 1 + gcN0 + gcN0 + gcN1 + 1          # 183  ← CORRECT formula
         NS = 1 << NQ
-        Lc = 1 + gcPipe + 1 + L_BRAM_R + LP_GEN_COST + LP_GEN_COST  # 194
+        Lc = 1 + gcPipe + 1 + L_BRAM_R + LP_GEN_COST + LP_GEN_COST  # 193
         Lm = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT
         LPipe = NS
         tl = Lm + NS//2 + NS%2
@@ -121,9 +121,9 @@ def level0_unit_tests():
                     tb_B2Mixer=t_Mixer-2, t_L2Compute=t_Compute,
                     _LPipe=LPipe, _Lc=Lc, _Lm=Lm, _NS=NS)
  
-    expected = dict(t_L2Addr=30, t_L2PipeGC=192, tb_B2GenCost=86, t_L2Pipe=45,
-                    nPLayer=2, L1Qbit=4, AddrMask=15, t_B2GenCost=39,
-                    tb_B2Mixer=45, t_L2Compute=313)
+    expected = dict(t_L2Addr=30, t_L2PipeGC=196, tb_B2GenCost=58, t_L2Pipe=41,
+                    nPLayer=2, L1Qbit=4, AddrMask=15, t_B2GenCost=58,
+                    tb_B2Mixer=41, t_L2Compute=285)
     got = compute_timing(5, 2)
     for k, v in expected.items():
         assert got[k] == v, f"_compute_timing: {k} expected {v} got {got[k]}"
@@ -467,7 +467,7 @@ if __name__ == "__main__":
     for i in range(1, len(sys.argv)):
         v = sys.argv[i]
         if head != "":
-            dic[head] = type(dic[v])(v)
+            dic[head] = type(dic[head])(v)
             head = ""
         if v in dic:
             head = v 
@@ -475,7 +475,6 @@ if __name__ == "__main__":
     NQ = dic["--NQ"]
     Np = dic["--Np"]
     port = dic["--port"]
- 
     p0 = level0_unit_tests()
     p1 = level1_dry_run()
     

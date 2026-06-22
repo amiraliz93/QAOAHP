@@ -122,6 +122,7 @@ initial begin
       $display("Starting the %d-th computation", t);
       filename = $sformatf("result_sim%0d.txt",t);
       fd= $fopen(filename, "w");
+      validRead <= 0;
 
       for (i = 0; i <ND ; i = i + 1) begin
             tx_data_in <= data_array[i];

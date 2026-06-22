@@ -164,6 +164,7 @@ class FpgaDriver:
         self._send_opcode(self.OP_FETCH8U)
 
         if self.port != "":
+            print(f"checking {self.port}...")
             version_bytes = self.ser.read(8)
             if len(version_bytes) == 8:
                 self.version = version_bytes.decode('ascii', errors='ignore').strip('\x00')
@@ -184,16 +185,16 @@ class FpgaDriver:
     # Higher level data formation
     def _write_bytes(self, data: bytes):
         """Write raw bytes to UART with the shared connection check."""
-        if not self.connected:
-            print("working")
-            raise RuntimeError("Not connected to FPGA or RTL's output file")
+        # if not self.connected:
+        #     print("working")
+        #     raise RuntimeError("Not connected to FPGA or RTL's output file")
         if self.port == "":
             # Record in buffer to output all the sequence later.
             self.RTL_buff.append(data)
         else:
-            if not self.connected:
-                print("working")
-                raise RuntimeError("Not connected to FPGA")
+            # if not self.connected:
+            #     print("working")
+            #     raise RuntimeError("Not connected to FPGA")
             self.ser.write(data)
             time.sleep(2e-4)
 
@@ -312,8 +313,8 @@ class FpgaDriver:
     def _compute_timing(self, NQ, Np):
         #Total cycle for cos_gen layer is 192 (each mul (10) - frac(1) - cordic (170) - some registe (11) - total 192 cycles)
 
-        LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
-        LP_MIXER_IN, LP_MIXER_OUT = 1, 1
+        LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 1, 1, 0
+        LP_MIXER_IN, LP_MIXER_OUT = 0, 0
         L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
         L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
         N3 = 1+10+2+1+1+1 # 16

@@ -15,11 +15,11 @@ localparam P = 64; // data width for numerical number
 localparam Ni = 5 + 24 + NM;// data width of auxiary information on pipeline.
 localparam NBRAM = 4; // number of block RAMs connected to qaoa system. 
 localparam N_BIT_SWAP_POINTER = $clog2(NM);
-localparam LP_BRAM_A = 2; // Address transmisshon pipeline latency
+localparam LP_BRAM_A = 1; // Address transmisshon pipeline latency
 localparam LP_BRAM_D = 1; // Data retrieving pipeline latency 
-localparam LP_GEN_COST = 2;
-localparam LP_MIXER_IN = 1;
-localparam LP_MIXER_OUT = 1;
+localparam LP_GEN_COST = 0;
+localparam LP_MIXER_IN = 0;
+localparam LP_MIXER_OUT = 0;
 localparam L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2; // Write latency
 localparam L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2; // Read latency
 
@@ -49,23 +49,14 @@ wire [NM-1:0] bram_addr_r [NBRAM];
 wire [NM-1:0] bram_addr_w [NBRAM];
 wire [P-1:0] bram_data_r [NBRAM];
 wire [P-1:0] bram_data_w [NBRAM];
-wire [NM-1:0] bram_addr_rP [NBRAM];
-wire [NM-1:0] bram_addr_wP [NBRAM];
-wire [P-1:0] bram_data_rP [NBRAM];
-wire [P-1:0] bram_data_wP [NBRAM];
 wire [NBRAM-1:0] bram_wen;
-wire [NBRAM-1:0] bram_wenP;
 
-wire [P-1:0] cosb, cosbP;
-wire [P-1:0] sinb, sinbP;
-wire [P-1:0] p_ar, p_arP;
-wire [P-1:0] p_ai, p_aiP;
-wire  [P-1:0]  p_ar_o, p_ar_oP;
-wire  [P-1:0]  p_ai_o, p_ai_oP;
+wire [P-1:0] cosb, sinb;
+wire [P-1:0] p_ar, p_ai,  p_ar_o,p_ai_o;
 wire  [Ni-1:0]  ag_info; // information, like addresses, enabled signal, and so on.
 wire  [Ni-1:0]  bs_info, bs_infoR; // information, like addresses, enabled signal, and so on.
-wire  [1:0]  mix_switch, mix_switchP; // information, like addresses, enabled signal, and so on.
-wire [NM:0] mix_info, mix_infoP, mix_infoR, mix_infoRP;  // NM-1:0 is for address, NM for enable signal.
+wire  [1:0]  mix_switch; // information, like addresses, enabled signal, and so on.
+wire [NM:0] mix_info, mix_infoR;  // NM-1:0 is for address, NM for enable signal.
 
 wire  [P-1:0]  gamma, gammaP; // cos gamma
 wire  [P-1:0]  HGC, HGCP;
@@ -173,7 +164,7 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM),  .L_BRAM_R(L_BRAM_R)) qs2
     //------------------------------------------------------------------------
    .bram_addr_r(bram_addr_r),
    .bram_addr_w(bram_addr_w),
-   .bram_data_r(bram_data_rP),
+   .bram_data_r(bram_data_r),
    .bram_data_w(bram_data_w),
    .bram_wen(bram_wen),
 
@@ -188,9 +179,9 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM),  .L_BRAM_R(L_BRAM_R)) qs2
    .mix_info(mix_info),
    .mix_switch(mix_switch),
    
-   .mix_ar_res(p_ar_oP),
-   .mix_ai_res(p_ai_oP),
-   .mix_info_res(mix_infoRP),
+   .mix_ar_res(p_ar_o),
+   .mix_ai_res(p_ai_o),
+   .mix_info_res(mix_infoR),
    .Status(rS),
 
     //------------------------------------------------------------------------
@@ -198,8 +189,8 @@ qaoa_system2 #(.NM(NM), .P(P), .NBRAM(NBRAM),  .L_BRAM_R(L_BRAM_R)) qs2
     //------------------------------------------------------------------------
    .gamma(gamma), 
    .HGC(HGC),
-   .Hr_res(Hr_oP),
-   .Hi_res(Hi_oP)
+   .Hr_res(Hr_o),
+   .Hi_res(Hi_o)
 
 
 );
@@ -220,13 +211,6 @@ bit_swap #(.M(N_BIT_SWAP_POINTER), .N(NM), .Np(5), .Ni(Ni)) bit_swap_inst(
     .info_out(bs_info)
 );
 
-regPipeline  #(.W_INFO($bits({gamma, HGC, Hr_o, Hi_o})), .NPipe(LP_GEN_COST)) instp_gc_qs_inst (
-   .CLK(CLK),
-   .info_in({gamma, HGC, Hr_o, Hi_o}),
-   .info_out({gammaP, HGCP, Hr_oP, Hi_oP})
-);
-
-
 // gen_costFixedP  #(.P(P)) inst_gencostFixedP
 //   (
 //    .CLK(CLK), // input
@@ -239,34 +223,23 @@ regPipeline  #(.W_INFO($bits({gamma, HGC, Hr_o, Hi_o})), .NPipe(LP_GEN_COST)) in
 updated_gen_cost #(.P(P)) inst_updated_gencost
   (
    .CLK(CLK), // input
-   .gamma(gammaP), //  gamma, input
-   .H(HGCP), // input
+   .gamma(gamma), //  gamma, input
+   .H(HGC), // input
    .Hr_o(Hr_o),
    .Hi_o(Hi_o)
-);
-
-regPipeline  #(.W_INFO($bits({cosb, sinb, p_ar, p_ai, mix_switch, mix_info})), .NPipe(LP_MIXER_OUT)) inst_p_mix_in (
-   .CLK(CLK),
-   .info_in({cosb, sinb, p_ar, p_ai, mix_switch, mix_info}),
-   .info_out({cosbP, sinbP, p_arP, p_aiP, mix_switchP, mix_infoP})
-);
-regPipeline  #(.W_INFO($bits({p_ar_o, p_ai_o, mix_infoR})), .NPipe(LP_MIXER_IN)) inst_p_mix_out (
-   .CLK(CLK),
-   .info_in({p_ar_o, p_ai_o, mix_infoR}),
-   .info_out({p_ar_oP, p_ai_oP, mix_infoRP})
 );
 
 Update_mixer #(.P(P),.Ni(NM+1)) Umix // width of additional information
 (
    .CLK(CLK),
-   .cos_beta(cosbP), // cos beta
-   .sin_beta(sinbP), // sin beta
-   .p_r(p_arP),
-   .p_i(p_aiP),
+   .cos_beta(cosb), // cos beta
+   .sin_beta(sinb), // sin beta
+   .p_r(p_ar),
+   .p_i(p_ai),
    .p_r_o(p_ar_o),
    .p_i_o(p_ai_o),
-   .switch_in(mix_switchP),
-   .info_in(mix_infoP), // information, like addresses, enabled signal, and so on.
+   .switch_in(mix_switch),
+   .info_in(mix_info), // information, like addresses, enabled signal, and so on.
    .info_out(mix_infoR) // information, like addresses, enabled signal, and so on.
 );
 
@@ -275,24 +248,25 @@ genvar j;
 generate
     for (j = 0; j < NBRAM; j = j + 1) begin : GEN_BRAM
          
-         regPipeline  #(.W_INFO(P), .NPipe(LP_BRAM_D)) P_BRAMD (
-            .CLK(CLK),
-            .info_in({bram_data_r[j]}),
-            .info_out({bram_data_rP[j]})
-         );
-         regPipeline  #(.W_INFO(NM + NM + 1+ P), .NPipe(LP_BRAM_A)) P_BRAMR (
-            .CLK(CLK),
-            .info_in({bram_addr_r[j], bram_addr_w[j], bram_wen[j], bram_data_w[j]}),
-            .info_out({bram_addr_rP[j], bram_addr_wP[j], bram_wenP[j], bram_data_wP[j]})
-         );
-         ram RAM (.address_a(bram_addr_rP[j]), // NM bit address
-            .address_b(bram_addr_wP[j]),
+         reg [P-1:0] daddr_w, ddata_w, daddr_r, ddata_r;
+         wire [P-1:0] mdata_r;
+         reg wen;
+         always @(posedge CLK) begin
+            ddata_w <= bram_data_w[j];
+            daddr_w <= bram_addr_w[j];
+            daddr_r <= bram_addr_r[j];
+            ddata_r <= mdata_r;
+            wen <= bram_wen[j];
+         end
+         assign bram_data_r[j] = ddata_r;
+         ram RAM (.address_a(daddr_r), // NM bit address
+            .address_b(daddr_w),
             .clock(CLK),
             .data_a(), // 64 bit
-            .data_b(bram_data_wP[j]),
+            .data_b(ddata_w),
             .wren_a(),
-            .wren_b(bram_wenP[j]),
-            .q_a(bram_data_r[j]),
+            .wren_b(wen),
+            .q_a(mdata_r),
             .q_b()
             );
     end

@@ -75,11 +75,11 @@ NQ = 6
 Np = 2     # number of p layers.
 F = 320*1e6 # Frequency of FPGa
 # additional BRAM latency
-LP_BRAM_A = 2
+LP_BRAM_A = 1
 LP_BRAM_D = 1
-LP_GEN_COST = 2
-LP_MIXER_IN = 1
-LP_MIXER_OUT = 1
+LP_GEN_COST = 0
+LP_MIXER_IN = 0
+LP_MIXER_OUT = 0
 L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
 L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
 
@@ -95,7 +95,7 @@ if len(sys.argv) > 2:
     Np = int(sys.argv[2])
 
 # piplinig for gen cost, related to the latency of gen cost
-gcPipe = 1 + gcN0 + 1 + gcN1 + 1
+gcPipe = 1 + gcN0 + gcN0 + 1 + gcN1 + 1
 
 # totla latency including memory access (after issue address, till store result in BRAM) )
 Lc = 1 + gcPipe + 1 +  L_BRAM_R + LP_GEN_COST + LP_GEN_COST# output H latency + cost gen latency,  memory and register latency, address output latency.
