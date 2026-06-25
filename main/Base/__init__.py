@@ -2,18 +2,24 @@
 import numba.cuda
 from .qaoa_simulator_base import Sim_Base
 from .Simulators.python.QAOA_simulator import QAOAFURXSimulator, ParamType, CostsType, TermsType
-from .Simulators.GPU.qaoa_simulatorbase import QAOAFURXSimulatorGPU
 from .Simulators.FPGA.Fpga_sim import FPGASimulator
+
+try:
+    from .Simulators.GPU.qaoa_simulatorbase import QAOAFURXSimulatorGPU
+except ImportError:
+    QAOAFURXSimulatorGPU = None
 
 Simulators = {
     "x": {
        # "c": QAOAFURXSimulatorC,
         "PYTHON": QAOAFURXSimulator,
-         "GPU": QAOAFURXSimulatorGPU,
-         "FPGA": FPGASimulator,
+        "FPGA": FPGASimulator,
         #"gpumpi": QAOAFURXSimulatorGPUMPI,
     }
 }
+
+if QAOAFURXSimulatorGPU is not None:
+    Simulators["x"]["GPU"] = QAOAFURXSimulatorGPU
 
 
 def choose_simulator(name="auto", mixer_type="x", **kwargs):

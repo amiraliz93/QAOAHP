@@ -5,6 +5,8 @@ import serial # UART communication to FPGA
 import time
 import datetime
 import struct
+import os
+import sys
 
 #from main.Base.Simulators.FPGA.NTU_FPGA2.res.all_test import LP_MIXER_OUT, NS, Lm # convert Python numbers into bytes
 from ...qaoa_simulator_base import Sim_Base, CostsType, ParamType, TermsType
@@ -88,8 +90,10 @@ class FpgaDriver:
     BRAM_STATE_REAL = 0x1000_0000_0000_0000      # BRAM[0]: Initial state real components 
     BRAM_STATE_IMAG = 0x2000_0000_0000_0000      # BRAM[1]: Initial state imaginary components (2^n values)
     BRAM_COST_FUNC  = 0x0400_0000_0000_0000       # BRAM[2]: Diagonal cost values _hc_diag (2^n values)
+    BRAM_COUNTER    = 0x0200_0000_0000_0000       # BRAM[2]: Diagonal cost values _hc_diag (2^n values)
     #BRAM_CONFIG_STEP = 0x0100000000000000      # Address step for config registers
 
+    BoardFrequency = 320_000_000 # 320 MHz
 
 
 
@@ -99,6 +103,8 @@ class FpgaDriver:
         port = fpga_config.get("port")
         baudrate = fpga_config.get("baudrate", 115200) 
         timeout = fpga_config.get("timeout", 1) 
+        RTL_file_path = fpga_config.get("RTL_file_path", "all_test_cmd.sv") 
+
 
         self.port = port
         self.baudrate = baudrate
@@ -106,29 +112,61 @@ class FpgaDriver:
         self.ser = None
         self.connected = False
         self.version = None
+        self.RTL_file_path = RTL_file_path
+        self.RTL_buff = [] 
+        self.t_params = {}
 
     def connect(self):
         """Connect to FPGA via UART and verify version"""
         print(f"Connecting to FPGA on {self.port}...")
-        try:
-            self.ser = serial.Serial(
-                port= self.port,
-                baudrate= self.baudrate,
-                bytesize=serial.EIGHTBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                timeout=self.timeout
-            )
-            
-            # Clear buffers
-            self.ser.reset_input_buffer()
-            self.ser.reset_output_buffer()
-            time.sleep(0.05)
-            
-            # Check version
-            self.ser.write(bytes([self.OP_MOV_Info2U, self.OP_FETCH8U]))
-            time.sleep(0.05)
 
+        # Check wheter, it is RTL simulation mode or not. 
+        # If it is RTL  simulation mode, read_data will return dummy output. 
+        if self.port == "": # try to work as RTL mode
+            self.RTL_buff = []
+            print("this module trying to work as RTL file output mode because self.port is set as \"\".\n")
+            try:
+                # just testing wheter the givin file path is avaiable as an output
+                f = open(self.RTL_file_path, "w")
+                f.write("// beginning RTL mode simulation\\")
+                f.write(f"// Date: {datetime.datetime.now()}\\")
+                f.close()
+                self.connected = True
+            except Exception as e:
+                print(f"Cannot open the file at the path FpgaDriver.RTL_file_path = {self.RTL_file_path}\n")
+                print(e)
+                return False
+        else:
+            try:
+                self.ser = serial.Serial(
+                    port= self.port, 
+                    baudrate= self.baudrate, 
+                    bytesize=serial.EIGHTBITS,  
+                    parity=serial.PARITY_NONE, 
+                    stopbits=serial.STOPBITS_ONE, 
+                    timeout=self.timeout
+                )
+                
+                # Clear buffers
+                self.ser.reset_input_buffer()
+                self.ser.reset_output_buffer()
+                time.sleep(0.05)
+                
+            except serial.SerialException as e:
+                print(f" serial error: {e}")
+                self.connected = False
+                return False
+            except Exception as e:
+                print(f"✗ Connection error: {e}")
+                self.connected = False
+                return False
+
+        # Check version
+        self._send_opcode(self.OP_MOV_Info2U)
+        self._send_opcode(self.OP_FETCH8U)
+
+        if self.port != "":
+            print(f"checking {self.port}...")
             version_bytes = self.ser.read(8)
             if len(version_bytes) == 8:
                 self.version = version_bytes.decode('ascii', errors='ignore').strip('\x00')
@@ -136,7 +174,6 @@ class FpgaDriver:
                 if "NTUSMv" in self.version or "Hello" in self.version:
                     self.connected = True
                     print(f"✓ FPGA connected: {self.version}")
-                    return True
                 else:
                     print(f"✗ FPGA version check failed: {self.version}")
                     self.ser.close()
@@ -145,22 +182,23 @@ class FpgaDriver:
                 print(f"✗ FPGA version read failed, got {len(version_bytes)} bytes")
                 self.ser.close()
                 return False
-        except serial.SerialException as e:
-            print(f" serial error: {e}")
-            self.connected = False
-            return False
-        except Exception as e:
-            print(f"✗ Connection error: {e}")
-            self.connected = False
-            return False
-        
-# Higher level data formation
+        return True
+
+    # Higher level data formation
     def _write_bytes(self, data: bytes):
         """Write raw bytes to UART with the shared connection check."""
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        self.ser.write(data)
-        time.sleep(2e-4)
+        # if not self.connected:
+        #     print("working")
+        #     raise RuntimeError("Not connected to FPGA or RTL's output file")
+        if self.port == "":
+            # Record in buffer to output all the sequence later.
+            self.RTL_buff.append(data)
+        else:
+            # if not self.connected:
+            #     print("working")
+            #     raise RuntimeError("Not connected to FPGA")
+            self.ser.write(data)
+            time.sleep(2e-4)
 
     def _send_opcode(self, opcode):
         """Send single opcode byte"""
@@ -179,7 +217,7 @@ class FpgaDriver:
             raise ValueError("fixed-point overflow")
         return [int(x) for x in v]
     
-    def _float_to_fixed_q559(self, v: float) -> int:
+    def _float_to_fixed_q559(self, v: float) -> int: # Q5.59 - Hamiltonian-  18 qubits random graphs 
         scaled = int(round(float(v) * (1 << self.FRAC_H)))
         lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
         if scaled < lo or scaled > hi:
@@ -187,7 +225,8 @@ class FpgaDriver:
                 f"Q5.59 overflow: H_scaled={v:.6f} scaled={scaled}. "
                 f"Check scale_H_gamma: max|H_scaled| must be < 16.")
         return scaled
-    def _float_to_fixed_q658(self, v: float) -> int:
+    
+    def _float_to_fixed_q658(self, v: float) -> int: # Q6.58 new_gamma
 
         scaled = int(round(float(v) * (1 << self.FRAC_G)))
         lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
@@ -197,7 +236,7 @@ class FpgaDriver:
                 f"Check scale_H_gamma: max|gamma_scaled| must be < 32.")
         return scaled
     
-    def _float_to_fixed_q361(self, v: float) -> int:
+    def _float_to_fixed_q361(self, v: float) -> int: # Q3.61 state 
 
         scaled = int(round(float(v) * (1 << self.FRAC_Q361)))
         lo, hi = -(1 << (self.FIX_P - 1)), (1 << (self.FIX_P - 1)) - 1
@@ -218,7 +257,7 @@ class FpgaDriver:
         """Convert float -> Q3.61 -> 8 bytes two's-complement LE, send over UART."""
         self._write_bytes(self._convert_byte(v, 8, signed=sign))
 
-    def _write_all_test_cmd(self, data_array, t_params, filename="all_test_cmd.sv", lineend=""):
+    def _write_all_test_cmd(self, data_array, filename="all_test_cmd.sv"):
         # build idop for single-byte opcode comments
         opcode_names = [
             "OP_NONE","OP_NONE8","OP_SEND1T","OP_SEND8T","OP_MOV_T2A","OP_MOV_T2B",
@@ -234,24 +273,27 @@ class FpgaDriver:
         for name in opcode_names:
             v = getattr(self, name, None)
             if isinstance(v, int):
-                idop[bytes([v]).hex()] = name
+                k = bytes([v]).hex()
+                if k not in idop:
+                    idop[k] = []
+                idop[k].append(name)
 
         ND = sum(len(b) for b in data_array)
         with open(filename, "w") as f:
-            f.write(f"integer t_L2Addr   = {t_params.get('t_L2Addr',0)};\n")
-            f.write(f"integer t_L2PipeGC = {t_params.get('t_L2PipeGC',0)};\n")
-            f.write(f"integer tb_B2GenCost= {t_params.get('tb_B2GenCost',0)};\n")
-            f.write(f"integer t_L2Pipe  = {t_params.get('t_L2Pipe',0)};\n")
-            f.write(f"integer nPLayer   = {t_params.get('nPLayer',0)};\n")
-            f.write(f"integer L1Qbit    = {t_params.get('L1Qbit',0)};\n")
-            f.write(f"integer AddrMask  = {t_params.get('AddrMask',0)};\n")
-            f.write(f"integer t_B2GenCost  = {t_params.get('t_B2GenCost',0)};\n")
-            f.write(f"integer tb_B2Mixer  = {t_params.get('tb_B2Mixer',0)};\n")
-            f.write(f"integer t_L2Compute  = {t_params.get('t_L2Compute',0)};\n")
-            f.write(f"integer seed = {t_params.get('seed',0)};\n")
+            f.write(f"integer t_L2Addr   = {self.t_params.get('t_L2Addr',0)};\n")
+            f.write(f"integer t_L2PipeGC = {self.t_params.get('t_L2PipeGC',0)};\n")
+            f.write(f"integer tb_B2GenCost= {self.t_params.get('tb_B2GenCost',0)};\n")
+            f.write(f"integer t_L2Pipe  = {self.t_params.get('t_L2Pipe',0)};\n")
+            f.write(f"integer nPLayer   = {self.t_params.get('nPLayer',0)};\n")
+            f.write(f"integer L1Qbit    = {self.t_params.get('L1Qbit',0)};\n")
+            f.write(f"integer AddrMask  = {self.t_params.get('AddrMask',0)};\n")
+            f.write(f"integer t_B2GenCost  = {self.t_params.get('t_B2GenCost',0)};\n")
+            f.write(f"integer tb_B2Mixer  = {self.t_params.get('tb_B2Mixer',0)};\n")
+            f.write(f"integer t_L2Compute  = {self.t_params.get('t_L2Compute',0)};\n")
+            f.write(f"integer seed = {self.t_params.get('seed',0)};\n")
             f.write(f"// Version {random.random()}, {datetime.datetime.now()}\n")
             f.write(f"localparam ND={ND};\n")
-            f.write(f"logic [7: 0] data_array [{ND}] = {{{lineend}\n")
+            f.write(f"logic [7: 0] data_array [{ND}] = {{\n")
             for i, b in enumerate(data_array):
                 # ensure b is bytes
                 if isinstance(b, int):
@@ -265,26 +307,26 @@ class FpgaDriver:
                 if i != len(data_array) - 1:
                     f.write(",")
                 skey = bb.hex()
-                if skey in idop and lineend != "":
-                    f.write(f" // {idop[skey]}{lineend}")
+                if skey in idop:
+                    f.write(f" // {idop[skey]}")
                 f.write("\n")
-            f.write("};" + lineend + "\n")
+            f.write("};\n")
             
     def _compute_timing(self, NQ, Np):
         #Total cycle for cos_gen layer is 192 (each mul (10) - frac(1) - cordic (170) - some registe (11) - total 192 cycles)
 
-        LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 2
-        LP_MIXER_IN, LP_MIXER_OUT = 1, 1
+        LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 0
+        LP_MIXER_IN, LP_MIXER_OUT = 0, 0
         L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
         L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
         N3 = 1+10+2+1+1+1 # 16
         gcN0, gcN1 = 10, 170                       # test_mul / CORDIC latencies — VERIFY vs HDL
         # I update this based on new method need to check again 
-        gcPipe = 1 + gcN0  + 1 + gcN1 + 1   # in, mul1, fx, mul2, slicer, cordic_in, cordic, out
-        #gcPipe = 1 + gcN0 + 1 + gcN0 + 1 + gcN1 + 1   # = 1+10+1+10+1+170+1 = 194
+        gcPipe = 1 + gcN0 + gcN0 + 1 + gcN1 + 1   # should be 193, 193 in, mul1, fx, mul2, slicer, cordic_in, cordic, out
+        #gcPipe = 1 + gcN0 + gcN0 + 1 + gcN1 + 1   # = 1+10 + 10 + 1 + 170+1 = 193, because 2 mul units are connected directly
         
         NS    = 1 << NQ
-        Lc    = 1 + gcPipe + 1 + L_BRAM_R + LP_GEN_COST + LP_GEN_COST   # 194
+        Lc    = 1 + gcPipe + 1 + L_BRAM_R + LP_GEN_COST + LP_GEN_COST 
         Lm    = 1 + N3 + 1 + L_BRAM_R + L_BRAM_W + 1 + LP_MIXER_IN + LP_MIXER_OUT  # 31
         LInit = 24
 
@@ -297,6 +339,7 @@ class FpgaDriver:
         tGenCost = DVTc*LPipe - Lc
         if tGenCost < LInit:
                 tGenCost += LPipe
+                print(f"tGenCost = {tGenCost} greater than LInit = {LInit}.")
 
         tbGenCost = LPipe*(NQ+1) - Lc
         t_Mixer = LPipe
@@ -308,7 +351,7 @@ class FpgaDriver:
             if a >= 64: return (1 << 64) - 1
             return (1 << a) - 1
 
-        return dict(
+        self.t_params = dict(
             t_L2Addr    = NS       - 2,
             t_L2PipeGC  = Lc       - 2,
             tb_B2GenCost= tbGenCost - 2,
@@ -322,10 +365,11 @@ class FpgaDriver:
             # informational
             _LPipe=LPipe, _Lc=Lc, _Lm=Lm, _NS=NS,
         )
+        return self.t_params
     
     def _program_addr_gen(self, NQ, Np):
         print("  Phase 2: addr_gen timing config...")
-        t = self._compute_timing(NQ, Np)
+        t = self.t_params
         ag_map = [
             (self.AG_SET_t_L2Addr,     t['t_L2Addr']),
             (self.AG_SET_t_L2Pipe,     t['t_L2Pipe']),
@@ -345,26 +389,62 @@ class FpgaDriver:
             self._send_opcode(self.OP_SEND8T)
             self._send_int64(ag_val & ((1 << 64) - 1))
             self._send_opcode(self.OP_WRITE_T2_AG)
-    
+    def _fetch_ui64(self):
+        if not self.connected: # Shibata removed ser condition
+            raise RuntimeError("Not connected to any backend")
+        if self.port == "":
+            # generate a dummy output
+            v = self._float_to_fixed_q361(0.0)
+            d = self._convert_byte(v, 8, signed=False)
+        else:
+            d = self.ser.read(8)
+        if len(d) != 8:
+            raise RuntimeError(f"Expected 8 bytes from FPGA, got {len(d)}")
+        v = int.from_bytes(d, "little", signed=False)
+        return v
+
     def _fetch_fx64(self):
-        if not self.connected or self.ser is None:
-            raise RuntimeError("Not connected to FPGA")
-        d = self.ser.read(8)
+        if not self.connected: # Shibata removed ser condition
+            raise RuntimeError("Not connected to any backend")
+        if self.port == "":
+            # generate a dummy output
+            v = self._float_to_fixed_q361(0.0)
+            d = self._convert_byte(v, 8, signed=True)
+        else:
+            d = self.ser.read(8)
         if len(d) != 8:
             raise RuntimeError(f"Expected 8 bytes from FPGA, got {len(d)}")
         v = int.from_bytes(d, "little", signed=True)
         return v / float(1 << self.FIX_N) # the two's-complement adjustment for signed Q3.61
     
+    def _fetch_8Bytes(self):
+        if not self.connected: # Shibata removed ser condition
+            raise RuntimeError("Not connected to any backend")
+        if self.port == "":
+            # generate a dummy output
+            d = bytes([0,0,0,0,0,0,0,0])
+        else:
+            d = self.ser.read(8)
+
+        if len(d) != 8:
+            raise RuntimeError(f"Expected 8 bytes from FPGA, got {len(d)}")
+        return d
+
     def _wait_for_fpga(self, timeout=1000):
-        if self.ser is None:
+        if not self.connected:
             raise RuntimeError("Serial connection not established")
-        for _ in range(timeout):
-            self._send_opcode(self.OP_MOV_S2U)
-            self._send_opcode(self.OP_FETCH1U)
-            
-            dr = self.ser.read(1)
-            if dr == bytes([self.qa_WAIT]): return True
-            time.sleep(0.001)
+        else:
+            if self.port == "":
+                self._send_opcode(self.HOST_WAIT) # dummy command only for RTL simulation
+                return True
+            else:
+                for _ in range(timeout):
+                    self._send_opcode(self.OP_MOV_S2U)
+                    self._send_opcode(self.OP_FETCH1U)
+                    
+                    dr = self.ser.read(1)
+                    if dr == bytes([self.qa_WAIT]): return True
+                    time.sleep(0.001)
         return False
 
     def load_data(self, diag_hamiltonian, sv0_real, sv0_imag, gammas, cosb, sinb):
@@ -399,6 +479,7 @@ class FpgaDriver:
             self._send_opcode(self.OP_SEND_CMD)
 
             # 2) Program addr_gen timing registers
+            self._compute_timing(n_qubits, p)
             self._program_addr_gen(n_qubits, p)
 
         # 3) Params: p+1 triples, redundant first cos/sin, trailing gamma=-1
@@ -417,6 +498,7 @@ class FpgaDriver:
             self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS) # send address for parameter block
             self._send_opcode(self.OP_MOV_T2A)
             for p_L in range (p +1): # send actual parameters
+                print(f"\nwriting {p_L} th layer, {gam_w[p_L]}, {cosb_w[p_L]}, {sinb_w[p_L]}\n")
                 for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
                     self._send_opcode(self.OP_SEND8T); self._send_fixed(value)
                     self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
@@ -432,6 +514,7 @@ class FpgaDriver:
                     self._send_opcode(self.OP_SEND8T); self._send_fixed(int(value[i]))
                     self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             print("✓ Data loaded to FPGA")
+
             return True
         
         except Exception as e:
@@ -447,11 +530,10 @@ class FpgaDriver:
                 self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
                 self._send_opcode(self.OP_SEND_CMD)
                 done = self._wait_for_fpga(timeout=1000)
-
                 if not done:
                     print("✗ FPGA did not signal completion")
                     return False
-                
+
                 self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
                 self._send_opcode(self.OP_SEND_CMD)
                 return True
@@ -497,8 +579,18 @@ class FpgaDriver:
                 imag_part = self._fetch_fx64()
                 result[i] = complex(result[i].real, imag_part)
                 self._send_opcode(self.OP_INC_A)
-            
             print(f"✓ Read {n_states} amplitudes")
+
+            # read the counter 
+            self._send_opcode(self.OP_SEND8T)
+            self._send_int64(self.BRAM_COUNTER)
+            self._send_opcode(self.OP_MOV_T2A)
+            self._send_opcode(self.OP_READ_RAM2U)
+            self._send_opcode(self.OP_FETCH8U)
+            counter = self._fetch_ui64()
+            print(f"✓ Read time {counter/self.BoardFrequency} [s], {counter}")
+            
+
             return result
             
         except Exception as e:
@@ -507,19 +599,23 @@ class FpgaDriver:
 
     def disconnect(self):
         """Disconnect from FPGA"""
-        if self.connected and self.ser:
+        if self.connected:
             print("Disconnecting from FPGA...")
-            try:
-                # Send WAIT command before closing
-                self._send_opcode(self.OP_SEND1T)
-                self._send_byte(self.qa_WAIT)
-                self._send_opcode(self.OP_SEND_CMD)
-                time.sleep(0.01)
-                self.ser.close()
-                print("✓ Disconnected")
-            except:
-                pass
+            if self.port == "":
+                self._write_all_test_cmd(self.RTL_buff, filename=self.RTL_file_path)
+            else:
+                try:
+                    # Send WAIT command before closing
+                    self._send_opcode(self.OP_SEND1T)
+                    self._send_byte(self.qa_WAIT)
+                    self._send_opcode(self.OP_SEND_CMD)
+                    time.sleep(0.01)
+                    self.ser.close()
+                    print("✓ Disconnected")
+                except:
+                    pass
         self.connected = False
+        # flush the file for all_test_cmd.sv
 
 
 
@@ -666,11 +762,12 @@ class FPGASimulator(Sim_Base):
                 if not self.connected:
                     raise RuntimeError("Failed to connect to FPGA")
             # Load data
+            print("gamma_scaled", gamma_scaled)
             success = self.fpga.load_data(H_scaled, sv0_re, sv0_im, gamma_scaled, cosb_0, sinb_0)
             #tempo
             #success = self.fpga.load_data(self._hc_diag, sv0_re, sv0_im, np.asarray(gammas), cosb_0, sinb_0)
             if not success:
-                raise RuntimeError("Failed to load data to FPGA")            
+                raise RuntimeError("Failed to load data to FPGA")  
             # Execute
             success = self.fpga.execute(p)
             if not success:
