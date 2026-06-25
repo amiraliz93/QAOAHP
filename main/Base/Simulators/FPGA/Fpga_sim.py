@@ -90,8 +90,10 @@ class FpgaDriver:
     BRAM_STATE_REAL = 0x1000_0000_0000_0000      # BRAM[0]: Initial state real components 
     BRAM_STATE_IMAG = 0x2000_0000_0000_0000      # BRAM[1]: Initial state imaginary components (2^n values)
     BRAM_COST_FUNC  = 0x0400_0000_0000_0000       # BRAM[2]: Diagonal cost values _hc_diag (2^n values)
+    BRAM_COUNTER    = 0x0200_0000_0000_0000       # BRAM[2]: Diagonal cost values _hc_diag (2^n values)
     #BRAM_CONFIG_STEP = 0x0100000000000000      # Address step for config registers
 
+    BoardFrequency = 320_000_000 # 320 MHz
 
 
 
@@ -313,7 +315,7 @@ class FpgaDriver:
     def _compute_timing(self, NQ, Np):
         #Total cycle for cos_gen layer is 192 (each mul (10) - frac(1) - cordic (170) - some registe (11) - total 192 cycles)
 
-        LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 1, 1, 0
+        LP_BRAM_A, LP_BRAM_D, LP_GEN_COST = 2, 1, 0
         LP_MIXER_IN, LP_MIXER_OUT = 0, 0
         L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
         L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
@@ -387,7 +389,20 @@ class FpgaDriver:
             self._send_opcode(self.OP_SEND8T)
             self._send_int64(ag_val & ((1 << 64) - 1))
             self._send_opcode(self.OP_WRITE_T2_AG)
-    
+    def _fetch_ui64(self):
+        if not self.connected: # Shibata removed ser condition
+            raise RuntimeError("Not connected to any backend")
+        if self.port == "":
+            # generate a dummy output
+            v = self._float_to_fixed_q361(0.0)
+            d = self._convert_byte(v, 8, signed=False)
+        else:
+            d = self.ser.read(8)
+        if len(d) != 8:
+            raise RuntimeError(f"Expected 8 bytes from FPGA, got {len(d)}")
+        v = int.from_bytes(d, "little", signed=False)
+        return v
+
     def _fetch_fx64(self):
         if not self.connected: # Shibata removed ser condition
             raise RuntimeError("Not connected to any backend")
@@ -564,8 +579,18 @@ class FpgaDriver:
                 imag_part = self._fetch_fx64()
                 result[i] = complex(result[i].real, imag_part)
                 self._send_opcode(self.OP_INC_A)
-            
             print(f"✓ Read {n_states} amplitudes")
+
+            # read the counter 
+            self._send_opcode(self.OP_SEND8T)
+            self._send_int64(self.BRAM_COUNTER)
+            self._send_opcode(self.OP_MOV_T2A)
+            self._send_opcode(self.OP_READ_RAM2U)
+            self._send_opcode(self.OP_FETCH8U)
+            counter = self._fetch_ui64()
+            print(f"✓ Read time {counter/self.BoardFrequency} [s], {counter}")
+            
+
             return result
             
         except Exception as e:

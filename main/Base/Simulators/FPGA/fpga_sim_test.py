@@ -95,7 +95,7 @@ def level0_unit_tests():
  
     # ── T0-5: _compute_timing against all_test_cmd.sv (NQ=5, Np=2) ──────
     def compute_timing(NQ, Np):
-        LP_BRAM_A = 1; LP_BRAM_D=1; LP_GEN_COST=0; LP_MIXER_IN=0; LP_MIXER_OUT=0
+        LP_BRAM_A = 2; LP_BRAM_D=1; LP_GEN_COST=0; LP_MIXER_IN=0; LP_MIXER_OUT=0
         L_BRAM_R = LP_BRAM_A + LP_BRAM_D + 2
         L_BRAM_W = LP_BRAM_A + LP_BRAM_D + 2
         N3=16; gcN0=10; gcN1=170; LInit=24
@@ -121,9 +121,9 @@ def level0_unit_tests():
                     tb_B2Mixer=t_Mixer-2, t_L2Compute=t_Compute,
                     _LPipe=LPipe, _Lc=Lc, _Lm=Lm, _NS=NS)
  
-    expected = dict(t_L2Addr=30, t_L2PipeGC=196, tb_B2GenCost=58, t_L2Pipe=41,
-                    nPLayer=2, L1Qbit=4, AddrMask=15, t_B2GenCost=58,
-                    tb_B2Mixer=41, t_L2Compute=285)
+    expected = dict(t_L2Addr=30, t_L2PipeGC=197, tb_B2GenCost=69, t_L2Pipe=43,
+                    nPLayer=2, L1Qbit=4, AddrMask=15, t_B2GenCost=24,
+                    tb_B2Mixer=43, t_L2Compute=299)
     got = compute_timing(5, 2)
     for k, v in expected.items():
         assert got[k] == v, f"_compute_timing: {k} expected {v} got {got[k]}"
