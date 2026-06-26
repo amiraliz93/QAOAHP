@@ -95,6 +95,8 @@ class FpgaDriver:
 
     BoardFrequency = 320_000_000 # 320 MHz
 
+    counter = 0
+    ctime = 0.0
 
 
 # helper function
@@ -444,7 +446,7 @@ class FpgaDriver:
                     
                     dr = self.ser.read(1)
                     if dr == bytes([self.qa_WAIT]): return True
-                    time.sleep(0.001)
+                    time.sleep(0.01)
         return False
 
     def load_data(self, diag_hamiltonian, sv0_real, sv0_imag, gammas, cosb, sinb):
@@ -529,10 +531,12 @@ class FpgaDriver:
             try:
                 self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_RUN)
                 self._send_opcode(self.OP_SEND_CMD)
-                done = self._wait_for_fpga(timeout=1000)
+                print("waiting the computation...")
+                done = self._wait_for_fpga(timeout=int(1e12))
                 if not done:
                     print("✗ FPGA did not signal completion")
                     return False
+                
 
                 self._send_opcode(self.OP_SEND1T); self._send_byte(self.qa_WAIT)
                 self._send_opcode(self.OP_SEND_CMD)
@@ -587,8 +591,8 @@ class FpgaDriver:
             self._send_opcode(self.OP_MOV_T2A)
             self._send_opcode(self.OP_READ_RAM2U)
             self._send_opcode(self.OP_FETCH8U)
-            counter = self._fetch_ui64()
-            print(f"✓ Read time {counter/self.BoardFrequency} [s], {counter}")
+            self.counter = self._fetch_ui64()
+            self.ctime = self.counter/self.BoardFrequency
             
 
             return result
@@ -781,7 +785,9 @@ class FPGASimulator(Sim_Base):
         finally:
             # Keep connection open for multiple calls
             pass
-
+    def get_duration_time(self):
+        return self.fpga.ctime
+        
     def get_expectation(self, result, costs: typing.Any = None, optimization_type="min", **kwargs) -> float:
         """
         Calculate expectation value of the cost Hamiltonian from the final state.

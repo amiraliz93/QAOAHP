@@ -16,9 +16,9 @@ Usage:
   python test_fpga_sim.py COM3      # Level 0 + 1 + 2  (real board)
   python test_fpga_sim.py /dev/ttyUSB0
 """
- 
-import sys, os, math, random, struct, time, datetime
-import numpy as np
+
+import sys, os, math, random, struct, time, datetime, subprocess
+import numpy as np 
 
 # import Fpga_sim
 from main.Base.Simulators.FPGA import Fpga_sim
@@ -201,6 +201,7 @@ def level1_dry_run():
     def fxq559(v): return int(round(float(v) * (1<<FRAC_H)))
  
     random.seed(0x22a2037)
+    
     sv0 = [complex(random.uniform(-1,1), random.uniform(-1,1)) for _ in range(NS)]
     amp = math.sqrt(sum(v.real**2+v.imag**2 for v in sv0))
     sv0 = [v/amp for v in sv0]
@@ -310,7 +311,7 @@ def level1_dry_run():
 #  LEVEL 2 — real hardware test 
 # ═══════════════════════════════════════════════════════════════════════════
  
-def level2_hardware(port, NQ=5, Np=2):
+def level2_hardware(port, NQ=5, Np=2, sim_Cpp=True, ouput_sim=""):
     print("\n" + "="*60)
     print(f"  LEVEL 2 — real hardware  port={port}  NQ={NQ}  Np={Np}")
     print("="*60)
@@ -330,6 +331,7 @@ def level2_hardware(port, NQ=5, Np=2):
     # ── Build a small random problem ──────────────────────────────────────
     NS = 1 << NQ
     seed = 0x22a2037
+    # generating initial states
     random.seed(seed); np.random.seed(seed)
     H_raw = np.array([random.uniform(-190, 190) for _ in range(NS)])
     #H_raw = np.array([1/(2.0) for _ in range(NS)])
@@ -372,63 +374,160 @@ def level2_hardware(port, NQ=5, Np=2):
         return f"0x{(int(round(value*(1<<FRAC_H)))&0xFFFFFFFFFFFFFFFF):016x}"
     def complex_to_hex(value):
         return f"({float_to_hex(value.real)}, {float_to_hex(value.imag)})" 
-    # ── Python reference simulation ───────────────────────────────────────
     def swap_bits(i, a, b):
         ba=(i>>a)&1; bb=(i>>b)&1
         if ba!=bb: i^=(1<<a)|(1<<b)
         return i
-    fs = open("simulation.txt", "w")
-    
-    fs.write(f"-------------------------------------------------------\n")
-    fs.write(f"Version {random.random()}, {datetime.datetime.now()}\n")
-    fs.write(f"Pi = {float_to_hex(np.pi)}\n")
-    fs.write(f"-------------------------------------------------------\n")
-    sv_ref = list(sv0.copy())
-    for i in range(NS):
-        fs.write(f"H_{i}, {float_to_hexH(H_scaled[i])}\n")
-    for i in range(NS):
-        fs.write(f"p_{i}, {complex_to_hex(sv_ref[i])}\n")
-    for p in range(Np):
-        gs = gam_w[p]; cb = cosb_w[p+1]; sb = sinb_w[p+1]
-        fs.write(f"\n# Starting {p}-th layer. Current params: gamma={float_to_hexG(gs)}, cosb={float_to_hex(cb)}, sinb={float_to_hex(sb)}\n\n")
-        print(f"\nwriting {p} th layer, {gs}, {cb}, {sb}\n")
-            
-        for i in range(NS):
-            ang = gs*H_scaled[i]*2*np.pi
-            costFt =  math.cos(ang) + 1j*math.sin(ang)
-            fs.write(f"F_{i}: {complex_to_hex(costFt)}, {costFt}\n")
-            sv_ref[i] *= costFt
-        for i in range(NS):
-            fs.write(f"F_{i}p_{i}: {complex_to_hex(sv_ref[i])}, {sv_ref[i]}\n")
-        for cq in range(NQ):
-            for id2 in range(NS//2):
-                a = swap_bits(id2*2,   cq, 0)
-                b = swap_bits(id2*2+1, cq, 0)
-                tsa =  cb*sv_ref[a] - 1j*sb*sv_ref[b]
-                tsb = -1j*sb*sv_ref[a] + cb*sv_ref[b]
-                sv_ref[a]=tsa; sv_ref[b]=tsb
-                
-                fs.write(f"p_{a}: {complex_to_hex(tsa)}, {tsa}\n")
-                fs.write(f"p_{b}: {complex_to_hex(tsb)}, {tsb}\n")
-    p = Np    
-    gs = gam_w[p]; cb = cosb_w[p]; sb = sinb_w[p]
-    fs.write("\n")
-    fs.write(f"# Starting {p}-th layer. Current params: gamma={float_to_hexG(gs)}, cosb={float_to_hex(cb)}, sinb={float_to_hex(sb)}\n")
-    fs.write("\n")
-    fs.write(f"\n---Results----------------------\n\n")
-    for i in range(NS):
-        fs.write(f"Re(p_{i}), {float_to_hex(sv_ref[i].real)}\n")
-    for i in range(NS):
-        fs.write(f"Im(p_{i}), {float_to_hex(sv_ref[i].imag)}\n")
+
+        
+    fs = open("statistics.txt", "a")
+    fs.write(f"---------------------------------------\n")
+    fs.write(f"summary of the computation \n")
+    fs.write(f"---------------------------------------\n")
     fs.close()
+    fs = open("statistics.txt", "a")
+    if sim_Cpp != "cpp":
+        if ouput_sim == "":
+            print("simulation output is disabled")
+            # ── Python reference simulation ───────────────────────────────────────
+            
+            sv_ref = list(sv0.copy())
+            # Simulation part
+            t0_cpu = time.perf_counter()
+
+            for p in range(Np):
+                gs = gam_w[p]; cb = cosb_w[p+1]; sb = sinb_w[p+1]
+                    
+                for i in range(NS):
+                    ang = gs*H_scaled[i]*2*np.pi
+                    costFt =  math.cos(ang) + 1j*math.sin(ang)
+                    sv_ref[i] *= costFt
+                for cq in range(NQ):
+                    for id2 in range(NS//2):
+                        a = swap_bits(id2*2,   cq, 0)
+                        b = swap_bits(id2*2+1, cq, 0)
+                        tsa =  cb*sv_ref[a] - 1j*sb*sv_ref[b]
+                        tsb = -1j*sb*sv_ref[a] + cb*sv_ref[b]
+                        sv_ref[a]=tsa; sv_ref[b]=tsb
+                        
+            p = Np    
+            
+            dt_cpu = time.perf_counter() - t0_cpu
+            print(f"  Python CPU reference wall time: {dt_cpu:.6f} s")         
+        else: 
+            print("simulation output is enabled")
+            
+            fs = open("simulation.txt", "w")
+            
+            fs.write(f"-------------------------------------------------------\n")
+            fs.write(f"Version {random.random()}, {datetime.datetime.now()}\n")
+            fs.write(f"Pi = {float_to_hex(np.pi)}\n")
+            fs.write(f"-------------------------------------------------------\n")
+            sv_ref = list(sv0.copy())
+            # Simulation part
+            for i in range(NS):
+                fs.write(f"H_{i}, {float_to_hexH(H_scaled[i])}\n")
+            for i in range(NS):
+                fs.write(f"p_{i}, {complex_to_hex(sv_ref[i])}\n")
+            t0_cpu = time.perf_counter()
+
+            for p in range(Np):
+                gs = gam_w[p]; cb = cosb_w[p+1]; sb = sinb_w[p+1]
+                fs.write(f"\n# Starting {p}-th layer. Current params: gamma={float_to_hexG(gs)}, cosb={float_to_hex(cb)}, sinb={float_to_hex(sb)}\n\n")
+                print(f"\nwriting {p} th layer, {gs}, {cb}, {sb}\n")
+                    
+                for i in range(NS):
+                    ang = gs*H_scaled[i]*2*np.pi
+                    costFt =  math.cos(ang) + 1j*math.sin(ang)
+                    fs.write(f"F_{i}: {complex_to_hex(costFt)}, {costFt}\n")
+                    sv_ref[i] *= costFt
+                for i in range(NS):
+                    fs.write(f"F_{i}p_{i}: {complex_to_hex(sv_ref[i])}, {sv_ref[i]}\n")
+                for cq in range(NQ):
+                    for id2 in range(NS//2):
+                        a = swap_bits(id2*2,   cq, 0)
+                        b = swap_bits(id2*2+1, cq, 0)
+                        tsa =  cb*sv_ref[a] - 1j*sb*sv_ref[b]
+                        tsb = -1j*sb*sv_ref[a] + cb*sv_ref[b]
+                        sv_ref[a]=tsa; sv_ref[b]=tsb
+                        
+                        fs.write(f"p_{a}: {complex_to_hex(tsa)}, {tsa}\n")
+                        fs.write(f"p_{b}: {complex_to_hex(tsb)}, {tsb}\n")
+            p = Np    
+            
+            dt_cpu = time.perf_counter() - t0_cpu
+            print(f"  Python CPU reference wall time: {dt_cpu:.6f} s")
+
+            gs = gam_w[p]; cb = cosb_w[p]; sb = sinb_w[p]
+            fs.write("\n")
+            fs.write(f"# Starting {p}-th layer. Current params: gamma={float_to_hexG(gs)}, cosb={float_to_hex(cb)}, sinb={float_to_hex(sb)}\n")
+            fs.write("\n")
+            fs.write(f"\n---Results----------------------\n\n")
+            for i in range(NS):
+                fs.write(f"Re(p_{i}), {float_to_hex(sv_ref[i].real)}\n")
+            for i in range(NS):
+                fs.write(f"Im(p_{i}), {float_to_hex(sv_ref[i].imag)}\n")
+            fs.close()
+        
+        with open("result.txt","w") as f:
+            for i in range(NS): f.write(float_to_hex(sv_ref[i].real) + "\n")
+            for i in range(NS): f.write(float_to_hex(sv_ref[i].imag) + "\n")
+        # Simulation part end
+    else:
+        # ── C++ reference simulation ───────────────────────────────────────
+        # Python precomputes only mixer sin/cos: cb=cos(beta), sb=sin(beta).
+        # The phase angle gamma*H*2*pi and its cos/sin are computed inside C++.
+        cb_arr = np.asarray(cosb, dtype=np.float64)
+        sb_arr = np.asarray(sinb, dtype=np.float64)
+        gam_arr = np.asarray(gamma_scaled, dtype=np.float64)
+        h_arr = np.asarray(H_scaled, dtype=np.float64)
+
+        in_file = "qaoa_sim_input.bin"
+        out_file = "qaoa_sim_output.bin"
+        exe_name = "qaoa_sim.exe" if os.name == "nt" else "qaoa_sim"
+        this_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+        cpp_path = os.path.join(this_dir, "qaoa_sim.cpp")
+        if not os.path.exists(cpp_path):
+            cpp_path = os.path.abspath("qaoa_sim.cpp")
+        exe_path = os.path.join(this_dir, exe_name)
+
+        if (not os.path.exists(exe_path)) or (os.path.getmtime(exe_path) < os.path.getmtime(cpp_path)):
+            cmd = ["g++", "-O3", "-march=native", "-std=c++20", cpp_path, "-o", exe_path]
+            print("  Compiling C++ simulator:", " ".join(cmd))
+            subprocess.run(cmd, check=True)
+
+        with open(in_file, "wb") as f:
+            f.write(struct.pack("<IIII", 0x51414F41, int(NQ), int(Np), int(NS)))
+            np.asarray(sv0.real, dtype="<f8").tofile(f)
+            np.asarray(sv0.imag, dtype="<f8").tofile(f)
+            h_arr.astype("<f8", copy=False).tofile(f)
+            gam_arr.astype("<f8", copy=False).tofile(f)
+            cb_arr.astype("<f8", copy=False).tofile(f)
+            sb_arr.astype("<f8", copy=False).tofile(f)
+
+        t0_cpu = time.perf_counter()
+        subprocess.run([exe_path, in_file, out_file, "result.txt"], check=True)
+        dt_cpu = time.perf_counter() - t0_cpu
+        print(f"  C++ CPU reference wall time: {dt_cpu:.6f} s")
+
+        raw = np.fromfile(out_file, dtype="<f8")
+        if raw.size != 2 * NS:
+            raise RuntimeError(f"C++ simulator output size mismatch: got {raw.size}, expected {2*NS}")
+        sv_ref = raw[:NS] + 1j * raw[NS:]
+        # Simulation part end
     # ── Run on FPGA ───────────────────────────────────────────────────────
     sim = FPGASimulator(n_qubits=NQ, costs=H_raw, fpga_config=fpga_config)
     t0 = time.perf_counter()
     sv_fpga = sim.simulate_qaoa(gammas, betas, sv0=sv0.copy())
     dt = time.perf_counter() - t0
+    ctime = sim.get_duration_time()
     print(f"  FPGA wall time: {dt:.4f} s")
+    print(f"✓ Read time {ctime} [s]")
 
- 
+    fs.write(f"FPGA time: {ctime}\n")
+    fs.write(f"NQ: {NQ}\n")
+    fs.write(f"NP: {Np}\n")
+    fs.write(f"NS: {2**NQ}\n")
     # ── MAE ───────────────────────────────────────────────────────────────
     mae_r = sum(abs(sv_fpga[i].real - sv_ref[i].real) for i in range(NS)) / NS
     mae_i = sum(abs(sv_fpga[i].imag - sv_ref[i].imag) for i in range(NS)) / NS
@@ -437,16 +536,16 @@ def level2_hardware(port, NQ=5, Np=2):
     print(f"  MAE imag : {mae_i:.4e}")
     print(f"  MAE total: {mae:.4e}")
     THRESHOLD = 1e-3
+    fs.write(f"MAE: {mae:.4e}\n")
+
     ok = mae < THRESHOLD
     print(f"  Result   : {'PASS ✓' if ok else 'FAIL ✗  (MAE too large)'}")
- 
+    
     # Save outputs
     with open("resultFPGA.txt","w") as f:
         for i in range(NS): f.write(f"0x{(int(round(sv_fpga[i].real*(1<<61)))&0xFFFFFFFFFFFFFFFF):016x}\n")
         for i in range(NS): f.write(f"0x{(int(round(sv_fpga[i].imag*(1<<61)))&0xFFFFFFFFFFFFFFFF):016x}\n")
-    with open("result.txt","w") as f:
-        for i in range(NS): f.write(float_to_hex(sv_ref[i].real) + "\n")
-        for i in range(NS): f.write(float_to_hex(sv_ref[i].imag) + "\n")
+    
     print("  Saved resultFPGA.txt and result.txt")
     return ok
  
@@ -462,7 +561,9 @@ if __name__ == "__main__":
     dic = {
         "--Np": 2,
         "--NQ": 6,
-        "--port": ""
+        "--port": "",
+        "--sim": "cpp",
+        "--output-sim": ""
     }
     for i in range(1, len(sys.argv)):
         v = sys.argv[i]
@@ -475,13 +576,15 @@ if __name__ == "__main__":
     NQ = dic["--NQ"]
     Np = dic["--Np"]
     port = dic["--port"]
+    sim = dic["--sim"]
+    output_sim = dic["--output-sim"]
     p0 = level0_unit_tests()
     p1 = level1_dry_run()
     
     if port == "":
         print("\n  Level 2 generating for RTL.")
  
-    p2 = level2_hardware(port, NQ, Np)
+    p2 = level2_hardware(port, NQ, Np, sim, output_sim)
  
     print("\n" + "="*60)
     print(f"  SUMMARY: L0={'PASS' if p0 else 'FAIL'}  "

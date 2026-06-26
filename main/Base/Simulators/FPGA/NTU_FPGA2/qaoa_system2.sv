@@ -178,8 +178,8 @@ reg [P-1:0] b_sinb;         // Next sin(β), buffer to align the timining
 logic [P-1:0] n_gamma;        // Next γ
 logic [P-1:0] nb_gamma;        // Next γ
 reg [P-1:0] b_gamma; // cos gamma - γ parameter
-logic [33: 0] n_CompCounter;
-reg [33: 0] CompCounter;
+logic [41: 0] n_CompCounter;
+reg [41: 0] CompCounter;
 //----------------------------------------------------------------------------
 // Mixer Operation Registers
 //----------------------------------------------------------------------------
@@ -313,8 +313,8 @@ always_comb begin: memorySwitchingBlock
             n_r_vd = r_req;
         end
         2: begin
-            n_r_data[33:0] = CompCounter;
-            n_r_data[P-1:34] = '0;
+            n_r_data[41:0] = CompCounter;
+            n_r_data[P-1:42] = '0;
             n_r_vd = r_req;
         end
         4: begin // Hamiltonian
