@@ -8,7 +8,7 @@ from functools import reduce
 from qiskit_aer import AerSimulator
 import typing
 import networkx as nx
-
+import time
 from .Base import choose_simulator, qaoa_simulator_base
 from . import parameter_utils
 from .parameter_utils import QAOAParameterization
@@ -93,11 +93,28 @@ def _create_qiskit_objective(
 
         # Run Circuit
         # Transpile circuit for the simulator
-        bound_qc = qc.bind_parameters(parameter_values)
+        t0 = time.perf_counter()
+
+
+        bound_qc = qc.assign_parameters(dict(zip(qc.parameters,
+parameter_values)), inplace=False)
         transpiled_qc = transpile(bound_qc, simulator)
         job = simulator.run(transpiled_qc)
         result = job.result()
         statevector = result.get_statevector()
+
+        elapsed = time.perf_counter() - t0
+
+        print(f"qiskit_compute_sec {elapsed:.9g} s")
+
+        with open("statistics.txt", "a") as fp:
+            fp.write("---------------------------------------\n")
+            fp.write("  summary of the computation  \n")
+            fp.write("---------------------------------------\n")
+            fp.write(f"qiskit: {elapsed:.9g}\n")
+            fp.write(f"NQ: {int(np.log2(len(statevector)))}\n")
+            fp.write(f"NP: {p}\n")
+            fp.write(f"NS: {len(statevector)}\n")
         
         # Calculate expectation value <ψ|H|ψ>
         probabilities = np.abs(statevector.data)**2
