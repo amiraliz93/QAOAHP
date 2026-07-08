@@ -1,44 +1,34 @@
 # report of various comparison
 
-Here is the comparison on energy consumption.
+This report describes comparison between qiskit on CPU and FPGA with our implementation. 
 
-CPU: 34 W
-FPGA: 4 W
+Basic specifications are,
 
-CPU is Ryzen 9950@5.7 GHz. FPGA is Stratix 5 with our design programmed and working at 320 MHz. The CPU power setting is set to high performance both on Windows and UEFI of the mother board. The program to process the problem is prepared in pure C language code and optimized using the latest compiler, gcc version 14.2. The power consumption is estimated as the difference from idle state and the state during the computation. The speed comparison is shown in speed_comp.svg (Fig 1). From Fig. 1, therefore we can say at the condition number of qbits is 16, CPU is almost twice faster than FPGA. If we let the power efficiency of CPU 1, then, we have the following comparison on power efficiency between our FPGA design and CPU.
+CPU: Ryzen 9950X, 5.7 GHz, 32 MB cache memory, 16 cores
+FPGA: Stratix 5, 320 MHz
 
-CPU: 1
-FPGA: 34/4*0.5 =  4.25
+We set the performance configuration of CPU at its maximum one. On Windows, power schedule was set to best performance, and in firmware configuration of motherboard, the power consumption setting was set to auto, where the CPU will consume as much power as possible on the system. 
 
-So our FPGA is 4.25 time power efficient than the CPU.
+fixP-N.svg is a result of comparison between qiskit and FPGA on various parameters of number of qbits N=1, N=2,...,16. Number of layers are 1 for all case. In this graph qiskit@$x$GHz means a result on the CPU run at the frequence of $x$ GHz. Each frequency is archived from UEFI configuration menu of the Motherboard. We can FPGA outperforms qiskit on all situation, despite its relatively low frequence (5.7 GHz vs 0.32 GHz). It is supposed due to the overhead to run the pipeline of the CPU. FPGA have no such overhead because it is implemented so that it does not waste clocks during computations. We can observe there is no increase at N = 2,3,4,5 for the FPGA. It is a result of non-stopping pipeline implementation, where in the case of N less than 6, the pipeline frequently has a chance it must wait to flush its contents. Decrease of the computation time for qiskit around N=14 is suppose to be a result by the paralell implementation of qiskit, where it may enable its parallelization when it have N greater than 14.
 
-However, the date of our FPGA is 2012, where the CPU is in 2025. So the level of technology inside these 2 processors are quit different and this is not fair comparison. The literature [1] provides the history of power efficiency of the most 2 major CPUs from Intel and AMD. According to [1], the power efficiency of the AMD's cpu improved 14 times from 2011 to 2026. So, 
+CN-P.svg is the comparison on $P=1,2,....,32, N=4,6,10,12,14,16$, to see the effect of increasing $P$. FPGA$N$ means the result by FPGA for number of qbits $N$. So for qiskit$N$. Theoretically, all the graph must be linear with a gradient of one. However, most of qiskit's result are not linear. It is supposed to be a result of the same overhead as mentioned in the result of fixP-N.svg. As an overall tendency, we can observe all the curves converges into linear lines as P increases. The tendency is consistent with the theoretical expectation.
 
-CPU: 1
-FPGA: 34/4*0.5 =  59.5
+During the Here is the comparison on energy consumption.  We measured following power consumption.
 
-Because FPGA is much simpler than CPU when we talk about its circuit structure, it can be assumed the improvement in modern CPU can be applied directly into FPGAs as the minimum expected improvement. So we believe this comparison is not unrealistic assumption.
+C_i: power consumption by CPU when it is idle state.
+F_i: power consumption by FPGA when it is idle state.
+C_c: power consumption by CPU when it is doing the computation.
+F_c: power consumption by FPGA when it is doing the computation.
+C_p: estimated power consumption by CPU for the computation.
+F_p: estimated power consumption by FPGA for the computation.
 
-Here is the comparison on theoretical performance.
+We have following equations.
 
-Ryzen 9950@5.7 theoretical speed: 8 * 2 * 5.7 = 91.2 GFlops.
-FPGA 320 MHz speed: 0.32* 6 = 1.92 GFlops
+C_p = C_c - C_i, F_p = F_c - F_i.
 
-Because Ryzen 9950@5.7 have AVX 512 instruction set and it can operate 1 FMA instruction per one clock, 8 multiplication and 8 addition on 64 bits floating point can be processed in one clock cycle. So 8 + 8 = 16 floating points can be processed in one clock cycle. Multiplying this value to the clock rate of 5.7 GHz, we obtain 91.2 GFlops as mentioned above. For FPGA, our design provide 4 multiplication and 2 addtion in mixer operation unit, 6 floating point can be processed in one clocl cycle. So we have 0.32 * 6 = 1.92 GFlops as mentioned. Inspite of the big difference in theoretical speed among CPU and FPGA, we have almost the same speed from Fig. 1. It can be said, our archtecture is far more efficient than the  program run on CPU.
+To calculate C_i, C_c, we record the power consumption 8 times, and averaged those observations to get C_i, C_c. For F_c, F_i we took the same procedure. Then we got the following result.
 
-Here are the flag ship FPGAs in 2026 and 2011. Agilex is the flagship in 2026, and Stratix 5 is our FPGA that was flagship in 2011. 
+C_p: 31.2 W
+F_p: 4.0 W
 
-Agilex 9@2025: 12,300 DSPs
-Stratix 5@2011: 340 DSPs
-
-Even only seeing the number of DSPs, we have 34 times more DSPs in 2026 than in 2011. And expected FMax on the flagship chip in 2026 will be 1000 MHz (need citation), we can expect 3 times faster clock rate than the clock of 320 MHz in our current design. So, roughly we can expect 34 * 3 = 92 times imporvement in terms of the speed.
-
-Here is the comparison on theoretical speed between flagship CPU and GPU in 2026. CPUs speed is estimated using all cores. Because 9950x have 16 cores, we have 91.2*16 = 2560 GFlops.
-
-THperf 9950x: 2.56 TFlops
-RTX 5090: 104 TFlops
-
-GPU is 50 times faster than CPU. If we talk about 1 CPU core vs GPU, then we have 50*16 = 900 times faster speed in GPU than in 1 CPU core. It is much faster than 92 times CPU speed FPGAs suppose to have as mentioned. But we cannot expect this theoretical speed in GPUs because the parallel efficiency in GPU is much less than theoretical performance.
-
-
-[1] Years of SPEC Power: An Analysis of x86 Energy Efficiency Trends, https://arxiv.org/pdf/2411.07062v116 
+CPU consumes much more power, despite of its lower performance than that of FPGA. It is clear that FPGA is more power efficient. Please also note that the FPGA we utilized was released in 2012, while the CPU we utlized was releaesd in 2025. Generally older devices has much lower power efficiency than new ones. Therefore, the result shows high potential of the FPGA implementation to the power efficient computation.

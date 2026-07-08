@@ -93,17 +93,18 @@ def _create_qiskit_objective(
 
         # Run Circuit
         # Transpile circuit for the simulator
-        t0 = time.perf_counter()
 
 
         bound_qc = qc.assign_parameters(dict(zip(qc.parameters,
 parameter_values)), inplace=False)
         transpiled_qc = transpile(bound_qc, simulator)
+        
+        t0 = time.perf_counter()
         job = simulator.run(transpiled_qc)
         result = job.result()
+        elapsed = time.perf_counter() - t0
         statevector = result.get_statevector()
 
-        elapsed = time.perf_counter() - t0
 
         print(f"qiskit_compute_sec {elapsed:.9g} s")
 
