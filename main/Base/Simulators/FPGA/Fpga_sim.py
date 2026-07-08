@@ -497,24 +497,24 @@ class FpgaDriver:
             fix_sv0_i = self._float_to_fixed(sv0_imag, f_bit=61) # Q3.61
             fix_H = self._float_to_fixed(diag_hamiltonian, f_bit=59) # Q5.59
 
-        #     self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS) # send address for parameter block
-        #     self._send_opcode(self.OP_MOV_T2A)
-        #     for p_L in range (p +1): # send actual parameters
-        #         print(f"\nwriting {p_L} th layer, {gam_w[p_L]}, {cosb_w[p_L]}, {sinb_w[p_L]}\n")
-        #         for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
-        #             self._send_opcode(self.OP_SEND8T); self._send_fixed(value)
-        #             self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+            self._send_opcode(self.OP_SEND8T); self._send_int64(self.BRAM_PARAMS) # send address for parameter block
+            self._send_opcode(self.OP_MOV_T2A)
+            for p_L in range (p +1): # send actual parameters
+                print(f"\nwriting {p_L} th layer, {gam_w[p_L]}, {cosb_w[p_L]}, {sinb_w[p_L]}\n")
+                for value in (fix_cosb_w[p_L], fix_sinb_w[p_L], fix_gamma_w[p_L]):
+                    self._send_opcode(self.OP_SEND8T); self._send_fixed(value)
+                    self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
 
-        #   # 4) State real / 5) State imag / 6) Cost values
-        #     print("  Phase 4: Load state and cost data...")
-        #     for address, value in ((self.BRAM_STATE_REAL, fix_sv0_r), 
-        #                            (self.BRAM_STATE_IMAG, fix_sv0_i),
-        #                            (self.BRAM_COST_FUNC,  fix_H)):
-        #         self._send_opcode(self.OP_SEND8T); self._send_int64(address)
-        #         self._send_opcode(self.OP_MOV_T2A)
-        #         for i in range(n_states):
-        #             self._send_opcode(self.OP_SEND8T); self._send_fixed(int(value[i]))
-        #             self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
+          # 4) State real / 5) State imag / 6) Cost values
+            print("  Phase 4: Load state and cost data...")
+            for address, value in ((self.BRAM_STATE_REAL, fix_sv0_r), 
+                                   (self.BRAM_STATE_IMAG, fix_sv0_i),
+                                   (self.BRAM_COST_FUNC,  fix_H)):
+                self._send_opcode(self.OP_SEND8T); self._send_int64(address)
+                self._send_opcode(self.OP_MOV_T2A)
+                for i in range(n_states):
+                    self._send_opcode(self.OP_SEND8T); self._send_fixed(int(value[i]))
+                    self._send_opcode(self.OP_WRITE_T2RAM); self._send_opcode(self.OP_INC_A)
             print("✓ Data loaded to FPGA")
 
             return True
@@ -563,27 +563,27 @@ class FpgaDriver:
         try:
             result = np.zeros(n_states, dtype=np.complex128)
             
-            # # Read real parts sequentially (set address once, then INC)
-            # self._send_opcode(self.OP_SEND8T)
-            # self._send_int64(self.BRAM_STATE_REAL)
-            # self._send_opcode(self.OP_MOV_T2A)
-            # for i in range(n_states):
-            #     self._send_opcode(self.OP_READ_RAM2U)
-            #     self._send_opcode(self.OP_FETCH8U)
-            #     result[i] = self._fetch_fx64()  # real part only for now
-            #     self._send_opcode(self.OP_INC_A)
+            # Read real parts sequentially (set address once, then INC)
+            self._send_opcode(self.OP_SEND8T)
+            self._send_int64(self.BRAM_STATE_REAL)
+            self._send_opcode(self.OP_MOV_T2A)
+            for i in range(n_states):
+                self._send_opcode(self.OP_READ_RAM2U)
+                self._send_opcode(self.OP_FETCH8U)
+                result[i] = self._fetch_fx64()  # real part only for now
+                self._send_opcode(self.OP_INC_A)
             
-            # # Read imaginary parts sequentially
-            # self._send_opcode(self.OP_SEND8T)
-            # self._send_int64(self.BRAM_STATE_IMAG)
-            # self._send_opcode(self.OP_MOV_T2A)
-            # for i in range(n_states):
-            #     self._send_opcode(self.OP_READ_RAM2U)
-            #     self._send_opcode(self.OP_FETCH8U)
-            #     imag_part = self._fetch_fx64()
-            #     result[i] = complex(result[i].real, imag_part)
-            #     self._send_opcode(self.OP_INC_A)
-            # print(f"✓ Read {n_states} amplitudes")
+            # Read imaginary parts sequentially
+            self._send_opcode(self.OP_SEND8T)
+            self._send_int64(self.BRAM_STATE_IMAG)
+            self._send_opcode(self.OP_MOV_T2A)
+            for i in range(n_states):
+                self._send_opcode(self.OP_READ_RAM2U)
+                self._send_opcode(self.OP_FETCH8U)
+                imag_part = self._fetch_fx64()
+                result[i] = complex(result[i].real, imag_part)
+                self._send_opcode(self.OP_INC_A)
+            print(f"✓ Read {n_states} amplitudes")
 
             # read the counter 
             self._send_opcode(self.OP_SEND8T)
