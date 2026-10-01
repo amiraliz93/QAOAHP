@@ -174,6 +174,10 @@ To re-generate the result presented at QAI conference, first write FPGA program 
 
 We prepared comparison on qiskit. To run the task of fair comparison by qiskit against our implementation on FPGA, run `stats_qiskit.py`. 
 
+All the result will be written in `statistics.txt`. If you newly start recording the statistics, first delete `statistics.txt` so that it will not include any old results. Both results of either `stats_qiskit.py` or `stats.py` will be written in the same `statistics.txt` at the directory where you run those scripts. The file name `statistics.txt` is hard coded. If you want to change it, look into the source code of python modules in the project just by searching the word statistics.txt.
+
+`plot_statistics.py` will generate a graph of comparison in SVG format.
+
 ### How to Cite
 If this code contributes to published work, please reference the repository and your commit/tag. A BibTeX stub can be added once a preprint is available.
 ## Acknowledgements
